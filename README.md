@@ -11,3 +11,8 @@ I may write a book on research platform construction; at which point this reposi
 
 My plotting code is in R. I am not that great a R programmer, and my code is a mess. I expect that I will migrate to a pure Python platform at some point. However, the R code is an example of how we can use a SQL database as the interface point between 
 different languages.
+
+There may very well be a similar package out there; I did not even bother looking. If there is a similar project, I guess I 
+could switch over to working wit it. However, since most of what I am doing is small wrappers on top of fairly standard
+libraries, not seeing that as worthwhile. I am not too familiar with pandas, and it looks like most of what I would be doing is
+within pandas already. Instead, the effort is getting everything wrapped into a high productivity environment.
