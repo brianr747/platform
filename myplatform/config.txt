@@ -1,0 +1,3 @@
+# Configuration File
+# For now, hardcoded for my use. Eventually, will have an override file outside GIT so
+# that people can have their own configuration data without it crashing into the public repository.
