@@ -16,3 +16,5 @@ There may very well be a similar package out there; I did not even bother lookin
 could switch over to working wit it. However, since most of what I am doing is small wrappers on top of fairly standard
 libraries, not seeing that as worthwhile. I am not too familiar with pandas, and it looks like most of what I would be doing is
 within pandas already. Instead, the effort is getting everything wrapped into a high productivity environment.
+
+Plans.txt has some thoughts on my plans for this project.

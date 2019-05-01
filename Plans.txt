@@ -1,0 +1,18 @@
+Plans.txt
+=========
+
+Since I do not know whether a similar open source package already exists, I am not making grandiose plans. (I
+am pretty sure that there are commercial packages.) I believe that what I want to build is a "data warehouse." However,
+the structure is very specific.
+
+I am working on a book on recessions, and this limits my pure development time. However, I need to add international
+data sources, and I will do placeholder work in this package as part of that.
+
+The idea is that all data - including data generated internally - gets funnelled into a single database. Users only need
+to learn a single query interface to get all data. Although there are commercial data providers that marshal data,
+it is typically difficult to get your own data onto their system (and one may not wish to push proprietary data to an
+outside party).
+
+Since I will only be looking at a handful of series now, the library code will short-circuit database queries to just
+use text files (one file per series). This will allow me to rapidly query the data in Python, and read the data into my
+R plotting routines. I will eventually migrate those files to a SQL database.
