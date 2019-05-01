@@ -26,25 +26,25 @@ limitations under the License.
 # Just execute the code as a script.
 print('Starting example')
 try:
+    import pandas
     import dbnomics
 except ImportError:
-    print('Need to install dbnomics -  pip install dbnomics')
+    print('Need to install pandas and dbnomics -  pip install dbnomics')
     raise
 
 
-def describe(x):
-    print('Object Description:')
-    print('Type is:', type(x))
-    try:
-        print(x.head())
-    except:
-        print(x)
 
-
-print('Fetch a single series: Greek nominal GDP.')
+print("""Fetch a single series: Greek nominal GDP.
+Got the code from the series webpage.
+Code: 'Eurostat/namq_10_gdp/Q.CP_MEUR.SCA.B1GQ.EL'
+URL: https://db.nomics.world/Eurostat/namq_10_gdp/Q.CP_MEUR.SCA.B1GQ.EL
+""")
 
 df1 = dbnomics.fetch_series('Eurostat/namq_10_gdp/Q.CP_MEUR.SCA.B1GQ.EL')
-describe(df1)
+print('Object returned by fetch_series:')
+print('Type:', type(df1))
+print('Some of the data')
+print(df1.head())
 input('Hit Return to continue')
 print('Columns of the dataframe:')
 print(df1.columns)
@@ -65,6 +65,48 @@ try:
     matplotlib.pyplot.plot(df1['period'], df1['value'])
 except:
     print('Plot failed. Need matplotlib to be installed. Skipping...')
+
+input('Hit return to continue')
+
+print("""
+DBnomics also supports more advanced query options. I will just grab two series for simplicity.
+The Greek GDP series (again), and some other series from their example code...
+
+At present, the dbnomics code throws up a pandas warning for me...
+""")
+
+df2 = dbnomics.fetch_series(['AMECO/ZUTN/EA19.1.0.0.0.ZUTN', 'Eurostat/namq_10_gdp/Q.CP_MEUR.SCA.B1GQ.EL'])
+
+print('The two time series live in a single pandas DataFrame')
+
+print(df2.head(100))
+print("""We want to unpack these into separate time series objects. We use the loc() method to do this""")
+
+df_ser1 = df2.loc[df2['series_code'] == 'Q.CP_MEUR.SCA.B1GQ.EL']
+df_ser2 = df2.loc[df2['series_code'] == 'EA19.1.0.0.0.ZUTN']
+print('First series')
+print(df_ser1.head())
+print('Second Series')
+print(df_ser2.head())
+input('Hit return to continue')
+print("""
+These "series" are still data frames. To be more convenient, need to convert to pandas Series.""")
+
+ser1 = pandas.Series(df_ser1.value)
+ser1.index = df_ser1.period
+
+ser2 = pandas.Series(df_ser2.value)
+ser2.index = df_ser2.period
+print('Second series has "NA": convert to NaN')
+import numpy
+print(ser2)
+ser2 = ser2.replace('NA', numpy.nan)
+print(ser2)
+print('Get rid of NaN')
+ser2 = ser2.dropna()
+print(ser2)
+
+
 
 
 
