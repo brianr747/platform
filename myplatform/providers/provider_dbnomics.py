@@ -1,5 +1,5 @@
 """
-dbnomics.py
+provider_dbnomics.py
 
 Functions to fetch data from DBNomics, and convert to standard format.
 
@@ -47,6 +47,27 @@ limitations under the License.
 """
 
 import dbnomics
+import pandas
+import numpy
+
+
+def fetch(query_ticker):
+    """
+    Initial stab at querying. Will refactor code into a subclass...
+    :param query_ticker: str
+    :return: list
+    """
+    df = dbnomics.fetch_series(query_ticker)
+    tickers = set(df.series_code)
+    if len(tickers) > 1:
+        raise NotImplementedError('Multiple series queries not yet supported')
+    ser = pandas.Series(df.value)
+    ser.index = df.period
+    ser.name = 'D@' + tickers.pop()
+    # Convert 'NA' to NaN
+    ser.replace('NA', numpy.nan)
+    # Always return a list of series. Only the user interface will convert list to a single pandas.Series
+    return [ser,]
 
 
 
