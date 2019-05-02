@@ -1,0 +1,22 @@
+EarlyAdopters.txt
+=================
+
+2019-05-02
+
+At the time of writing, my objective is just to get a system that I can use so that I can finish my book. In particular,
+I just need access to DBnomics data so that I can plot it in R. Once the book is done, I will fill out the platform.
+
+The structures are not yet in place, but the fetching is built around "databases" and "providers."
+
+- Currently, only a text file database ("TXT") is supported; "MySQL" will be added next. (This will make the platform
+interesting...)
+- The only provider is DB.nomics. I could add FRED easily - but the user will need their own API key. (You need to
+request a free key from the FRED people.)
+
+If you want to extend the capabilities, the best way will be to "monkey patch" your own database/provider code into the
+framework. If I have time, I will do this within the *sfc_models* package to give an example. The way monkey-patching
+works is that you import myplatform, and then insert your modifications into the loaded class objects that handle
+providers/databases.
+
+At the time of writing this is not possible, but I will build out the "fetch" routine to support this relatively soon
+(I hope).

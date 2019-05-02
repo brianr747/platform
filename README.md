@@ -2,7 +2,7 @@
 Platform to download, manipulate and plot data. Mainly Python, with some R. Built around a MySQL database.
 
 This repository is mainly for my own use for now; I am transferring my platform to a new computer, and decided to do a clean up 
-at the same time.
+at the same time. In particular, the MySQL interface is not implemented.
 
 With a fair amount of effort, users could replicate my examples. However, there will be example wrappers for various web interfaces
 which may make things slightly simpler to work with.
@@ -18,3 +18,5 @@ libraries, not seeing that as worthwhile. I am not too familiar with pandas, and
 within pandas already. Instead, the effort is getting everything wrapped into a high productivity environment.
 
 Plans.txt has some thoughts on my plans for this project.
+
+EarlyAdopters.txt has some comments aimed at anyone who wants to use this package.
