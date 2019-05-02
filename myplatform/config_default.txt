@@ -1,28 +1,39 @@
-# Example Configuration File
+# Defauly Configuration File
 #
 # Managed by configuration.py; uses built-in configparser.
 #
 # In order to avoid anyone (like me...) pushing their API keys, database login credentials, etc.
 # onto GitHub, will have a somewhat convoluted configuration structure.
 #
-# (1) If the file "config.txt" in this directory exists, it is loaded. (The file does not exist in the repository,
-# and I have set .gitignore to ignore it.)
+# The procedure is as follows.
+# (1) This file is loaded first by configparser (so don't delete it!)
+# (2) If "config.txt" exists in the same directory, load its configuration information. This overwrites
+#     selected entries, so you need only override defaults that you want. This file does not exist in the repository,
+#     and I set .gitignore to ignore it.
+# (3) The configuration parameter [ActualConfigFile][FileName] is checked to see if it is the path to
+#     a file on the file system. If so, it is loaded.
 #
-# (2) Otherwise, this file is loaded.
+# What I did is place my actual config file outside the repository directory structure, so it will never get checked in.
+# config.txt just overrides the [ActualCongFile] value. That is, the contents of config.txt is:
 #
-# Then: the [ActualConfigFile].FileName setting is checked: if it points to a file, that one is loaded.
-#
-# On my system, the actual config file is outside the directory structure, and so it won't get checked in ever...
-# That is, config.txt will be:
 # [ActualConfigFile]
 # FileName = {Windows Path}
+#
+#
 [ActualConfigFile]
 FileName = NA
-[Logging]
-# "Default" means in the "logs" directory below myplatform.
+[Logging]ans in the "logs" directory below myplatform.
 LogDirectory = DEFAULT
+# TODO: set the log formatting strings here...
+#------------------------------------------------------------------
+# High level "database parameters." For a particular database (like MySQL), it should have its
+# own section of parameters.
 [Database]
 Default=TXT
 TickerSeparator=@
+# "Default" me
+#-------------------------------------------------------------------
+# Providers are specified by {ticker_code} = {Provider Name}
+# If you don't like the ticker code assignments, you can re-map them...
 [Providers]
-DBNomics=D
+D=DBnomics

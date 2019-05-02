@@ -1,7 +1,11 @@
 """
 myplatform - Glue code for a unified work environment.
 
-*Under Construction*
+*Under Construction* See Plans.txt (in the parent directory) to see what is going on.
+
+Note: importing this file triggers configuration loading. If this blows up, just importing the module
+causes Python to throw up all over you. I may make this behaviour more graceful, but for now, I assume that
+users are Python programmers who can figure out what went wrong from the error messages.
 
 Copyright 2019 Brian Romanchuk
 
