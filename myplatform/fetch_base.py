@@ -42,6 +42,7 @@ def fetch(ticker, database='SQL', dropna=True):
     full_name = os.path.join(os.path.dirname(__file__), 'text_database', filename)
     if os.path.exists(full_name):
         # Load the file...
+        log('loading from %s', full_name)
         df = pandas.read_csv(filepath_or_buffer=full_name, sep='\t', parse_dates=True, index_col=0)
         ser = pandas.Series(df[df.columns[0]])
         return ser

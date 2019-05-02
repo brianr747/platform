@@ -22,13 +22,20 @@ import os.path
 # As a convenience, use the "logging.info" function as log.
 from logging import info as log
 from myplatform.fetch_base import fetch
+import myplatform.configuration
 
 
+PlatformConfiguration = myplatform.configuration.load_platform_configuration()
 import myplatform.utils as utils
+
 
 LogInfo = utils.PlatformLogger()
 # By default, go into the "logs" directory below this file.
-LogInfo.LogDirectory = os.path.join(os.path.dirname(__file__), 'logs')
+if PlatformConfiguration['Logging']['LogDirectory'] == 'DEFAULT':
+    LogInfo.LogDirectory = os.path.join(os.path.dirname(__file__), 'logs')
+else:
+    LogInfo.LogDirectory = PlatformConfiguration['Logging']['LogDirectory']
+
 
 def start_log(fname=None):
     global LogInfo

@@ -1,0 +1,28 @@
+# Example Configuration File
+#
+# Managed by configuration.py; uses built-in configparser.
+#
+# In order to avoid anyone (like me...) pushing their API keys, database login credentials, etc.
+# onto GitHub, will have a somewhat convoluted configuration structure.
+#
+# (1) If the file "config.txt" in this directory exists, it is loaded. (The file does not exist in the repository,
+# and I have set .gitignore to ignore it.)
+#
+# (2) Otherwise, this file is loaded.
+#
+# Then: the [ActualConfigFile].FileName setting is checked: if it points to a file, that one is loaded.
+#
+# On my system, the actual config file is outside the directory structure, and so it won't get checked in ever...
+# That is, config.txt will be:
+# [ActualConfigFile]
+# FileName = {Windows Path}
+[ActualConfigFile]
+FileName = NA
+[Logging]
+# "Default" means in the "logs" directory below myplatform.
+LogDirectory = DEFAULT
+[Database]
+Default=TXT
+TickerSeparator=@
+[Providers]
+DBNomics=D
