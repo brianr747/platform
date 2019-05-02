@@ -29,8 +29,12 @@ LogDirectory = DEFAULT
 # High level "database parameters." For a particular database (like MySQL), it should have its
 # own section of parameters.
 [Database]
-Default=TXT
+Default=TEXT
 TickerSeparator=@
+# Data associated with each database are saved as separate sections.
+# Naming convention: D_{database_ticker}
+[D_TEXT]
+directory=text_database
 # "Default" me
 #-------------------------------------------------------------------
 # Providers are specified by {ticker_code} = {Provider Name}

@@ -21,6 +21,7 @@ import logging
 import myplatform.utils as utils
 from myplatform import log
 import myplatform.providers.provider_dbnomics as provider_dbnomics
+import myplatform.databases as databases
 
 def fetch(ticker, database='SQL', dropna=True):
     """
@@ -35,28 +36,24 @@ def fetch(ticker, database='SQL', dropna=True):
     # NOTE: This will get fancier, but don't over-design for now...
     if not database=='TEXT':
         raise NotImplementedError('Only the text database supported!')
+    database_manager = databases.Databases[database]
     source_code, source_ticker = utils.split_ticker_information(ticker)
     if not source_code == 'D':
         raise NotImplementedError('Only DBnomics (D) supported for now...')
-    filename = utils.convert_ticker_to_variable(ticker) + '.txt'
-    full_name = os.path.join(os.path.dirname(__file__), 'text_database', filename)
-    if os.path.exists(full_name):
+
+    if database_manager.Exists(ticker):
         # Load the file...
-        log('loading from %s', full_name)
-        df = pandas.read_csv(filepath_or_buffer=full_name, sep='\t', parse_dates=True, index_col=0)
-        ser = pandas.Series(df[df.columns[0]])
-        return ser
+        return database_manager.Retrieve(ticker)
     else:
         log('Fetching %s', ticker)
         ser_list = provider_dbnomics.fetch(source_ticker)
         if dropna:
             ser_list = [x.dropna() for x in ser_list]
-        log('Writing to %s', full_name)
+        if len(ser_list) > 1:
+            raise NotImplementedError('More than one series in a fetch not supported')
+        log('Writing %s', ticker)
         for x in ser_list:
-            x.to_csv(path_or_buf=full_name, sep='\t', header=True)
-    if len(ser_list) > 1:
-        logging.error('Should not have fetches that return multiple series...')
-
+            database_manager.Write(x, x.name)
     return ser_list[0]
 
 

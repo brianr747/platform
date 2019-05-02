@@ -59,7 +59,11 @@ def convert_ticker_to_variable(ticker):
     """
     if len(ticker) == 0:
         raise ValueError('Cannot deal with empty tickers')
-    ticker = re.sub('[^0-9a-zA-Z_]', '_', ticker)
+    try:
+        ticker = re.sub('[^0-9a-zA-Z_]', '_', ticker)
+    except:
+        print('Failure parsing', ticker)
+        raise
     # Not sure how to this with re
     if ticker[0].isdigit():
         ticker = '_' + ticker
@@ -76,3 +80,10 @@ def split_ticker_information(ticker):
     """
     source_code, source_ticker = ticker.split('@')
     return (source_code, source_ticker)
+
+def get_platform_directory():
+    """
+    Where is the directory of this package? (Used as default position for files).
+    :return: str
+    """
+    return os.path.dirname(__file__)
