@@ -50,26 +50,34 @@ import dbnomics
 import pandas
 import numpy
 
+import myplatform
 
-def fetch(query_ticker):
-    """
-    Initial stab at querying. Will refactor code into a subclass...
 
-    Can only support single series queries...
-    :param query_ticker: str
-    :return: list
-    """
-    df = dbnomics.fetch_series(query_ticker)
-    tickers = set(df.series_code)
-    if len(tickers) > 1:
-        raise NotImplementedError('Multiple series queries not yet supported')
-    ser = pandas.Series(df.value)
-    ser.index = df.period
-    ser.name = 'D@{0}/{1}/{2}'.format(df['provider_code'][0], df['dataset_code'][0], df['series_code'][0])
-    # Convert 'NA' to NaN
-    ser.replace('NA', numpy.nan)
-    # Always return a list of series. Only the user interface will convert list to a single pandas.Series
-    return [ser,]
+class ProviderDBnomics(myplatform.ProviderWrapper):
+    def __init__(self):
+        super(ProviderDBnomics, self).__init__(name='DBnomics')
+
+
+    def fetch(self, query_ticker):
+        """
+        Initial stab at querying. Will refactor code into a subclass...
+
+        Can only support single series queries...
+        :param query_ticker: str
+        :return: list
+        """
+        df = dbnomics.fetch_series(query_ticker)
+        tickers = set(df.series_code)
+        if len(tickers) > 1:
+            raise NotImplementedError('Multiple series queries not yet supported')
+        ser = pandas.Series(df.value)
+        ser.index = df.period
+        ser.name = '{0}@/{1}/{2}/{3}'.format(self.ProviderCode, df['provider_code'][0], df['dataset_code'][0],
+                                             df['series_code'][0])
+        # Convert 'NA' to NaN
+        ser.replace('NA', numpy.nan)
+        # Always return a list of series. Only the user interface will convert list to a single pandas.Series
+        return [ser,]
 
 
 

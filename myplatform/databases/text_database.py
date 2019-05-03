@@ -21,10 +21,9 @@ import os
 import pandas
 
 import myplatform
-import myplatform.databases as databases
 import myplatform.utils
 
-class TextDatabase(databases.DatabaseManager):
+class TextDatabase(myplatform.DatabaseManager):
     def __init__(self):
         self.Directory = None
 
