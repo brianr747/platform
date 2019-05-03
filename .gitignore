@@ -1,7 +1,11 @@
 # Project specific
 myplatform/logs/*.txt
 myplatform/config.txt
+myplatform/text_database/*.txt
 legacy/R/images/*.png
+legacy/R/text_database/*.txt
+
+
 # R files
 .RData
 .Rhistory

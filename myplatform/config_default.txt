@@ -41,3 +41,9 @@ directory=text_database
 # If you don't like the ticker code assignments, you can re-map them...
 [Providers]
 D=DBnomics
+F=FRED
+U=User
+# Provider-specific Info Pre-pend "P_" to name
+[P_FRED]
+# Need to get a free API key from the St. Louis FED. (Put into an external config file if you are using GIT),
+api_key=NONE

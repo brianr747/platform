@@ -1,0 +1,9 @@
+"""
+Plot the 10-year US Treasury/Euro area AAA govvie  spread in 4 -- count'em, 4 -- lines of code.
+(Couldn't find a daily bund series...)
+"""
+
+from myplatform import fetch, quick_plot
+ust10 = fetch('F@DGS10')
+euro_AAA_10 = fetch('D@Eurostat/irt_euryld_d/D.EA.PYC_RT.Y10.CGB_EA_AAA')
+quick_plot(ust10-euro_AAA_10, title='U.S. 10Y Spread Over AAA-Rated Euro Govvie')

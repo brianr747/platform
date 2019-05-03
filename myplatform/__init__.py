@@ -25,7 +25,13 @@ limitations under the License.
 import os.path
 # As a convenience, use the "logging.info" function as log.
 from logging import info as log, info
-
+try:
+    import matplotlib.pyplot as plt
+    from pandas.plotting import register_matplotlib_converters
+    register_matplotlib_converters()
+except ImportError:
+    plt = None
+    pass
 
 import myplatform.configuration
 from myplatform import utils as utils
@@ -156,9 +162,19 @@ class ProviderList(object):
         # Need to hide this import until we have finished importing all the class definitions.
         # This is because the provider wrappers probably import this file.
         import myplatform.providers.provider_dbnomics
-        obj = myplatform.providers.provider_dbnomics.ProviderDBnomics()
-        print(obj.ProviderCode)
-        self.ProviderDict[obj.ProviderCode] = obj
+        import myplatform.providers.provider_fred
+        import myplatform.providers.provider_user
+        self.AddProvider(myplatform.providers.provider_dbnomics.ProviderDBnomics())
+        self.AddProvider(myplatform.providers.provider_fred.ProviderFred())
+        self.AddProvider(myplatform.providers.provider_user.ProviderUser())
+
+    def AddProvider(self, obj):
+         """
+         Add a provider
+         :param obj: ProviderWrapper
+         :return:
+         """
+         self.ProviderDict[obj.ProviderCode] = obj
 
     def __getitem__(self, item):
         """
@@ -177,10 +193,6 @@ def init_package():
     """
     Databases.Initialise()
     Providers.Initialise()
-
-
-
-
 
 def fetch(ticker, database='Default', dropna=True):
     """
@@ -222,6 +234,22 @@ def fetch(ticker, database='Default', dropna=True):
         for x in ser_list:
             database_manager.Write(x, x.name)
     return ser_list[0]
+
+def quick_plot(ser, title=None):
+    """
+    There's some overhead with plotting...
+    :param ser: pandas.Series
+    :return:
+    """
+    if plt is None:
+        raise ImportError('Was not able to import plotting libraries (matplotlib.pyplot) or the converter.')
+    plt.plot(ser)
+    if title is None:
+        title = ser.name
+    plt.title(title)
+    plt.grid(True)
+    plt.show()
+
 
 # If we have problems with initialisation, may need to not execute here - user has to call.
 init_package()
