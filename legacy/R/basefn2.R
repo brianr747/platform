@@ -5,7 +5,7 @@
 
 
 require("extrafont")
-extrafont::loadfonts(device="win")
+# extrafont::loadfonts(device="win")
 require("RODBC")
 require("xts")
 require("ggplot2")
@@ -21,6 +21,7 @@ require("lubridate")
 require("TTR")
 
 
+source('platformstartup.R')
 
 
 BondEconomicsBlue <- function() {return("#4D469C")}

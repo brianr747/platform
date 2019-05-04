@@ -245,6 +245,14 @@ def fetch(ticker, database='Default', dropna=True):
     return ser_list[0]
 
 def fetch_df(ticker, database='Default', dropna=True):
+    """
+    Return a DataFrame. Used by R.
+
+    :param ticker: str
+    :param database: str
+    :param dropna: bool
+    :return: pandas.DataFrame
+    """
     ser = fetch(ticker, database, dropna)
     df = pandas.DataFrame({'series_dates': ser.index, 'series_values': ser.values})
     return df
