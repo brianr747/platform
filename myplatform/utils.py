@@ -22,6 +22,7 @@ import logging
 import sys
 import os
 import re
+import datetime
 
 class PlatformLogger(object):
     """
@@ -87,3 +88,62 @@ def get_platform_directory():
     :return: str
     """
     return os.path.dirname(__file__)
+
+def entry_lookup(target, row, case_sensitive=True):
+    """
+    Return the index of a specified target value in a list.
+    Throws a KeyError if no match
+    :param target: str
+    :param row: list
+    :param case_sensitive: bool
+    :return: int
+    """
+    if case_sensitive:
+        for i in range(0, len(row)):
+            if row[i] == target:
+                return i
+        raise KeyError('{0} not found'.format(target))
+    else:
+        target = target.lower()
+        for i in range(0, len(row)):
+            if row[i].lower() == target:
+                return i
+        raise KeyError('{0} not found'.format(target))
+
+def remove_non_ascii(x):
+    """
+    Assumes utf-8
+    Taken from https://stackoverflow.com/questions/1342000/how-to-make-the-python-interpreter-correctly-handle-non-ascii-characters-in-stri
+    :param x:
+    :return:
+    """
+    return "".join(i for i in x if ord(i) < 128)
+
+# Date alignment functions.
+
+def align_by_month(year, month, freq='M'):
+    """
+    How are calendar dates aligned versus low frequency (monthly, quarterly, annual)...
+
+    By default, first of month convention.
+
+    You can pass year/month as strings; forced to int
+
+    :param year: int
+    :param month: int
+    :param freq: str
+    :return: datetime.date
+    """
+    freq = freq.upper()
+    if freq == 'M':
+        return datetime.date(int(year), int(month), 1)
+    else:
+        raise NotImplementedError('align_by_month() unsupported frequency: {0}'.format(freq))
+
+def iso_string_to_date(d):
+    """
+    Convert an ISO string date to a datetime.date
+    :param d: str
+    :return: datetime.date
+    """
+    return datetime.date(int(d[0:4]), int(d[5:7]), int(d[-2:]))

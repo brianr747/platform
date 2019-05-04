@@ -1,4 +1,4 @@
-# Defauly Configuration File
+# Default Configuration File
 #
 # Managed by configuration.py; uses built-in configparser.
 #
@@ -22,7 +22,8 @@
 #
 [ActualConfigFile]
 FileName = NA
-[Logging]ans in the "logs" directory below myplatform.
+[Logging]
+# Default in the "logs" directory below myplatform.
 LogDirectory = DEFAULT
 # TODO: set the log formatting strings here...
 #------------------------------------------------------------------
@@ -31,23 +32,34 @@ LogDirectory = DEFAULT
 [Database]
 Default=TEXT
 TickerSeparator=@
+dates_column=series_dates
+values_column=series_values
+#------------------------------------------------------------------------
 # Data associated with each database are saved as separate sections.
 # Naming convention: D_{database_ticker}
 [D_TEXT]
 directory=text_database
-# "Default" me
+
 # Generic provider options
 [ProviderOptions]
 echo_access=True
 #-------------------------------------------------------------------
 # Providers are specified by {ticker_code} = {Provider Name}
 # If you don't like the ticker code assignments, you can re-map them...
-
+#++++++++++++++++++++++++++++++++++++++
 [Providers]
 D=DBnomics
 F=FRED
 U=User
+CCSV=CANSIM_CSV
+#+++++++++++++++++++++++++++++
 # Provider-specific Info Pre-pend "P_" to name
 [P_FRED]
 # Need to get a free API key from the St. Louis FED. (Put into an external config file if you are using GIT),
 api_key=NONE
+[P_CCSV]
+# Directory information . Note that if these defaults are used, this means it goes below the providers directory.
+# Which means that we don't need to worry about the directory separaor in this case.
+zip_directory = cansim_csv
+parsed_directory = cansim_csv/parsed
+zip_tail=-eng.zip

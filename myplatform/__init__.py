@@ -200,6 +200,15 @@ def init_package():
     Databases.Initialise()
     Providers.Initialise()
 
+class PlatformError(Exception):
+    pass
+
+class TickerError(PlatformError):
+    pass
+
+class TickerNotFoundError(PlatformError):
+    pass
+
 def fetch(ticker, database='Default', dropna=True):
     """
     Fetch a series from database; may create series and/or update as needed.

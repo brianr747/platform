@@ -1,0 +1,1 @@
+Folder where CANSIM_CSV sends parsed output.

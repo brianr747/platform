@@ -1,0 +1,1 @@
+Folder where you save the downloaded ZIP files (don't unzip).
