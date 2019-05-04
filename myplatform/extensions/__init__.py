@@ -32,6 +32,26 @@ import os
 
 
 def load_extensions():
+    """
+    Imports all *.py files in this directory (in an arbitrary order).
+
+    All errors are caught and largely ignored (other than listing the module that failed, and a text dump on the
+    console.
+
+    Returns [loaded_extensions, failed_extensions]
+
+    The operations on import of an extension:
+
+    (1) The import itself. If you wish, you can just put a script that is executed.
+    (2) If the module has a variable (hopefully a string) with the name 'extension_name', that is used as the extension
+    name for display, otherwise it is the name of the text file.
+    (3) If the module has a main() function, it is called.
+
+    Since logging is not yet initialised, things are dumped to console rather than logged. (If you really need logging
+    for debugging purposes, you could turn on logging in the extension.)
+
+    :return: list
+    """
     # There might be some iteration tools in importlib, but no time to read documentation...
     this_dir = os.path.dirname(__file__)
     flist = os.listdir(this_dir)

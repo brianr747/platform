@@ -6,17 +6,17 @@ EarlyAdopters.txt
 At the time of writing, my objective is just to get a system that I can use so that I can finish my book. In particular,
 I just need access to DBnomics data so that I can plot it in R. Once the book is done, I will fill out the platform.
 
-The structures are not yet in place, but the fetching is built around "databases" and "providers."
+For some time, the package may be overhauled a lot as a result of refactoring efforts. Files are moving, disappearing,
+etc. as I try to see what is the most logical structure.
+
+The structures are not yet fully in place, but the fetching is built around "databases" and "providers."
 
 - Currently, only a text file database ("TXT") is supported; "MySQL" will be added next. (This will make the platform
 interesting...)
-- The only provider is DB.nomics. I could add FRED easily - but the user will need their own API key. (You need to
-request a free key from the FRED people.)
+- Have DB.nomics, FRED (need free API key), and "user database". The user database allows for library code to create
+series dynamically and are accessed by the same interface as fetching.
 
-If you want to extend the capabilities, the best way will be to "monkey patch" your own database/provider code into the
-framework. If I have time, I will do this within the *sfc_models* package to give an example. The way monkey-patching
-works is that you import myplatform, and then insert your modifications into the loaded class objects that handle
-providers/databases.
-
-At the time of writing this is not possible, but I will build out the "fetch" routine to support this relatively soon
-(I hope).
+If you want to extend the capabilities, the package initialisation loads all Python source files (*.py) in the
+"extensions" sub-package. This is how the hooks to the DB.nomics and FRED providers are added. Failures on loaded
+extensions are noted, but are stepped over. This means that the package will run even if you are missing the underlying
+provider/database API's, and you can extend/monkey-patch the framework without touching the source code.
