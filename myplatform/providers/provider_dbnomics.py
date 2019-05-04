@@ -1,5 +1,5 @@
 """
-provider_dbnomics.py
+hook_provider_dbnomics.py
 
 Functions to fetch data from DBNomics, and convert to standard format.
 
@@ -72,7 +72,7 @@ class ProviderDBnomics(myplatform.ProviderWrapper):
             raise NotImplementedError('Multiple series queries not yet supported')
         ser = pandas.Series(df.value)
         ser.index = df.period
-        ser.name = '{0}@/{1}/{2}/{3}'.format(self.ProviderCode, df['provider_code'][0], df['dataset_code'][0],
+        ser.name = '{0}@{1}/{2}/{3}'.format(self.ProviderCode, df['provider_code'][0], df['dataset_code'][0],
                                              df['series_code'][0])
         # Convert 'NA' to NaN
         ser.replace('NA', numpy.nan)

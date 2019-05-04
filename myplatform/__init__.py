@@ -23,8 +23,11 @@ limitations under the License.
 """
 
 import os.path
+import configparser
+import pandas
+
 # As a convenience, use the "logging.info" function as log.
-from logging import info as log, info
+from logging import info as log, info, debug as log_debug
 try:
     import matplotlib.pyplot as plt
     from pandas.plotting import register_matplotlib_converters
@@ -35,6 +38,7 @@ except ImportError:
 
 import myplatform.configuration
 from myplatform import utils as utils
+import myplatform.extensions
 
 try:
     # It would be good to log the loading of configuration information, except that the logging
@@ -72,6 +76,9 @@ class DatabaseManager(object):
     """
     This is the base class for Database Managers.
     """
+    def __init__(self):
+        self.Name = ''
+
     def Exists(self, ticker):
         """
 
@@ -141,8 +148,10 @@ class ProviderWrapper(object):
     if we get Eurostat data from Eurostat itself. However, we can get Eurostat data from DB.nomics.
 
     """
+    Name: str
+
     def __init__(self, name='VirtualObject'):
-        self.ProviderName = name
+        self.Name = name
         self.ProviderCode = ''
         if not name == 'VirtualObject':
             self.ProviderCode = get_provider_code(name)
@@ -157,15 +166,12 @@ class ProviderList(object):
     """
     def __init__(self):
         self.ProviderDict = {}
+        self.EchoAccess = PlatformConfiguration['ProviderOptions'].getboolean('echo_access')
 
     def Initialise(self):
         # Need to hide this import until we have finished importing all the class definitions.
         # This is because the provider wrappers probably import this file.
-        import myplatform.providers.provider_dbnomics
-        import myplatform.providers.provider_fred
         import myplatform.providers.provider_user
-        self.AddProvider(myplatform.providers.provider_dbnomics.ProviderDBnomics())
-        self.AddProvider(myplatform.providers.provider_fred.ProviderFred())
         self.AddProvider(myplatform.providers.provider_user.ProviderUser())
 
     def AddProvider(self, obj):
@@ -205,8 +211,8 @@ def fetch(ticker, database='Default', dropna=True):
     :return: pandas.Series
     """
     # NOTE: This will get fancier, but don't over-design for now...
-    if database=='Default':
-        database = 'TEXT'
+    if database.lower()=='default':
+        database = PlatformConfiguration["Database"]["Default"]
     if not database=='TEXT':
         raise NotImplementedError('Only the text database supported!')
     database_manager = Databases[database]
@@ -222,9 +228,12 @@ def fetch(ticker, database='Default', dropna=True):
     if database_manager.Exists(ticker):
         # TODO: Handle series updates.
         # Return what is on the database.
+        log_debug('Fetching {0} from {1}'.format(ticker, database_manager.Name))
         return database_manager.Retrieve(ticker)
     else:
-        log('Fetching %s', ticker)
+        log_debug('Fetching %s', ticker)
+        if Providers.EchoAccess:
+            print('Going to {0} to fetch {1}'.format(provider_manager.Name, ticker))
         ser_list = provider_manager.fetch(provider_ticker)
         if dropna:
             ser_list = [x.dropna() for x in ser_list]
@@ -234,6 +243,11 @@ def fetch(ticker, database='Default', dropna=True):
         for x in ser_list:
             database_manager.Write(x, x.name)
     return ser_list[0]
+
+def fetch_df(ticker, database='Default', dropna=True):
+    ser = fetch(ticker, database, dropna)
+    df = pandas.DataFrame({'series_dates': ser.index, 'series_values': ser.values})
+    return df
 
 def quick_plot(ser, title=None):
     """
@@ -253,3 +267,6 @@ def quick_plot(ser, title=None):
 
 # If we have problems with initialisation, may need to not execute here - user has to call.
 init_package()
+
+# Do this last
+LoadedExtensions, FailedExtensions = myplatform.extensions.load_extensions()

@@ -24,7 +24,7 @@ myplatform.start_log()
 def main():
     log('Starting')
     # Need to pre-pend 'D@' to show the provider.
-    uk = fetch('D@BOE/8745/LPMVTVQ', database='TEXT')
+    # uk = fetch('D@BOE/8745/LPMVTVQ', database='TEXT')
     ser = fetch('D@Eurostat/namq_10_gdp/Q.CP_MEUR.SCA.B1GQ.EL', database='TEXT')
     # Load the same series multiple times; see the log to see that it is only fetched at most once from
     # the provider
@@ -33,7 +33,6 @@ def main():
         fetch('D@Eurostat/namq_10_gdp/Q.CP_MEUR.SCA.B1GQ.EL', database='TEXT')
     plt.plot(ser)
     plt.show()
-
 
 
 if __name__ == '__main__':

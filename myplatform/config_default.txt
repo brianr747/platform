@@ -36,9 +36,13 @@ TickerSeparator=@
 [D_TEXT]
 directory=text_database
 # "Default" me
+# Generic provider options
+[ProviderOptions]
+echo_access=True
 #-------------------------------------------------------------------
 # Providers are specified by {ticker_code} = {Provider Name}
 # If you don't like the ticker code assignments, you can re-map them...
+
 [Providers]
 D=DBnomics
 F=FRED

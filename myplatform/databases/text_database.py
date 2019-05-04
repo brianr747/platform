@@ -25,6 +25,8 @@ import myplatform.utils
 
 class TextDatabase(myplatform.DatabaseManager):
     def __init__(self):
+        super().__init__()
+        self.Name = 'TEXT'
         self.Directory = None
 
     def CheckDirectory(self):
@@ -39,7 +41,8 @@ class TextDatabase(myplatform.DatabaseManager):
 
     def Exists(self, ticker):
         self.CheckDirectory()
-        return os.path.exists(os.path.join(self.Directory, TextDatabase.GetFileName(ticker)))
+        full_file = os.path.join(self.Directory, TextDatabase.GetFileName(ticker))
+        return os.path.exists(full_file)
 
     def Retrieve(self, ticker):
         self.CheckDirectory()

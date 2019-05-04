@@ -55,7 +55,10 @@ def print_configuration(config):
     for sec in config.sections():
         print('[{0}]'.format(sec))
         for k in config[sec]:
-            print(k, '=', config[sec][k])
+            if k.lower() in ('api_key', 'password'):
+                print(k, '= *********')
+            else:
+                print(k, '=', config[sec][k])
 
 
 def main():

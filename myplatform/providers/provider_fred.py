@@ -1,5 +1,5 @@
 """
-provider_fred.py
+hook_provider_fred.py
 
 Functions to fetch data from FRED (St. Louis Fed), and convert to standard format.
 
