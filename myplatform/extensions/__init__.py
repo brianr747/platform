@@ -58,6 +58,7 @@ def load_extensions():
     exclusion_list = ['__init__']
     loaded_extensions = []
     failed_extensions = []
+    decorated_fails = []
     for fname in flist:
         fname = fname.lower()
         if not fname.endswith('.py'):
@@ -79,4 +80,5 @@ def load_extensions():
             print('Failure loading extension:', fname)
             print(type(ex), str(ex))
             failed_extensions.append(fname)
-    return (loaded_extensions, failed_extensions)
+            decorated_fails.append((fname, str(ex)))
+    return (loaded_extensions, failed_extensions, decorated_fails)

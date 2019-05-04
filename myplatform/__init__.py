@@ -27,7 +27,7 @@ import configparser
 import pandas
 
 # As a convenience, use the "logging.info" function as log.
-from logging import info as log, info, debug as log_debug
+from logging import info as log, info, debug as log_debug, warning as log_warning
 try:
     import matplotlib.pyplot as plt
     from pandas.plotting import register_matplotlib_converters
@@ -276,5 +276,21 @@ def quick_plot(ser, title=None):
 # If we have problems with initialisation, may need to not execute here - user has to call.
 init_package()
 
+def log_extension_status():
+    """
+    After the fact logging of what extensions were loaded. Useful for R
+    :return:
+    """
+    log_debug('Successful Extension Initialisation')
+    for e in LoadedExtensions:
+        log_debug(e)
+    if len(DecoratedFailedExtensions) == 0:
+        return
+    log_warning('Failed Extension Initialisation')
+    for f,warn in DecoratedFailedExtensions:
+        log_warning('Extension_File\t{0}\tMessage:\t{1}'.format(f, warn))
+
+
 # Do this last
-LoadedExtensions, FailedExtensions = myplatform.extensions.load_extensions()
+LoadedExtensions, FailedExtensions, DecoratedFailedExtensions = myplatform.extensions.load_extensions()
+
