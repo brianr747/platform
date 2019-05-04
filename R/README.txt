@@ -14,4 +14,4 @@ want to replicate my work.
 I did this by putting the appropriate PYTHONPATH setting in the Renviron.site file. (On my machine,
 C:\Program Files\R\R-3.5.3\etc)
 
-If this package ever makes the big time, it will be PyPi, and can do installation with pip install.
+If this package ever makes the big time, it will be on PyPi, and can do installation with pip install.
