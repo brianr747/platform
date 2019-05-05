@@ -1,8 +1,11 @@
 # platform
 Platform to download, manipulate and plot data. Mainly Python, with some R. Built around a MySQL database (eventually).
 
-Python 3 only. I work on Python 3.7, and no idea about backward 
-compatability issues.
+(Note: if this is every to be a serious project, it needs a better name. Since all my code is 
+in a single PyCharm project, I can refactor the name easily, but users need to 
+know that the package name may shift.)
+
+Python 3 only. I work on Python 3.7, and no idea about backward compatibility issues.
 
 This repository is mainly for my own use for now; I am transferring my platform to a new computer, and decided to do a clean up 
 at the same time. In particular, the MySQL interface is not implemented.
