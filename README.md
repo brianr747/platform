@@ -1,9 +1,9 @@
 # platform
 Platform to download, manipulate and plot data. Mainly Python, with some R. Built around a MySQL database (eventually).
 
-(Note: if this is every to be a serious project, it needs a better name. Since all my code is 
-in a single PyCharm project, I can refactor the name easily, but users need to 
-know that the package name may shift.)
+(Note: if this is every to be a serious project, it needs a better package name. Since 
+all my code is  in a single PyCharm project, I can refactor the name easily, but users 
+need to know that the package name may shift.)
 
 Python 3 only. I work on Python 3.7, and no idea about backward compatibility issues.
 
@@ -28,7 +28,7 @@ of where this project is going.
 *Databases*
 
 - TEXT: Save each series as a text file in a local directory. This is
-good enough for a casual user, and is user for debugging and unit testing.
+good enough for a casual user, and is useful for debugging and unit testing.
 
 No meta-data support until the SQL interface is attacked.
 
@@ -45,7 +45,7 @@ mapped automatically to the clunkier provider tickers.)
 
 - If the requested series does not exist, the system goes to 
 the Provider and fetches it. (This is either an API call, or 
-parsing a downloaded table, as in the CANSIM_CSV interfae.)
+parsing a downloaded table, as in the CANSIM_CSV interface.)
 - If the series exists on the database, that series is returned
 (at the minimum.)
 - If the series is *USER* series, the appropriate Python code module
@@ -83,7 +83,11 @@ Python.)
 - Users can use the extension interface to monkey-patch the platform,
 so that any parts of the code that are horrifying can be replaced.
 - Unfortunately, very little in the way of unit tests (although some
-exist). The most important code here are 
+exist). The most important code here are  API calls and database interface, 
+which are painful for unit testing. (I should backfit some end-to-end testing,
+based on looking at text files.)
+
+
 
 *Analysis Support*
 
@@ -100,10 +104,10 @@ be configurable with config files.
 
 The main planned work (which will be done when heavy development 
 starts) is to create classes to clean up chart management: create
-a library of charts, that can be configured/customised ("chart talk*)
+a library of charts, that can be configured/customised ("chart talk")
 to create particular images for publication.
 
-On the analytics side, I might try to interfae with my *simple_pricers*
+On the analytics side, I might try to interface with my *simple_pricers*
 module, or if I am ambitious, *quantlib*. Needless to say, my focus
 would be on fixed income calculations (e.g., calculating total returns
 from par coupon data, forward rate approximations, etc.)
