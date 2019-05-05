@@ -23,7 +23,7 @@ of where this project is going.
 - DB.nomics
 - FRED (St. Louis Fed)
 - CANSIM manual downloaded table (CSV) parsing.
-- (Coming soon?) Quantl.
+- (Coming soon?) Quandl.
 
 *Databases*
 
