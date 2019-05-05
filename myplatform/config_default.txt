@@ -52,6 +52,7 @@ D=DBnomics
 F=FRED
 U=User
 CCSV=CANSIM_CSV
+Q=Quandl
 #+++++++++++++++++++++++++++++
 # Provider-specific Info Pre-pend "P_" to name
 [P_FRED]

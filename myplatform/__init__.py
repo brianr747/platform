@@ -294,6 +294,7 @@ def log_extension_status():
     for e in LoadedExtensions:
         log_debug(e)
     if len(DecoratedFailedExtensions) == 0:
+        log_debug('No extension loads failed.')
         return
     log_warning('Failed Extension Initialisation')
     for f,warn in DecoratedFailedExtensions:
