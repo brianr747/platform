@@ -34,20 +34,21 @@ class ProviderFred(myplatform.ProviderWrapper):
         super(ProviderFred, self).__init__(name='FRED')
 
 
-    def fetch(self, query_ticker):
+    def fetch(self, series_meta):
         """
         Do the fetch; will puke if do not have an API key in the config
         TODO: Look to see if FRED_API_KEY environment variable is set...
 
         Can only support single series queries...
-        :param query_ticker: str
+        :param series_meta: str
         :return: list
         """
+        query_ticker = series_meta.ticker_query
         api_key = myplatform.PlatformConfiguration['P_FRED']['api_key']
         if api_key.lower() == 'none':
             # KeyError - ha, ha, I kill myself...
             raise KeyError('Error: need to set the FRED API key in the config.txt; available from St. Louis Fed.')
         fred = fredapi.Fred(api_key=api_key)
         data = fred.get_series(query_ticker)
-        data.name = '{0}@{1}'.format(self.ProviderCode, query_ticker)
+        data.name = series_meta.ticker_full
         return [data,]

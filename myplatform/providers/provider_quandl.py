@@ -32,22 +32,27 @@ import myplatform
 
 
 class ProviderQuandl(myplatform.ProviderWrapper):
+    """
+    Quandl interface (https://www.quandl.com/)
+
+    """
     def __init__(self):
         super(ProviderQuandl, self).__init__(name='QUANDL')
 
 
-    def fetch(self, query_ticker):
+    def fetch(self, series_meta):
         """
         Do the fetch; will puke if you do too many queries in a day without an API key.
 
 
         Can only support single series queries...
-        :param query_ticker: str
+        :param series_meta: myplatform.SeriesMetaData
         :return: list
         """
+        query_ticker = series_meta.ticker_query
         df = quandl.get(query_ticker)
         # Need to convert to series.
         ser = df["Value"]
         ser.index = df.index
-        ser.name = '{0}@{1}'.format(self.ProviderCode, query_ticker)
+        ser.name = series_meta.ticker_full
         return [ser,]

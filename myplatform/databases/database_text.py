@@ -23,10 +23,10 @@ import pandas
 import myplatform
 import myplatform.utils
 
-class TextDatabase(myplatform.DatabaseManager):
+
+class DatabaseText(myplatform.DatabaseManager):
     def __init__(self):
-        super().__init__()
-        self.Name = 'TEXT'
+        super().__init__('Text File Database')
         self.Directory = None
 
     def CheckDirectory(self):
@@ -41,25 +41,26 @@ class TextDatabase(myplatform.DatabaseManager):
 
     def Exists(self, ticker):
         self.CheckDirectory()
-        full_file = os.path.join(self.Directory, TextDatabase.GetFileName(ticker))
+        full_file = os.path.join(self.Directory, DatabaseText.GetFileName(ticker))
         return os.path.exists(full_file)
 
     def Retrieve(self, ticker):
         self.CheckDirectory()
-        full_name = os.path.join(self.Directory, TextDatabase.GetFileName(ticker))
+        full_name = os.path.join(self.Directory, DatabaseText.GetFileName(ticker))
         df = pandas.read_csv(filepath_or_buffer=full_name, sep='\t', parse_dates=True, index_col=0)
         ser = pandas.Series(df[df.columns[0]])
         return ser
 
-    def Write(self, ser, ticker):
+    def Write(self, ser, series_meta):
         """
 
         :param ser: pandas.Series
-        :param ticker: str
+        :param series_meta: myplatform.SeriesMetaData
         :return:
         """
         self.CheckDirectory()
-        full_name = os.path.join(self.Directory, TextDatabase.GetFileName(ticker))
+        ticker = series_meta.ticker_full
+        full_name = os.path.join(self.Directory, DatabaseText.GetFileName(ticker))
         ser.to_csv(path_or_buf=full_name, sep='\t', header=True)
 
 

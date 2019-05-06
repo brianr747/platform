@@ -1,5 +1,5 @@
 # platform
-Platform to download, manipulate and plot data. Mainly Python, with some R. Built around a MySQL database (eventually).
+*Platform to download, manipulate and plot data. Mainly Python, with some R.*
 
 (Note: if this is every to be a serious project, it needs a better package name. Since 
 all my code is  in a single PyCharm project, I can refactor the name easily, but users 
@@ -31,6 +31,9 @@ of where this project is going.
 good enough for a casual user, and is useful for debugging and unit testing.
 
 No meta-data support until the SQL interface is attacked.
+
+(Note: Starting with sqlite3, since that is installed with Python. Will worry 
+about compatability with other SQL formats later.)
 
 *Dynamic Loading*
 
@@ -134,3 +137,5 @@ within pandas already. Instead, the effort is getting everything wrapped into a 
 Plans.txt has some thoughts on my plans for this project.
 
 EarlyAdopters.txt has some comments aimed at anyone who wants to use this package.
+
+DesignNotes.md has (suprisingly enough) design notes.

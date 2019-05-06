@@ -23,11 +23,12 @@ limitations under the License.
 """
 
 import os.path
-import configparser
 import pandas
+import traceback
 
 # As a convenience, use the "logging.info" function as log.
-from logging import info as log, info, debug as log_debug, warning as log_warning
+from logging import info as log, info, debug as log_debug, warning as log_warning, error as log_error
+
 try:
     import matplotlib.pyplot as plt
     from pandas.plotting import register_matplotlib_converters
@@ -72,12 +73,60 @@ def start_log(fname=None):
     LogInfo.StartLog(fname)
 
 
+class SeriesMetaData(object):
+    """
+    Class that holds series meta data used on the platform.
+    """
+    def __init__(self):
+        # Kind of strange, but does this series yet exist on the database in question?
+        self.Exists = False
+        self.series_id = -1
+        self.series_provider_code = ''
+        self.ticker_full = ''
+        self.ticker_local = ''
+        self.ticker_query = ''
+        self.ProviderMetaData = {}
+
 class DatabaseManager(object):
     """
     This is the base class for Database Managers.
+
+    Note: Only support full series replacement for now.
     """
-    def __init__(self):
-        self.Name = ''
+    def __init__(self, name='Virtual Object'):
+        self.Name = name
+        if not name == 'Virtual Object':
+            self.Code = PlatformConfiguration['DatabaseList'][name]
+        self.ReplaceOnly = True
+
+    def Find(self, ticker):
+        """
+        Can we find the ticker on the database? Default behaviour is generally adequate.
+        :param ticker: str
+        :return: SeriesMetaData
+        """
+        try:
+            provider_code, query_ticker = ticker.split('@')
+        except:
+            return self._FindLocal(ticker)
+        meta = SeriesMetaData()
+        meta.ticker_local = ''
+        meta.ticker_full = ticker
+        meta.ticker_query = query_ticker
+        meta.series_provider_code  = provider_code
+        meta.Exists = self.Exists(ticker)
+        # Provider-specific meta data data not supported yet.
+        return meta
+
+    def _FindLocal(self, local_ticker):
+        """
+        Databases that support local tickers should override this method.
+
+        :param local_ticker: SeriesMetaData
+        :return:
+        """
+        raise NotImplementedError('This database does not support local tickers')
+
 
     def Exists(self, ticker):
         """
@@ -87,11 +136,14 @@ class DatabaseManager(object):
         """
         raise NotImplementedError()
 
-    def Write(self, ser, ticker):
+    def Retrieve(self, full_ticker):
+        raise NotImplementedError()
+
+    def Write(self, ser, series_meta):
         """
 
         :param ser: pandas.Series
-        :param ticker: str
+        :param series_meta: SeriesMetaData
         :return:
         """
         raise NotImplementedError()
@@ -107,8 +159,16 @@ class DatabaseList(object):
     def Initialise(self):
         # Need to hide this import until we have finished importing all the class definitions.
         # This is because myplatform.databases.text_database imports this file.
-        import myplatform.databases.text_database
-        self.DatabaseDict['TEXT'] = myplatform.databases.text_database.TextDatabase()
+        import myplatform.databases.database_text
+        self.AddDatabase(myplatform.databases.database_text.DatabaseText())
+
+    def AddDatabase(self, wrapper):
+        """
+
+        :param wrapper: DatabaseManager
+        :return:
+        """
+        self.DatabaseDict[wrapper.Code] = wrapper
 
     def __getitem__(self, item):
         """
@@ -122,25 +182,6 @@ class DatabaseList(object):
 Databases = DatabaseList()
 
 
-def get_provider_code(provider_name):
-    """
-    Get the provider code associated with the given provider name in the configuration information.
-
-    Case insensitive name matching, provider codes are always upper case.
-
-    If we define two codes as being the same provider, will return one arbitrary choice...
-
-    :param provider_name: str
-    :return: str
-    """
-    # only trick is that the codes are the keys to the configuration section
-    code_section = PlatformConfiguration['Providers']
-    for k in code_section.keys():
-        if provider_name.lower() == code_section[k].lower():
-            return k.upper()
-    # If we reach this, no match!
-    raise KeyError('Provider "{0}" is not in the configuration information'.format(provider_name))
-
 class ProviderWrapper(object):
     """
     Data provider class. Note that we call them "providers" and not "sources" since the source is the
@@ -153,10 +194,11 @@ class ProviderWrapper(object):
     def __init__(self, name='VirtualObject'):
         self.Name = name
         self.ProviderCode = ''
+        self.IsExternal = True
         if not name == 'VirtualObject':
-            self.ProviderCode = get_provider_code(name)
+            self.ProviderCode = PlatformConfiguration['ProviderList'][name]
 
-    def fetch(self, provider_ticker):
+    def fetch(self, series_meta):
         raise NotImplementedError
 
 
@@ -222,49 +264,54 @@ def fetch(ticker, database='Default', dropna=True):
     # NOTE: This will get fancier, but don't over-design for now...
     if database.lower()=='default':
         database = PlatformConfiguration["Database"]["Default"]
-    if not database=='TEXT':
-        raise NotImplementedError('Only the text database supported!')
-    database_manager = Databases[database]
+    database_manager: DatabaseManager = Databases[database]
+    series_meta = database_manager.Find(ticker)
+    provider_code = series_meta.series_provider_code
     try:
-        provider_code, provider_ticker = utils.split_ticker_information(ticker)
-    except:
-        raise NotImplementedError('We assume that all tickers are of the form {provider{}@{provider_ticker}')
-    try:
-        provider_manager = Providers[provider_code]
+        provider_manager: ProviderWrapper = Providers[provider_code]
     except:
         raise KeyError('Unknown provider_code: ' + provider_code)
 
-    if database_manager.Exists(ticker):
+    if series_meta.Exists:
         # TODO: Handle series updates.
         # Return what is on the database.
         log_debug('Fetching {0} from {1}'.format(ticker, database_manager.Name))
         return database_manager.Retrieve(ticker)
     else:
+        if provider_manager.IsExternal:
+            _hook_fetch_external(provider_manager, ticker)
         log_debug('Fetching %s', ticker)
         if Providers.EchoAccess:
             print('Going to {0} to fetch {1}'.format(provider_manager.Name, ticker))
-        ser_list = provider_manager.fetch(provider_ticker)
+        ser_list = provider_manager.fetch(series_meta)
         if dropna:
             ser_list = [x.dropna() for x in ser_list]
         if len(ser_list) > 1:
+            # Not sure how more than one series will work with the SeriesMetaData
             raise NotImplementedError('More than one series in a fetch not supported')
         log('Writing %s', ticker)
-        for x in ser_list:
-            database_manager.Write(x, x.name)
+        ser = ser_list[0]
+        database_manager.Write(ser, series_meta)
     return ser_list[0]
 
 def fetch_df(ticker, database='Default', dropna=True):
     """
     Return a DataFrame. Used by R.
 
+    As a convenience for R users, dumps the last error to the log file.
+
     :param ticker: str
     :param database: str
     :param dropna: bool
     :return: pandas.DataFrame
     """
-    ser = fetch(ticker, database, dropna)
-    df = pandas.DataFrame({'series_dates': ser.index, 'series_values': ser.values})
-    return df
+    try:
+        ser = fetch(ticker, database, dropna)
+        df = pandas.DataFrame({'series_dates': ser.index, 'series_values': ser.values})
+        return df
+    except:
+        log_last_error()
+        raise
 
 def quick_plot(ser, title=None):
     """
@@ -299,6 +346,24 @@ def log_extension_status():
     log_warning('Failed Extension Initialisation')
     for f,warn in DecoratedFailedExtensions:
         log_warning('Extension_File\t{0}\tMessage:\t{1}'.format(f, warn))
+
+
+def _hook_fetch_external(provider_manager, ticker):
+    """
+    Hook for customisation when external reference is hit.
+   :param provider_manager: ProviderManager
+   :param ticker: str
+   :return: None
+   """
+    pass
+
+def log_last_error():
+    """
+    Convenience function to log the last error.
+    :return:
+    """
+    msg = traceback.format_exc()
+    log_error(msg)
 
 
 # Do this last

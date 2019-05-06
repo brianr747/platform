@@ -46,14 +46,15 @@ class ProviderCansim_Csv(myplatform.ProviderWrapper):
         self.ZipTail = myplatform.PlatformConfiguration['P_CCSV']['zip_tail']
 
 
-    def fetch(self, query_ticker):
+    def fetch(self, series_meta):
         """
         Do the fetch.
 
         Can only support single series queries...
-        :param query_ticker: str
+        :param series_meta: myplatform.SeriesMetaData
         :return: list
         """
+        query_ticker = series_meta.ticker_query
         try:
             table_name, vector = query_ticker.split('|')
         except:
@@ -153,11 +154,6 @@ class ProviderCansim_Csv(myplatform.ProviderWrapper):
                 vector_list.sort()
                 for v in vector_list:
                     f_meta.write('\t'.join(last_rows[v]) + '\n')
-
-
-
-
-
 
 
 

@@ -26,13 +26,14 @@ class ProviderUser(myplatform.ProviderWrapper):
             raise NotImplementedError('There is no function that handles the query ticker: {0}'.format(query_ticker))
 
 
-    def fetch(self, query_ticker):
+    def fetch(self, series_meta):
         """
         Get a series
-        :param query_ticker: str
+        :param series_meta: myplatform.SeriesMetaData
         :return: list
         """
+        query_ticker = series_meta.ticker_query
         fn = self.MapTicker(query_ticker)
         ser = fn(query_ticker)
-        ser.name = '{0}@{1}'.format(self.ProviderCode, query_ticker)
+        ser.name = series_meta.ticker_query
         return [ser,]

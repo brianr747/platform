@@ -58,14 +58,15 @@ class ProviderDBnomics(myplatform.ProviderWrapper):
         super(ProviderDBnomics, self).__init__(name='DBnomics')
 
 
-    def fetch(self, query_ticker):
-        """
+    def fetch(self, series_meta):
+        """"
         Initial stab at querying. Will refactor code into a subclass...
 
         Can only support single series queries...
-        :param query_ticker: str
+        :param series_meta: myplatform.SeriesMetaData
         :return: list
         """
+        query_ticker = series_meta.ticker_query
         df = dbnomics.fetch_series(query_ticker)
         tickers = set(df.series_code)
         if len(tickers) > 1:

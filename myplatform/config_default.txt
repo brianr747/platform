@@ -25,21 +25,35 @@ FileName = NA
 [Logging]
 # Default in the "logs" directory below myplatform.
 LogDirectory = DEFAULT
+[Options]
+UseMonkeyPatchExample = False
 # TODO: set the log formatting strings here...
 #------------------------------------------------------------------
 # High level "database parameters." For a particular database (like MySQL), it should have its
 # own section of parameters.
 [Database]
 Default=TEXT
+# What variant of "SQL" is mapped to "SQL"?
+SQL=SQLITE
 TickerSeparator=@
 dates_column=series_dates
 values_column=series_values
+# SQL configuration information. This could get huge, so it may migrate to a new file.
+[SQL]
+meta_table = SeriesMeta
+data_table = SeriesData
+[DatabaseList]
+Text File Database=TEXT
+SQLite Database=SQLite
 #------------------------------------------------------------------------
 # Data associated with each database are saved as separate sections.
 # Naming convention: D_{database_ticker}
 [D_TEXT]
 directory=text_database
-
+[D_SQLITE]
+# If left as "myplatform", drops the database file into myplatform base directory
+directory=myplatform
+file_name=platform.db
 # Generic provider options
 [ProviderOptions]
 echo_access=True
@@ -47,12 +61,12 @@ echo_access=True
 # Providers are specified by {ticker_code} = {Provider Name}
 # If you don't like the ticker code assignments, you can re-map them...
 #++++++++++++++++++++++++++++++++++++++
-[Providers]
-D=DBnomics
-F=FRED
-U=User
-CCSV=CANSIM_CSV
-Q=Quandl
+[ProviderList]
+DBnomics=D
+FRED=F
+User=U
+CANSIM_CSV=CCSV
+Quandl=Q
 #+++++++++++++++++++++++++++++
 # Provider-specific Info Pre-pend "P_" to name
 [P_FRED]

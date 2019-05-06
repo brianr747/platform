@@ -30,10 +30,15 @@ limitations under the License.
 import importlib
 import os
 
+import myplatform
+
 
 def load_extensions():
     """
-    Imports all *.py files in this directory (in an arbitrary order).
+    Imports all *.py files in this directory (in alphabetical order).
+
+    Since the order of import will eventually matter, will need to add something to force a order of import operations.
+    For now, not am issue (can just use the alphabetical order rule to fix problems).
 
     All errors are caught and largely ignored (other than listing the module that failed, and a text dump on the
     console.
@@ -55,10 +60,15 @@ def load_extensions():
     # There might be some iteration tools in importlib, but no time to read documentation...
     this_dir = os.path.dirname(__file__)
     flist = os.listdir(this_dir)
+    # Do alphabetical order
+    flist.sort()
     exclusion_list = ['__init__']
     loaded_extensions = []
     failed_extensions = []
     decorated_fails = []
+    use_monkey_example = myplatform.PlatformConfiguration['Options'].getboolean('UseMonkeyPatchExample')
+    if not use_monkey_example:
+        exclusion_list.append('monkey_patch_example')
     for fname in flist:
         fname = fname.lower()
         if not fname.endswith('.py'):
