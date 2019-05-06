@@ -34,7 +34,7 @@ unit testing.
 
 The solution appears to be that I will create a *script* startup.py that is inside the package.
 Importing it launches the start up configuration protocol. The initialisation code
-that is in __init__.py will not be invoked automatically. 
+that is in \_\_init__.py will not be invoked automatically. 
 
 It looks like this solution will cover all of my objectives, and make importing the base package
 have almost no side effects (other than the declaration of abstract base classes, and initialising
@@ -49,15 +49,15 @@ import the definitions of the abstract base classes of the provider/database wra
 as well as the container objects.
 
 I had problems with having those definitions inside the "databases" and "providers" sub-packages,
-which is why they migrated to the base package __init__.py. 
+which is why they migrated to the base package \_\_init__.py. 
 
 If I cannot get that migration to work, I may move all the code inside the abstract base class
 to another base class in the appropriate sub-package (e.g., "BaseProvider" and "BaseDatabase"),
-and just leave the public interface definition in the base __init__.py.
+and just leave the public interface definition in the base \_\_init__.py.
 
 Other high level modules:
 - **configuration.py** It makes sense to pull the front end to ConfigParser into a separate module.
-- **utils.py** The code in utils.py are things L do all the time with standard Python code.
+- **utils.py** The code in utils.py are things I do all the time with standard Python code.
   It should not import any other modules from this package, so it should avoid circular
   import problems.
   
