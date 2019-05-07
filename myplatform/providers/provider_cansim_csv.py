@@ -58,7 +58,7 @@ class ProviderCansim_Csv(myplatform.ProviderWrapper):
         try:
             table_name, vector = query_ticker.split('|')
         except:
-            raise myplatform.TickerError('CANSIM_CSV ticker format: {table}|{vector}; invalid ticker = {0}'.format(
+            raise myplatform.TickerError('CANSIM_CSV ticker format: <table>|<vector>; invalid ticker = {0}'.format(
                                          query_ticker))
         parsed_name = self.GetTimeSeriesFile(table_name)
         if not os.path.exists(parsed_name):

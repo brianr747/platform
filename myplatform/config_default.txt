@@ -67,6 +67,7 @@ FRED=F
 User=U
 CANSIM_CSV=CCSV
 Quandl=Q
+ABS_XLS=ABSXLS
 #+++++++++++++++++++++++++++++
 # Provider-specific Info Pre-pend "P_" to name
 [P_FRED]
