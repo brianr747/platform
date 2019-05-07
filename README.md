@@ -10,12 +10,12 @@ Python 3 only. I work on Python 3.7, and no idea about backward compatibility is
 This repository is mainly for my own use for now; I am transferring my platform to a new computer, and decided to do a clean up 
 at the same time. In particular, the MySQL interface is not implemented.
 
-Features
+## Features
 
 Please note that all features listed are minimal implementations. However, they offer an idea
 of where this project is going.
 
-*Providers*
+### Providers
 "Single series" interface only; there will be table query support (for pandasdmx).
 
 - "User Series": Series that are calculated by Python code dynamically
@@ -25,18 +25,19 @@ of where this project is going.
 - CANSIM manual downloaded table (CSV) parsing.
 - Quandl.
 
-*Databases*
+### Databases
 
 - TEXT: Save each series as a text file in a local directory. This is
 good enough for a casual user, and is useful for debugging and unit testing.
 - SQLITE: The SQLite database is supported, although with minimal features.
 
-No meta-data support until the SQL interface is attacked.
+Meta-data support is extremely minimal. Although useful, not a priority for my
+own work. So it will wait until after refactoring is underway.
 
 (Note: Starting with sqlite3, since that is installed with Python. Will worry 
 about compatability with other SQL formats later.)
 
-*Dynamic Loading*
+### Dynamic Loading
 
 Series are loaded with a single *fetch()* command that sits between user
 code and the underlying API's. This means that there is only a single
@@ -64,12 +65,12 @@ will be hit with perhaps one API refresh call in a day. The update
 protocol would be extremely important for an "industrial" multi-user
 platform, but is not a pressing issue for me.
 
-*Other Languages*
+### Other Languages
 - *R* can directly trigger the Python dynamic fetching code, using 
 reticulate. An example is given. (I have terrible legacy code in a
 side folder.)
 
-*Programming Support*
+### Programming Support
 - Very clean interface to the *logging* module; you just call 
 *start_log()* and a log file based on the module name is created in
 a (configurable) log directory. 
@@ -91,9 +92,7 @@ exist). The most important code here are  API calls and database interface,
 which are painful for unit testing. (I should backfit some end-to-end testing,
 based on looking at text files.)
 
-
-
-*Analysis Support*
+### Analysis Support
 
 Since *fetch()* returns a pandas Series object, they can leverage 
 the features of pandas. (Disclaimer: I am not too familiar with 
@@ -116,7 +115,7 @@ module, or if I am ambitious, *quantlib*. Needless to say, my focus
 would be on fixed income calculations (e.g., calculating total returns
 from par coupon data, forward rate approximations, etc.)
 
-**Comments**
+## Comments
 
 With a fair amount of effort, users could replicate my examples. However, there will be example wrappers for various web interfaces
 which may make things slightly simpler to work with.
@@ -133,7 +132,7 @@ within pandas already. Instead, the effort is getting everything wrapped into a 
 
 
 
-**More Information**
+## More Information
 
 Plans.txt has some thoughts on my plans for this project.
 
