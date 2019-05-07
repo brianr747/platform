@@ -127,4 +127,19 @@ will migrate from SQLite class to the  base class, and only the query syntax
 will be saved as  data in the subclass (if possible). Then adding a new SQL format
 will just be a question of changing the syntax in the data configuration if needed.
 
+## "Tickers" and Multi-Data Type Entities
 
+One of my tasks is to standardise naming conventions. This will be easier now that I have the database;
+variable names should align with database column names. (Current code needs to be standardised.)
+
+I have used "ticker" to stand for "unique string identifier." This is OK for series with one "data type", but
+when we run into financial market data, we will have things with multiple data types - stocks have prices and 
+dividend yields, bonds have price and yield. It may have been more sensible to use "ticker" to refer to those
+security identifiers. 
+
+The key to the design is that we have a unique string identifier locally, as well as a unique string identifier
+for queries. Even if we store related data in multi-column tables, we still need a single identifier for each column
+of data. Since we will not be able to align with provider data type identifiers in our database, we still need a series-by-series mapping.
+
+What are currently called "local tickers" will allow us to handle these multi-datatype securities. We just need to
+patch in the local ticker, and they will incorporate the local multi-datatype naming convention.
