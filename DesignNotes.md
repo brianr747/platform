@@ -4,7 +4,7 @@
 I am writing these notes now as I hope to start working on other projects; I want to 
 lay out my thinking for when I get back to this.
 
-##Name Issue
+## Name Issue
 
 The current name of the package is a placeholder, but I think I need to change it soon.
 
@@ -90,7 +90,7 @@ The objective is that coding extensions should be extremely easy to do. Ideally:
  (I will probably pursue that strategy within my *sfc_models* package: I will have a script that
  monkey-patches *sfc_models* functionality into the platform.) 
 
-##Unit Tests
+## Unit Tests
 
 My current test coverage is probably about 0.1% of the package; I want to move that to "100%".
 
@@ -111,7 +111,7 @@ myself); once that milestone is ready, I will try to freeze Python development u
 to get test coverage to "100%." (Since there will be a lot of ignored external API-dependent
 code, that 100% coverage is a bit of a cheat.)
 
-##SQL
+## SQL
 
 I have minimal SQLite support: series are overwritten completely
 each time. Not much in the way of meta-data.
