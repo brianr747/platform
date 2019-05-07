@@ -29,6 +29,7 @@ of where this project is going.
 
 - TEXT: Save each series as a text file in a local directory. This is
 good enough for a casual user, and is useful for debugging and unit testing.
+- SQLITE: The SQLite database is supported, although with minimal features.
 
 No meta-data support until the SQL interface is attacked.
 
