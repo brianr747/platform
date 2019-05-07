@@ -3,7 +3,7 @@
 
 (Note: if this is every to be a serious project, it needs a better package name. Since 
 all my code is  in a single PyCharm project, I can refactor the name easily, but users 
-need to know that the package name may shift.)
+need to know that the package name may shift. The current front runner is *econ_platform*.)
 
 Python 3 only. I work on Python 3.7, and no idea about backward compatibility issues.
 
@@ -136,6 +136,6 @@ within pandas already. Instead, the effort is getting everything wrapped into a 
 
 Plans.txt has some thoughts on my plans for this project.
 
-EarlyAdopters.txt has some comments aimed at anyone who wants to use this package.
+EarlyAdopters.md has some comments aimed at anyone who wants to use this package.
 
 DesignNotes.md has (suprisingly enough) design notes.
