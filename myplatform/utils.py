@@ -24,6 +24,7 @@ import os
 import re
 import datetime
 
+
 class PlatformLogger(object):
     """
     Add a convenient front end to the logging module
@@ -82,12 +83,14 @@ def split_ticker_information(ticker):
     source_code, source_ticker = ticker.split('@')
     return (source_code, source_ticker)
 
+
 def get_platform_directory():
     """
     Where is the directory of this package? (Used as default position for files).
     :return: str
     """
     return os.path.dirname(__file__)
+
 
 def entry_lookup(target, row, case_sensitive=True):
     """
@@ -110,6 +113,7 @@ def entry_lookup(target, row, case_sensitive=True):
                 return i
         raise KeyError('{0} not found'.format(target))
 
+
 def remove_non_ascii(x):
     """
     Assumes utf-8
@@ -119,8 +123,8 @@ def remove_non_ascii(x):
     """
     return "".join(i for i in x if ord(i) < 128)
 
-# Date alignment functions.
 
+# Date alignment functions.
 def align_by_month(year, month, freq='M'):
     """
     How are calendar dates aligned versus low frequency (monthly, quarterly, annual)...
@@ -140,13 +144,15 @@ def align_by_month(year, month, freq='M'):
     else:
         raise NotImplementedError('align_by_month() unsupported frequency: {0}'.format(freq))
 
+
 def iso_string_to_date(d):
     """
     Convert an ISO string date to a datetime.date
     :param d: str
     :return: datetime.date
     """
-    return datetime.date(int(d[0:4]), int(d[5:7]), int(d[-2:]))
+    return datetime.date(int(d[0:4]), int(d[5:7]), int(d[8:10]))
+
 
 def coerce_date_to_string(d):
     """

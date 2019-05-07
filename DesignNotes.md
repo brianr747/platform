@@ -143,3 +143,8 @@ of data. Since we will not be able to align with provider data type identifiers 
 
 What are currently called "local tickers" will allow us to handle these multi-datatype securities. We just need to
 patch in the local ticker, and they will incorporate the local multi-datatype naming convention.
+
+I think it is necessary to create classes that manage the ticker rules, and are used 
+internally as parameters. Eliminates the need for defensive coding around tickers.
+Making them classes will make it easier for people to customise ticker
+construction.
