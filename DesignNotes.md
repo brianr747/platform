@@ -4,14 +4,14 @@
 I am writing these notes now as I hope to start working on other projects; I want to 
 lay out my thinking for when I get back to this.
 
-*Name Issue*
+##Name Issue
 
 The current name of the package is a placeholder, but I think I need to change it soon.
 
 My preference is *economics_platform*, but open to suggestions. It will be easy to refactor
 until people start using it. 
 
-*Start-Up Issue*
+##Start-Up Issue
 
 I want the package to be extremely efficient to use. I want to be able to do either:
 
@@ -42,7 +42,7 @@ the containers for database provider wrappers).
 
 This change will break my existing example code; better to do it now than later.
 
-*Circular Imports*
+##Circular Imports
 
 I have run into problems with circular imports. Importing the base package needs to 
 import the definitions of the abstract base classes of the provider/database wrappers,
@@ -61,7 +61,7 @@ Other high level modules:
   It should not import any other modules from this package, so it should avoid circular
   import problems.
   
-*Extensions*
+##Extensions
 
 The objective is that coding extensions should be extremely easy to do. Ideally:
  
@@ -73,10 +73,10 @@ The objective is that coding extensions should be extremely easy to do. Ideally:
  In order to get there, the functionality of the base classes needs to be beefed up. That will
  happen as I iterate on the design.
  
- *A Public Package?*
+ ##A Public Package?
  
  Although I would love that this package would have a life of its own, the reality is that
- maintenance could turn into a dog's breakfast. I already hve 4 external providers, two 
+ maintenance could turn into a dog's breakfast. I already have 4 external providers, two 
  database formats, and one external language (R). Any changes on those API's would break some
  functionality of this package.
  
@@ -90,7 +90,7 @@ The objective is that coding extensions should be extremely easy to do. Ideally:
  (I will probably pursue that strategy within my *sfc_models* package: I will have a script that
  monkey-patches *sfc_models* functionality into the platform.) 
 
-*Unit Tests*
+##Unit Tests
 
 My current test coverage is probably about 0.1% of the package; I want to move that to "100%".
 
@@ -110,5 +110,21 @@ I want to get the SQLite database functioning first (so I can start working with
 myself); once that milestone is ready, I will try to freeze Python development until I have time
 to get test coverage to "100%." (Since there will be a lot of ignored external API-dependent
 code, that 100% coverage is a bit of a cheat.)
+
+##SQL
+
+I have minimal SQLite support: series are overwritten completely
+each time. Not much in the way of meta-data.
+
+The only thing I might push for is some form of series update support.Once that is
+in place, I will then work on refactoring before adding features.
+
+I think a full database wrapper package (SQLalchemy?) might be overkill. Will take a 
+look when I have time.
+
+Unless I go with a database wrapper, my plan is to create a "SQL" base class. Logic
+will migrate from SQLite class to the  base class, and only the query syntax 
+will be saved as  data in the subclass (if possible). Then adding a new SQL format
+will just be a question of changing the syntax in the data configuration if needed.
 
 
