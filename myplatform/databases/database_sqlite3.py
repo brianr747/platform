@@ -22,6 +22,7 @@ limitations under the License.
 import os
 import pandas
 import sqlite3
+import datetime
 
 import myplatform
 import myplatform.utils
@@ -36,7 +37,7 @@ class DatabaseSqlite3(myplatform.DatabaseManager):
         Initialise the object. Note: Does nothing, including looking up configuration information.
 
         """
-        super().__init__()
+        super().__init__(name='SQLite Database')
         self.Name = 'SQLite Database'
         self.Directory = ''
         self.DatabaseFile = ''
@@ -96,14 +97,14 @@ class DatabaseSqlite3(myplatform.DatabaseManager):
                 print(str(ex))
                 raise myplatform.PlatformError('Error when testing for table existence')
 
-    def Execute(self, cmd, *args, commit_after=False):
+    def Execute(self, cmd, *args, commit_after=False, is_many=False):
         """
         Convenience function that logs commands if self.LogSQL is True.
 
         :param cmd: str
         :param args:
         :param commit_after: bool
-        :return:
+        :return: sqlite3.Cursor
         """
         if self.Connection is None:
             self.GetConnection(test_tables=False)
@@ -111,32 +112,118 @@ class DatabaseSqlite3(myplatform.DatabaseManager):
             self.Cursor = self.Connection.cursor()
         if self.LogSQL:
             if len(args) > 0:
-                myplatform.log(cmd + " : " + str(args))
+                if is_many:
+                    myplatform.log('{0} : executemany()'.format(cmd))
+                else:
+                    myplatform.log(cmd + " : " + str(args))
             else:
                 myplatform.log(cmd)
         if len(args) > 0:
-            self.Cursor.execute(cmd, args)
+            if is_many:
+                self.Cursor.executemany(cmd, args[0])
+            else:
+                self.Cursor.execute(cmd, args)
         else:
             self.Cursor.execute(cmd)
         if commit_after:
             self.Connection.commit()
+        return self.Cursor
 
-    def Exists(self, ticker):
-        raise NotImplementedError('boum')
+    def Exists(self, full_ticker):
+        self.GetConnection()
+        search_query = 'SELECT COUNT(*) FROM {0} WHERE ticker_full = ?'.format(self.MetaTable)
+        cursor = self.Execute(search_query, full_ticker)
+        res = cursor.fetchall()
+        return res[0][0] > 0
 
-    def Retrieve(self, ticker):
-        if self.Connection is None:
-            self.GetConnection()
-        raise NotImplementedError('boum')
+    def Retrieve(self, series_meta):
+        self.GetConnection()
+        try:
+            ticker_full = series_meta.ticker_full
+        except:
+            ticker_full = series_meta
+        series_id = self.GetSeriesID(ticker_full)
+        if series_id is None:
+            raise myplatform.TickerNotFoundError('{0} not found on database'.format(ticker_full))
+        cmd = """
+SELECT series_dates, series_values FROM {0} WHERE series_id = ?
+        """.format(self.DataTable)
+        res = self.Execute(cmd, series_id, commit_after=False).fetchall()
+        def mapper(s):
+            try:
+                return myplatform.utils.iso_string_to_date(s)
+            except:
+                float(s)
+        try:
+            dates = [mapper(x[0]) for x in res]
+        except:
+            raise myplatform.PlatformError('Corrupted date axis for {0}'.format(ticker_full))
+        valz = [x[1] for x in res]
+        ser = pandas.Series(valz)
+        ser.index = dates
+        ser.name = ticker_full
+        return ser
 
-    def Write(self, ser, ticker):
+
+    def Write(self, ser, series_meta, overwrite=True):
         """
 
         :param ser: pandas.Series
-        :param ticker: str
+        :param ticker: myplatform.SeriesMetaData
+        :param overwrite: bool
         :return:
         """
-        raise NotImplementedError('boum')
+
+        series_id = self.GetSeriesID(series_meta.ticker_full)
+        if series_id is None:
+            self.CreateSeries(series_meta)
+        else:
+            if not overwrite:
+                raise NotImplementedError()
+            else:
+                # Delete the existing series
+                cmd = """
+DELETE FROM {0} WHERE series_id = ?""".format(self.DataTable)
+                self.Execute(cmd, series_id, commit_after=True)
+        dates = ser.index
+        # Need to coerce to strings.
+        dates = [myplatform.utils.coerce_date_to_string(x) for x in dates]
+        id_list = [series_id,]*len(dates)
+        info = zip(id_list, dates, ser.values)
+        cmd = """
+        INSERT INTO {0}(series_id, series_dates, series_values) VALUES (?, ?, ?)
+        """.format(self.DataTable)
+        self.Execute(cmd, info, commit_after=True, is_many=True)
+
+    def GetSeriesID(self, full_ticker):
+        self.GetConnection()
+        cmd = """
+        SELECT series_id FROM {0} WHERE ticker_full = ?""".format(self.MetaTable)
+        self.Execute(cmd, full_ticker, commit_after=False)
+        res = self.Cursor.fetchall()
+        if len(res) == 0:
+            return None
+        else:
+            return res[0][0]
+
+    def CreateSeries(self, series_meta):
+        """
+
+        :param series_meta: myplatform.SeriesMetaData
+        :return:
+        """
+        # Need to make sure initialised
+        self.GetConnection()
+        create_str = """
+INSERT INTO {0} (series_provider_code, ticker_full, ticker_local, ticker_query) VALUES
+(?, ?, ?, ?)        
+        """.format(self.MetaTable)
+        local_ticker = series_meta.ticker_local
+        if len(local_ticker) == 0:
+            local_ticker = None
+        self.Execute(create_str, series_meta.series_provider_code, series_meta.ticker_full,
+                     local_ticker, series_meta.ticker_query, commit_after=True)
+
 
     def CreateSqlite3Tables(self):
         """
@@ -201,16 +288,3 @@ def create_sqlite3_tables():
     obj2 = DatabaseSqlite3()
     obj2.GetConnection(test_tables=True)
 
-
-
-
-
-def _main():
-    # test code
-    obj = DatabaseSqlite3()
-    obj.GetConnection()
-    obj.TestTablesExist()
-
-
-if __name__ == '__main__':
-    _main()

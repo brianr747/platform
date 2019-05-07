@@ -44,23 +44,73 @@ class DatabaseText(myplatform.DatabaseManager):
         full_file = os.path.join(self.Directory, DatabaseText.GetFileName(ticker))
         return os.path.exists(full_file)
 
-    def Retrieve(self, ticker):
+    def Retrieve(self, series_meta):
+        try:
+            ticker = series_meta.ticker_full
+        except:
+            ticker = series_meta
         self.CheckDirectory()
         full_name = os.path.join(self.Directory, DatabaseText.GetFileName(ticker))
         df = pandas.read_csv(filepath_or_buffer=full_name, sep='\t', parse_dates=True, index_col=0)
         ser = pandas.Series(df[df.columns[0]])
         return ser
 
-    def Write(self, ser, series_meta):
+    def GetMeta(self, full_ticker):
+        self.CheckDirectory()
+        full_name = os.path.join(self.Directory, DatabaseText.GetFileName(full_ticker))
+        if not os.path.exists(full_name):
+            raise myplatform.TickerNotFoundError('Unknown ticker: {0}'.format(full_ticker))
+        return self.GetMetaFromFile(full_name)
+
+    def GetMetaFromFile(self, full_name):
+        # Just read the first line.
+        f = open(full_name, 'r')
+        header = f.readline()
+        header = header.rstrip()
+        try:
+            dummy, full_ticker = header.split('\t')
+        except:
+            raise myplatform.PlatformError('Corrupt file: {0}'.format(full_name))
+        meta = myplatform.SeriesMetaData()
+        meta.ticker_full = full_ticker
+        meta.Exists = True
+        try:
+            meta.series_provider_code, meta.ticker_query = myplatform.utils.split_ticker_information(full_ticker)
+        except:
+            raise myplatform.PlatformError('Invalid full ticker')
+        return meta
+
+    def Write(self, ser, series_meta, overwrite=True):
         """
 
         :param ser: pandas.Series
         :param series_meta: myplatform.SeriesMetaData
+        :param overwrite: bool
         :return:
         """
         self.CheckDirectory()
+        if not overwrite:
+            raise NotImplementedError()
         ticker = series_meta.ticker_full
         full_name = os.path.join(self.Directory, DatabaseText.GetFileName(ticker))
         ser.to_csv(path_or_buf=full_name, sep='\t', header=True)
+
+    def GetAllValidSeriesTickers(self):
+        """
+        Returns a list of all the valid full tickers in the database.
+
+        Used for database tansfers
+        :return: list
+        """
+        self.CheckDirectory()
+        flist = os.listdir(self.Directory)
+        out = []
+        for fname in flist:
+            try:
+                meta = self.GetMetaFromFile(os.path.join(self.Directory, fname))
+                out.append(meta.ticker_full)
+            except:
+                pass
+        return out
 
 

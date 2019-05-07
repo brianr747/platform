@@ -147,3 +147,21 @@ def iso_string_to_date(d):
     :return: datetime.date
     """
     return datetime.date(int(d[0:4]), int(d[5:7]), int(d[-2:]))
+
+def coerce_date_to_string(d):
+    """
+    Force a datetime-like object to an ISO date format string yyyy-mm-dd.
+
+    Not too highly recommended, but used by SQLite, which uses strings for date.
+
+    If there are no year, month, day members, just force to a string. (For things like integer time axes from
+    models.)
+
+    :param d: datetime.date
+    :return: str
+    """
+    try:
+        return '{0}-{1:02}-{2:02}'.format(d.year, d.month, d.day)
+    except:
+        # Tough luck
+        return str(d)

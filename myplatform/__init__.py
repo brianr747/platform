@@ -87,6 +87,14 @@ class SeriesMetaData(object):
         self.ticker_query = ''
         self.ProviderMetaData = {}
 
+    def __str__(self):
+        out = ''
+        for name in dir(self):
+            if name.startswith('_'):
+                continue
+            out += '{0}\t{1}\n'.format(name, str(getattr(self, name)))
+        return out
+
 class DatabaseManager(object):
     """
     This is the base class for Database Managers.
@@ -136,14 +144,39 @@ class DatabaseManager(object):
         """
         raise NotImplementedError()
 
-    def Retrieve(self, full_ticker):
+    def Retrieve(self, series_meta):
+        """
+
+        :param series_meta: SeriesMetaData
+        :return: pandas.Series
+        """
         raise NotImplementedError()
 
-    def Write(self, ser, series_meta):
+    def GetMeta(self, full_ticker):
+        raise NotImplementedError()
+
+    def RetrieveWithMeta(self, full_ticker):
+        """
+        Retrieve both the meta data and the series. Have a single method in case there is
+        an optimisation for the database to do both queries at once.
+
+        Since we normally do not want the meta data at the same time, have the usual workflow to just
+        use the Retrieve() interface.
+
+        :param full_ticker: str
+        :return: list
+        """
+        meta = self.GetMeta(full_ticker)
+        ser = self.Retrieve(meta)
+        return ser, meta
+
+
+    def Write(self, ser, series_meta, overwrite=True):
         """
 
         :param ser: pandas.Series
         :param series_meta: SeriesMetaData
+        :param overwrite: bool
         :return:
         """
         raise NotImplementedError()
@@ -177,6 +210,24 @@ class DatabaseList(object):
         :return: DatabaseManager
         """
         return self.DatabaseDict[item]
+
+    def TransferSeries(self, full_ticker, source, dest):
+        """
+        Transfer a series from one database to another.
+
+        Useful for migrations and testing.
+
+        :param full_ticker: str
+        :param source: str
+        :param dest: str
+        :return:
+        """
+        source_manager = self[source]
+        dest_manager = self[dest]
+        ser, meta = source_manager.RetrieveWithMeta(full_ticker)
+        # The meta information should be the same, except the Exists flag...
+        meta.Exists = dest_manager.Exists(full_ticker)
+        dest_manager.Write(ser, meta)
 
 
 Databases = DatabaseList()
@@ -276,7 +327,7 @@ def fetch(ticker, database='Default', dropna=True):
         # TODO: Handle series updates.
         # Return what is on the database.
         log_debug('Fetching {0} from {1}'.format(ticker, database_manager.Name))
-        return database_manager.Retrieve(ticker)
+        return database_manager.Retrieve(series_meta)
     else:
         if provider_manager.IsExternal:
             _hook_fetch_external(provider_manager, ticker)
