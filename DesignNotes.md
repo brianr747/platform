@@ -11,7 +11,7 @@ The current name of the package is a placeholder, but I think I need to change i
 My preference is *economics_platform*, but open to suggestions. It will be easy to refactor
 until people start using it. 
 
-##Start-Up Issue
+## Start-Up Issue
 
 I want the package to be extremely efficient to use. I want to be able to do either:
 
@@ -42,7 +42,7 @@ the containers for database provider wrappers).
 
 This change will break my existing example code; better to do it now than later.
 
-##Circular Imports
+## Circular Imports
 
 I have run into problems with circular imports. Importing the base package needs to 
 import the definitions of the abstract base classes of the provider/database wrappers,
@@ -61,7 +61,7 @@ Other high level modules:
   It should not import any other modules from this package, so it should avoid circular
   import problems.
   
-##Extensions
+## Extensions
 
 The objective is that coding extensions should be extremely easy to do. Ideally:
  
@@ -73,7 +73,7 @@ The objective is that coding extensions should be extremely easy to do. Ideally:
  In order to get there, the functionality of the base classes needs to be beefed up. That will
  happen as I iterate on the design.
  
- ##A Public Package?
+ ## A Public Package?
  
  Although I would love that this package would have a life of its own, the reality is that
  maintenance could turn into a dog's breakfast. I already have 4 external providers, two 
