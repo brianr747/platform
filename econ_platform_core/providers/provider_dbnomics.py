@@ -50,10 +50,10 @@ import dbnomics
 import pandas
 import numpy
 
-import myplatform
+import econ_platform_core
 
 
-class ProviderDBnomics(myplatform.ProviderWrapper):
+class ProviderDBnomics(econ_platform_core.ProviderWrapper):
     def __init__(self):
         super(ProviderDBnomics, self).__init__(name='DBnomics')
 
@@ -63,7 +63,7 @@ class ProviderDBnomics(myplatform.ProviderWrapper):
         Initial stab at querying. Will refactor code into a subclass...
 
         Can only support single series queries...
-        :param series_meta: myplatform.SeriesMetaData
+        :param series_meta: econ_platform_core.SeriesMetaData
         :return: list
         """
         query_ticker = series_meta.ticker_query

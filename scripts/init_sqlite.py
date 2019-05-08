@@ -4,20 +4,20 @@ Script to initialise the sqlite3 database. Needs to be run before using the data
 
 import os
 
-import myplatform.databases.database_sqlite3
+import econ_platform_core.databases.database_sqlite3
 
 
 
 def main():
-    myplatform.LogInfo.LogDirectory = os.path.dirname(__file__)
-    myplatform.start_log()
-    myplatform.log('Starting')
+    econ_platform_core.LogInfo.LogDirectory = os.path.dirname(__file__)
+    econ_platform_core.start_log()
+    econ_platform_core.log('Starting')
     print('Initialising the SQLite database')
     print('If they exist, will throw an error.')
     try:
-        myplatform.databases.database_sqlite3.create_sqlite3_tables()
+        econ_platform_core.databases.database_sqlite3.create_sqlite3_tables()
     except:
-        myplatform.log_last_error()
+        econ_platform_core.log_last_error()
         raise
 
 if __name__ == '__main__':

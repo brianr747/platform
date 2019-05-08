@@ -20,24 +20,24 @@ limitations under the License.
 import os
 import pandas
 
-import myplatform
-import myplatform.utils
+import econ_platform_core
+import econ_platform_core.utils
 
 
-class DatabaseText(myplatform.DatabaseManager):
+class DatabaseText(econ_platform_core.DatabaseManager):
     def __init__(self):
         super().__init__('Text File Database')
         self.Directory = None
 
     def CheckDirectory(self):
         if self.Directory is None:
-            self.Directory = myplatform.PlatformConfiguration['D_TEXT']['directory']
+            self.Directory = econ_platform_core.PlatformConfiguration['D_TEXT']['directory']
             if self.Directory == 'text_database':
-                self.Directory = os.path.join(myplatform.utils.get_platform_directory(), 'text_database')
+                self.Directory = os.path.join(econ_platform_core.utils.get_platform_directory(), 'text_database')
 
     @staticmethod
     def GetFileName(ticker):
-        return myplatform.utils.convert_ticker_to_variable(ticker) + '.txt'
+        return econ_platform_core.utils.convert_ticker_to_variable(ticker) + '.txt'
 
     def Exists(self, ticker):
         self.CheckDirectory()
@@ -59,7 +59,7 @@ class DatabaseText(myplatform.DatabaseManager):
         self.CheckDirectory()
         full_name = os.path.join(self.Directory, DatabaseText.GetFileName(full_ticker))
         if not os.path.exists(full_name):
-            raise myplatform.TickerNotFoundError('Unknown ticker: {0}'.format(full_ticker))
+            raise econ_platform_core.TickerNotFoundError('Unknown ticker: {0}'.format(full_ticker))
         return self.GetMetaFromFile(full_name)
 
     def GetMetaFromFile(self, full_name):
@@ -70,21 +70,21 @@ class DatabaseText(myplatform.DatabaseManager):
         try:
             dummy, full_ticker = header.split('\t')
         except:
-            raise myplatform.PlatformError('Corrupt file: {0}'.format(full_name))
-        meta = myplatform.SeriesMetaData()
+            raise econ_platform_core.PlatformError('Corrupt file: {0}'.format(full_name))
+        meta = econ_platform_core.SeriesMetaData()
         meta.ticker_full = full_ticker
         meta.Exists = True
         try:
-            meta.series_provider_code, meta.ticker_query = myplatform.utils.split_ticker_information(full_ticker)
+            meta.series_provider_code, meta.ticker_query = econ_platform_core.utils.split_ticker_information(full_ticker)
         except:
-            raise myplatform.PlatformError('Invalid full ticker')
+            raise econ_platform_core.PlatformError('Invalid full ticker')
         return meta
 
     def Write(self, ser, series_meta, overwrite=True):
         """
 
         :param ser: pandas.Series
-        :param series_meta: myplatform.SeriesMetaData
+        :param series_meta: econ_platform_core.SeriesMetaData
         :param overwrite: bool
         :return:
         """

@@ -34,7 +34,7 @@
 FileName = NA
 [Logging]
 # Default in the "logs" directory below myplatform.
-LogDirectory = DEFAULT
+LogDirectory = {CORE}/logs
 [Options]
 UseMonkeyPatchExample = False
 # TODO: set the log formatting strings here...
@@ -61,9 +61,7 @@ SQLite Database=SQLITE
 [D_TEXT]
 directory=text_database
 [D_SQLITE]
-# If left as "myplatform", drops the database file into myplatform base directory
-directory=myplatform
-file_name=platform.db
+file_name={CORE}\platform.db
 # Generic provider options
 [ProviderOptions]
 echo_access=True
@@ -86,6 +84,6 @@ api_key=NONE
 [P_CCSV]
 # Directory information . Note that if these defaults are used, this means it goes below the providers directory.
 # Which means that we don't need to worry about the directory separaor in this case.
-zip_directory = cansim_csv
-parsed_directory = cansim_csv/parsed
+zip_directory = {CORE}\providers\cansim_csv
+parsed_directory = {CORE}\providers\cansim_csv\parsed
 zip_tail=-eng.zip

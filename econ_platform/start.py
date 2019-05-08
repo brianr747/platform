@@ -1,5 +1,14 @@
 """
-Python script that hooks in the ABSXLS code (found in providers).
+start.py
+
+This is a *script* that imports and initialises the econ_platform & econ_platform_core
+packages.
+
+Although the initialisation should not cause errors, it has side effects: reading configuration files,
+attempting to import extensions, etc. You import this module if you do not care about those side effects.
+
+(Unit tests will care about those side effects, so we have to be able to import the packages without triggering
+them. This means that unit tests will not cover this file.)
 
 Copyright 2019 Brian Romanchuk
 
@@ -17,16 +26,5 @@ limitations under the License.
 
 """
 
-import myplatform
-import myplatform.providers.provider_abs_xls
-
-
-extension_name = 'Australian Bureau Statistics (XLS)'
-
-def main():
-    """
-    Insert the provider into the platform list
-    :return:
-    """
-    obj = myplatform.providers.provider_abs_xls.ProviderAbsXls()
-    myplatform.Providers.AddProvider(obj)
+from econ_platform import *
+econ_platform.init_core_plus_extensions()

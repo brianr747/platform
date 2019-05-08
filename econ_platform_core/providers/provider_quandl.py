@@ -28,10 +28,10 @@ limitations under the License.
 import quandl
 
 
-import myplatform
+import econ_platform_core
 
 
-class ProviderQuandl(myplatform.ProviderWrapper):
+class ProviderQuandl(econ_platform_core.ProviderWrapper):
     """
     Quandl interface (https://www.quandl.com/)
 
@@ -46,7 +46,7 @@ class ProviderQuandl(myplatform.ProviderWrapper):
 
 
         Can only support single series queries...
-        :param series_meta: myplatform.SeriesMetaData
+        :param series_meta: econ_platform_core.SeriesMetaData
         :return: list
         """
         query_ticker = series_meta.ticker_query

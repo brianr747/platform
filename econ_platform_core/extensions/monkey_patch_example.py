@@ -18,7 +18,7 @@ except ImportError:
     # Not exactly important
     pass
 
-import myplatform
+import econ_platform_core
 
 last_beep: datetime.datetime = None
 
@@ -49,4 +49,4 @@ def main():
     Note: probably not a good idea to do have this hook running when running a big batch...
     :return:
     """
-    myplatform._hook_fetch_external = beep_on_windows
+    econ_platform_core._hook_fetch_external = beep_on_windows

@@ -1,3 +1,4 @@
+
 """
 Platform extensions.
 
@@ -26,15 +27,20 @@ limitations under the License.
 
 """
 
-
-import importlib
 import os
 
-import myplatform
-
+import econ_platform
+import econ_platform_core
+import importlib
 
 def load_extensions():
     """
+
+    NOTE: This code is a copy of the code in econ_platform_core.extensions.__init__.py.
+    I will need to figure out how to make this function not use the current directory.
+
+    TODO: Merge this function with the one in econ_platform_core.
+
     Imports all *.py files in this directory (in alphabetical order).
 
     Since the order of import will eventually matter, will need to add something to force a order of import operations.
@@ -66,7 +72,7 @@ def load_extensions():
     loaded_extensions = []
     failed_extensions = []
     decorated_fails = []
-    use_monkey_example = myplatform.PlatformConfiguration['Options'].getboolean('UseMonkeyPatchExample')
+    use_monkey_example = econ_platform_core.PlatformConfiguration['Options'].getboolean('UseMonkeyPatchExample')
     if not use_monkey_example:
         exclusion_list.append('monkey_patch_example')
     for fname in flist:
@@ -78,7 +84,7 @@ def load_extensions():
             continue
         # Import it!
         try:
-            mod = importlib.import_module('myplatform.extensions.' + fname)
+            mod = importlib.import_module('econ_platform.extensions.' + fname)
             if hasattr(mod, 'extension_name'):
                 fname = str(mod.extension_name)
             # Try running main()

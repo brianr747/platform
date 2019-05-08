@@ -30,7 +30,7 @@ class PlatformLogger(object):
     Add a convenient front end to the logging module
     """
     def __init__(self):
-        self.LogDirectory = '.'
+        self.LogDirectory = ''
         self.LogName = 'log.txt'
         self.Format = '%(asctime)s\t%(levelname)s\t%(message)s'
         self.DateFormat = '%Y-%m-%d %H:%M:%S'
@@ -99,25 +99,25 @@ def parse_config_path(fpath):
     """
     Parse a path in config files.
 
-    (1) If the path does not contain '{BASE}', it is a non-default path, so return unchanged.
-    (2) If the path contains '{BASE}', it is a default that is going into the platform package
+    (1) If the path does not contain '{CORE}', it is a non-default path, so return unchanged.
+    (2) If the path contains '{CORE}', it is a default that is going into the platform package
     directory structure. (Why? These are the only directories that we now exist, other than the current
     directory.)
 
-    (a) The term '{BASE}' is replaced with the directory of this file (assumed to be the base of the package.)
+    (a) The term '{CORE}' is replaced with the directory of this file (assumed to be the base of the package.)
     (b) All directory seperators ("/", "\") are replaced with the correct path seperator for the OS.
 
     :param fpath: str
     :return: str
     """
-    if '{BASE}' not in fpath:
+    if '{CORE}' not in fpath:
         return fpath
     # Default path; go to work.
     # Make all seperators the same.
     fpath = fpath.replace('\\', '/')
     fpath_s = fpath.split('/')
     new_path = os.path.sep.join(fpath_s)
-    return new_path.replace('{BASE}', os.path.dirname(__file__))
+    return new_path.replace('{CORE}', os.path.dirname(__file__))
 
 def entry_lookup(target, row, case_sensitive=True):
     """

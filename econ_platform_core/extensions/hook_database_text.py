@@ -1,5 +1,5 @@
 """
-Python script that hooks in the DBnomics code (found in providers).
+Python script that hooks in SQLite database.
 
 Copyright 2019 Brian Romanchuk
 
@@ -17,15 +17,16 @@ limitations under the License.
 
 """
 
-import myplatform
-import myplatform.providers.provider_dbnomics
+import econ_platform_core
+import econ_platform_core.databases.database_text
 
-extension_name = 'DB.nomics'
+
+extension_name = 'Text File Database'
 
 def main():
     """
     Insert the provider into the platform list
     :return:
     """
-    obj = myplatform.providers.provider_dbnomics.ProviderDBnomics()
-    myplatform.Providers.AddProvider(obj)
+    obj = econ_platform_core.databases.database_text.DatabaseText()
+    econ_platform_core.Databases.AddDatabase(obj)

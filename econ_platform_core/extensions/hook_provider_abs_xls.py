@@ -1,5 +1,5 @@
 """
-Python script that hooks in the FRED code (found in providers).
+Python script that hooks in the ABSXLS code (found in providers).
 
 Copyright 2019 Brian Romanchuk
 
@@ -17,16 +17,16 @@ limitations under the License.
 
 """
 
-import myplatform
-import myplatform.providers.provider_fred
+import econ_platform_core
+import econ_platform_core.providers.provider_abs_xls
 
 
-extension_name = 'FRED (St. Louis Fed)'
+extension_name = 'Australian Bureau Statistics (XLS)'
 
 def main():
     """
     Insert the provider into the platform list
     :return:
     """
-    obj = myplatform.providers.provider_fred.ProviderFred()
-    myplatform.Providers.AddProvider(obj)
+    obj = econ_platform_core.providers.provider_abs_xls.ProviderAbsXls()
+    econ_platform_core.Providers.AddProvider(obj)

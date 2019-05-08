@@ -6,10 +6,10 @@ your own class if this gets complicated.
 
 """
 
-import myplatform
+import econ_platform_core
 
 
-class ProviderUser(myplatform.ProviderWrapper):
+class ProviderUser(econ_platform_core.ProviderWrapper):
     def __init__(self):
         super(ProviderUser, self).__init__(name='User')
         self.SeriesMapper = {}
@@ -29,7 +29,7 @@ class ProviderUser(myplatform.ProviderWrapper):
     def fetch(self, series_meta):
         """
         Get a series
-        :param series_meta: myplatform.SeriesMetaData
+        :param series_meta: econ_platform_core.SeriesMetaData
         :return: list
         """
         query_ticker = series_meta.ticker_query

@@ -1,9 +1,9 @@
 """
 ex2019050_dbnomics.py
 
-Just some initial examples for DBnomics queries. Using the raw interface calls, as well as using myplatform functions.
+Just some initial examples for DBnomics queries. Using the raw interface calls, as well as using econ_platform_core functions.
 
-Uses Python 3.7. Obviously need to install the dbnomics package. The "myplatform" package will need to be
+Uses Python 3.7. Obviously need to install the dbnomics package. The "econ_platform_core" package will need to be
 installed for the later parts of the code to work.
 
 Copyright 2019 Brian Romanchuk

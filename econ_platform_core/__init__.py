@@ -1,5 +1,5 @@
 """
-myplatform - Glue code for a unified work environment.
+econ_platform_core - Glue code for a unified work environment.
 
 *Under Construction* See Plans.txt (in the parent directory) to see what is going on.
 
@@ -22,45 +22,26 @@ See the License for the specific language governing permissions and
 limitations under the License.
 """
 
-import os.path
 import pandas
 import traceback
+import configparser
 
 # As a convenience, use the "logging.info" function as log.
-from logging import info as log, info, debug as log_debug, warning as log_warning, error as log_error
+from logging import info as log, debug as log_debug, warning as log_warning, error as log_error
 
-try:
-    import matplotlib.pyplot as plt
-    from pandas.plotting import register_matplotlib_converters
-    register_matplotlib_converters()
-except ImportError:
-    plt = None
-    pass
 
-import myplatform.configuration
-from myplatform import utils as utils
-import myplatform.extensions
+import econ_platform_core.configuration
+from econ_platform_core import utils as utils
+import econ_platform_core.extensions
 
-try:
-    # It would be good to log the loading of configuration information, except that the logging
-    # configuration is loaded in this step!
-    # Try to load configuration silently...
-    PlatformConfiguration = myplatform.configuration.load_platform_configuration(display_steps=False)
-except:
-    # it failed, so try again, showing the steps...
-    myplatform.configuration.load_platform_configuration(display_steps=True)
-    raise
+PlatformConfiguration = configparser.ConfigParser()
+
+
 
 
 # Get the logging information. Users can either programmatically change the LogInfo.LogDirectory or
 # use a config file before calling start_log()
 LogInfo = utils.PlatformLogger()
-# By default, go into the "logs" directory below this file.
-if PlatformConfiguration['Logging']['LogDirectory'] == 'DEFAULT':
-    LogInfo.LogDirectory = os.path.join(os.path.dirname(__file__), 'logs')
-else:
-    LogInfo.LogDirectory = PlatformConfiguration['Logging']['LogDirectory']
-
 
 def start_log(fname=None):
     """
@@ -190,10 +171,7 @@ class DatabaseList(object):
         self.DatabaseDict = {}
 
     def Initialise(self):
-        # Need to hide this import until we have finished importing all the class definitions.
-        # This is because myplatform.databases.text_database imports this file.
-        import myplatform.databases.database_text
-        self.AddDatabase(myplatform.databases.database_text.DatabaseText())
+        pass
 
     def AddDatabase(self, wrapper):
         """
@@ -259,13 +237,10 @@ class ProviderList(object):
     """
     def __init__(self):
         self.ProviderDict = {}
-        self.EchoAccess = PlatformConfiguration['ProviderOptions'].getboolean('echo_access')
+        self.EchoAccess = False
 
     def Initialise(self):
-        # Need to hide this import until we have finished importing all the class definitions.
-        # This is because the provider wrappers probably import this file.
-        import myplatform.providers.provider_user
-        self.AddProvider(myplatform.providers.provider_user.ProviderUser())
+        self.EchoAccess = PlatformConfiguration['ProviderOptions'].getboolean('echo_access')
 
     def AddProvider(self, obj):
          """
@@ -285,13 +260,35 @@ class ProviderList(object):
 
 Providers = ProviderList()
 
+LoadedExtensions = []
+FailedExtensions = []
+DecoratedFailedExtensions = []
+
 def init_package():
     """
     Call to initialise the package, other than configuration file (and logging set up).
     :return:
     """
+    global PlatformConfiguration
+    try:
+        # It would be good to log the loading of configuration information, except that the logging
+        # configuration is loaded in this step!
+        # Try to load configuration silently...
+        PlatformConfiguration = econ_platform_core.configuration.load_platform_configuration(display_steps=False)
+    except:
+        # it failed, so try again, showing the steps...
+        PlatformConfiguration = econ_platform_core.configuration.load_platform_configuration(display_steps=True)
+    # By default, go into the "logs" directory below this file.
+    if len(LogInfo.LogDirectory) == 0:
+        # If it has not been set manually, use the config information.
+        LogInfo.LogDirectory = utils.parse_config_path(PlatformConfiguration['Logging']['LogDirectory'])
     Databases.Initialise()
     Providers.Initialise()
+    global LoadedExtensions
+    global FailedExtensions
+    global DecoratedFailedExtensions
+    LoadedExtensions, FailedExtensions, DecoratedFailedExtensions = econ_platform_core.extensions.load_extensions()
+
 
 class PlatformError(Exception):
     pass
@@ -364,24 +361,6 @@ def fetch_df(ticker, database='Default', dropna=True):
         log_last_error()
         raise
 
-def quick_plot(ser, title=None):
-    """
-    There's some overhead with plotting...
-    :param ser: pandas.Series
-    :return:
-    """
-    if plt is None:
-        raise ImportError('Was not able to import plotting libraries (matplotlib.pyplot) or the converter.')
-    plt.plot(ser)
-    if title is None:
-        title = ser.name
-    plt.title(title)
-    plt.grid(True)
-    plt.show()
-
-
-# If we have problems with initialisation, may need to not execute here - user has to call.
-init_package()
 
 def log_extension_status():
     """
@@ -415,8 +394,4 @@ def log_last_error():
     """
     msg = traceback.format_exc()
     log_error(msg)
-
-
-# Do this last
-LoadedExtensions, FailedExtensions, DecoratedFailedExtensions = myplatform.extensions.load_extensions()
 

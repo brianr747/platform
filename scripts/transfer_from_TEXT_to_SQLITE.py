@@ -6,10 +6,10 @@ Note: the TEXT database series to have the correct ticker_full as the column hea
 
 
 
-import myplatform
+import econ_platform_core
 
-myplatform.start_log()
-myplatform.Databases['SQLITE'].LogSQL = True
-ticker_list = myplatform.Databases['TEXT'].GetAllValidSeriesTickers()
+econ_platform_core.start_log()
+econ_platform_core.Databases['SQLITE'].LogSQL = True
+ticker_list = econ_platform_core.Databases['TEXT'].GetAllValidSeriesTickers()
 for ticker in ticker_list:
-    myplatform.Databases.TransferSeries(ticker, 'TEXT', 'SQLITE')
+    econ_platform_core.Databases.TransferSeries(ticker, 'TEXT', 'SQLITE')

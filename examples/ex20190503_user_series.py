@@ -6,7 +6,9 @@ another library code. However, this shows the workflow.
 
 """
 
-from myplatform import fetch, quick_plot, Providers
+
+from econ_platform_core import fetch, Providers
+from econ_platform.start import quick_plot
 
 
 #---------------------------------------------------------------------------------------

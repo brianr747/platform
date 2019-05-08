@@ -30,14 +30,14 @@ import os
 import pandas
 import glob
 
-import myplatform
-from myplatform import log, log_warning
-import myplatform.configuration
-import myplatform.tickers as tickers
-import myplatform.utils
+import econ_platform_core
+from econ_platform_core import log, log_warning
+import econ_platform_core.configuration
+import econ_platform_core.tickers as tickers
+import econ_platform_core.utils
 
 
-class ProviderAbsXls(myplatform.ProviderWrapper):
+class ProviderAbsXls(econ_platform_core.ProviderWrapper):
     def __init__(self):
         super(ProviderAbsXls, self).__init__(name='ABS_XLS')
         # Directory is not configurable for now.
@@ -77,7 +77,7 @@ class ProviderAbsXls(myplatform.ProviderWrapper):
             try:
                 sheets = pandas.read_excel(fname, sheet_name=None, header=None, index_col=0)
             except:
-                myplatform.log_last_error()
+                econ_platform_core.log_last_error()
                 log_warning('Problem with Excel {0}'.format(fname))
                 continue
             for sheet_name in sheets:
@@ -92,7 +92,7 @@ class ProviderAbsXls(myplatform.ProviderWrapper):
                         sheet.index = list_index
                         return sheet[c]
         # Did not find it; puke.
-        raise myplatform.TickerNotFoundError('Could not find series ID = {0}'.format(series_code))
+        raise econ_platform_core.TickerNotFoundError('Could not find series ID = {0}'.format(series_code))
 
 
 

@@ -24,10 +24,10 @@ import pandas
 import sqlite3
 import datetime
 
-import myplatform
-import myplatform.utils
+import econ_platform_core
+import econ_platform_core.utils
 
-class DatabaseSqlite3(myplatform.DatabaseManager):
+class DatabaseSqlite3(econ_platform_core.DatabaseManager):
     Cursor: sqlite3.Cursor
     Directory: str
     Connection: sqlite3.Connection
@@ -39,7 +39,6 @@ class DatabaseSqlite3(myplatform.DatabaseManager):
         """
         super().__init__(name='SQLite Database')
         self.Name = 'SQLite Database'
-        self.Directory = ''
         self.DatabaseFile = ''
         self.Connection = None
         self.Cursor = None
@@ -51,7 +50,7 @@ class DatabaseSqlite3(myplatform.DatabaseManager):
         if self.Connection is not None:
             return self.Connection
         self.SetParameters()
-        full_name = os.path.join(self.Directory, self.DatabaseFile)
+        full_name = self.DatabaseFile
         did_not_exist = not os.path.exists(full_name)
         self.Connection = sqlite3.Connection(full_name)
         if did_not_exist and auto_create:
@@ -65,8 +64,7 @@ class DatabaseSqlite3(myplatform.DatabaseManager):
     def SetParameters(self):
         # Set data from config file, unless previously set
         # List of (class_member, config_attribute) pairs.
-        info = [('Directory', 'directory'),
-                ('DatabaseFile', 'file_name'),
+        info = [('DatabaseFile', 'file_name'),
                 ('MetaTable', 'meta_table'),
                 ('DataTable', 'data_table')]
         for attrib, config_name in info:
@@ -74,12 +72,12 @@ class DatabaseSqlite3(myplatform.DatabaseManager):
             if len(getattr(self, attrib)) == 0:
                 # Can either be under "SQL" or "D_SQLITE3"
                 try:
-                    setattr(self, attrib, myplatform.PlatformConfiguration['SQL'][config_name])
+                    setattr(self, attrib, econ_platform_core.PlatformConfiguration['SQL'][config_name])
                 except KeyError:
-                    setattr(self, attrib, myplatform.PlatformConfiguration['D_SQLITE'][config_name])
-        # Directory is a special case.
-        if self.Directory == 'myplatform':
-            self.Directory = myplatform.utils.get_platform_directory()
+                    setattr(self, attrib, econ_platform_core.PlatformConfiguration['D_SQLITE'][config_name])
+        # Database file is a special case.
+        self.DatabaseFile = econ_platform_core.utils.parse_config_path(self.DatabaseFile)
+
 
 
     def TestTablesExist(self):
@@ -90,12 +88,12 @@ class DatabaseSqlite3(myplatform.DatabaseManager):
             cursor.execute('SELECT * FROM {0} LIMIT 1'.format(self.MetaTable))
         except sqlite3.OperationalError as ex:
             # Expected error message: 'no such table: {table_name}'
-            myplatform.log_warning('sqlite3 error %s', ex)
+            econ_platform_core.log_warning('sqlite3 error %s', ex)
             if self.MetaTable.lower() in ex.args[0].lower():
-                raise myplatform.PlatformError('Tables do not exist. Need to run the initialisation script init_sqlite.py in the scripts directory.')
+                raise econ_platform_core.PlatformError('Tables do not exist. Need to run the initialisation script init_sqlite.py in the scripts directory.')
             else:
                 print(str(ex))
-                raise myplatform.PlatformError('Error when testing for table existence')
+                raise econ_platform_core.PlatformError('Error when testing for table existence')
 
     def Execute(self, cmd, *args, commit_after=False, is_many=False):
         """
@@ -113,11 +111,11 @@ class DatabaseSqlite3(myplatform.DatabaseManager):
         if self.LogSQL:
             if len(args) > 0:
                 if is_many:
-                    myplatform.log('{0} : executemany()'.format(cmd))
+                    econ_platform_core.log('{0} : executemany()'.format(cmd))
                 else:
-                    myplatform.log(cmd + " : " + str(args))
+                    econ_platform_core.log(cmd + " : " + str(args))
             else:
-                myplatform.log(cmd)
+                econ_platform_core.log(cmd)
         if len(args) > 0:
             if is_many:
                 self.Cursor.executemany(cmd, args[0])
@@ -144,20 +142,20 @@ class DatabaseSqlite3(myplatform.DatabaseManager):
             ticker_full = series_meta
         series_id = self.GetSeriesID(ticker_full)
         if series_id is None:
-            raise myplatform.TickerNotFoundError('{0} not found on database'.format(ticker_full))
+            raise econ_platform_core.TickerNotFoundError('{0} not found on database'.format(ticker_full))
         cmd = """
 SELECT series_dates, series_values FROM {0} WHERE series_id = ?
         """.format(self.DataTable)
         res = self.Execute(cmd, series_id, commit_after=False).fetchall()
         def mapper(s):
             try:
-                return myplatform.utils.iso_string_to_date(s)
+                return econ_platform_core.utils.iso_string_to_date(s)
             except:
                 float(s)
         try:
             dates = [mapper(x[0]) for x in res]
         except:
-            raise myplatform.PlatformError('Corrupted date axis for {0}'.format(ticker_full))
+            raise econ_platform_core.PlatformError('Corrupted date axis for {0}'.format(ticker_full))
         valz = [x[1] for x in res]
         ser = pandas.Series(valz)
         ser.index = dates
@@ -169,7 +167,7 @@ SELECT series_dates, series_values FROM {0} WHERE series_id = ?
         """
 
         :param ser: pandas.Series
-        :param ticker: myplatform.SeriesMetaData
+        :param ticker: econ_platform_core.SeriesMetaData
         :param overwrite: bool
         :return:
         """
@@ -187,7 +185,7 @@ DELETE FROM {0} WHERE series_id = ?""".format(self.DataTable)
                 self.Execute(cmd, series_id, commit_after=True)
         dates = ser.index
         # Need to coerce to strings.
-        dates = [myplatform.utils.coerce_date_to_string(x) for x in dates]
+        dates = [econ_platform_core.utils.coerce_date_to_string(x) for x in dates]
         id_list = [series_id,]*len(dates)
         info = zip(id_list, dates, ser.values)
         cmd = """
@@ -209,7 +207,7 @@ DELETE FROM {0} WHERE series_id = ?""".format(self.DataTable)
     def CreateSeries(self, series_meta):
         """
 
-        :param series_meta: myplatform.SeriesMetaData
+        :param series_meta: econ_platform_core.SeriesMetaData
         :return:
         """
         # Need to make sure initialised

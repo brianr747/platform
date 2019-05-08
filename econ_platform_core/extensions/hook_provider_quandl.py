@@ -1,5 +1,5 @@
 """
-Python script that hooks in SQLite database.
+Python script that hooks in the quandl code (found in providers).
 
 Copyright 2019 Brian Romanchuk
 
@@ -17,16 +17,16 @@ limitations under the License.
 
 """
 
-import myplatform
-import myplatform.databases.database_sqlite3
+import econ_platform_core
+import econ_platform_core.providers.provider_quandl
 
 
-extension_name = 'SQLite Database (sqlite3)'
+extension_name = 'Quandl'
 
 def main():
     """
     Insert the provider into the platform list
     :return:
     """
-    obj = myplatform.databases.database_sqlite3.DatabaseSqlite3()
-    myplatform.Databases.AddDatabase(obj)
+    obj = econ_platform_core.providers.provider_quandl.ProviderQuandl()
+    econ_platform_core.Providers.AddProvider(obj)

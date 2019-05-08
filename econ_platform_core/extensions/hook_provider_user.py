@@ -1,5 +1,5 @@
 """
-Python script that hooks in the quandl code (found in providers).
+Python script that hooks in the USER code (found in providers).
 
 Copyright 2019 Brian Romanchuk
 
@@ -17,16 +17,16 @@ limitations under the License.
 
 """
 
-import myplatform
-import myplatform.providers.provider_quandl
+import econ_platform_core
+import econ_platform_core.providers.provider_user
 
 
-extension_name = 'Quandl'
+extension_name = 'User Provided Data'
 
 def main():
     """
     Insert the provider into the platform list
     :return:
     """
-    obj = myplatform.providers.provider_quandl.ProviderQuandl()
-    myplatform.Providers.AddProvider(obj)
+    obj = econ_platform_core.providers.provider_user.ProviderUser()
+    econ_platform_core.Providers.AddProvider(obj)

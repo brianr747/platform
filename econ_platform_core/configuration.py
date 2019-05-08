@@ -24,7 +24,7 @@ limitations under the License.
 import configparser
 import os
 
-import myplatform
+import econ_platform_core
 
 
 def load_platform_configuration(display_steps=True):
@@ -54,7 +54,7 @@ def load_platform_configuration(display_steps=True):
 
 def print_configuration(config=None):
     if config is None:
-        config = myplatform.PlatformConfiguration
+        config = econ_platform_core.PlatformConfiguration
     for sec in config.sections():
         print('[{0}]'.format(sec))
         for k in config[sec]:

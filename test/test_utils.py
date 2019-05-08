@@ -2,8 +2,8 @@
 import unittest
 import os
 
-import myplatform
-import myplatform.utils as utils
+import econ_platform_core
+import econ_platform_core.utils as utils
 
 
 class test_functions(unittest.TestCase):
@@ -23,7 +23,7 @@ class test_functions(unittest.TestCase):
 
 
 class test_parse_config_directory(unittest.TestCase):
-    package_dir = os.path.dirname(myplatform.__file__)
+    package_dir = os.path.dirname(econ_platform_core.__file__)
     """
     Note: These tests will fail if someone relocates utils.py, which is probably what we want to happen.
     """

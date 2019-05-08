@@ -26,10 +26,10 @@ limitations under the License.
 import fredapi
 
 
-import myplatform
+import econ_platform_core
 
 
-class ProviderFred(myplatform.ProviderWrapper):
+class ProviderFred(econ_platform_core.ProviderWrapper):
     def __init__(self):
         super(ProviderFred, self).__init__(name='FRED')
 
@@ -44,7 +44,7 @@ class ProviderFred(myplatform.ProviderWrapper):
         :return: list
         """
         query_ticker = series_meta.ticker_query
-        api_key = myplatform.PlatformConfiguration['P_FRED']['api_key']
+        api_key = econ_platform_core.PlatformConfiguration['P_FRED']['api_key']
         if api_key.lower() == 'none':
             # KeyError - ha, ha, I kill myself...
             raise KeyError('Error: need to set the FRED API key in the config.txt; available from St. Louis Fed.')

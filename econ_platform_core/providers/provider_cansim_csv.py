@@ -27,23 +27,22 @@ import csv
 import os
 import pandas
 
-import myplatform
-from myplatform import log, log_warning
-import myplatform.configuration
-import myplatform.utils
+import econ_platform.analysis.quick_plot
+import econ_platform_core
+from econ_platform_core import log, log_warning
+import econ_platform_core.configuration
+import econ_platform_core.utils
 
 
-class ProviderCansim_Csv(myplatform.ProviderWrapper):
+class ProviderCansim_Csv(econ_platform_core.ProviderWrapper):
     def __init__(self):
         super(ProviderCansim_Csv, self).__init__(name='CANSIM_CSV')
-        self.DirectoryZip = myplatform.PlatformConfiguration['P_CCSV']['zip_directory']
-        if self.DirectoryZip == 'cansim_csv':
-            # Put it into the sub-directory
-            self.DirectoryZip = os.path.join(os.path.dirname(__file__), 'cansim_csv')
-        self.DirectoryParsed = myplatform.PlatformConfiguration['P_CCSV']['parsed_directory']
-        if self.DirectoryParsed == 'cansim_csv/parsed':
-            self.DirectoryParsed = os.path.join(os.path.dirname(__file__), 'cansim_csv', 'parsed')
-        self.ZipTail = myplatform.PlatformConfiguration['P_CCSV']['zip_tail']
+        self.DirectoryZip = econ_platform_core.utils.parse_config_path(
+            econ_platform_core.PlatformConfiguration['P_CCSV']['zip_directory'])
+
+        self.DirectoryParsed = econ_platform_core.utils.parse_config_path(
+            econ_platform_core.PlatformConfiguration['P_CCSV']['parsed_directory'])
+        self.ZipTail = econ_platform_core.PlatformConfiguration['P_CCSV']['zip_tail']
 
 
     def fetch(self, series_meta):
@@ -51,22 +50,22 @@ class ProviderCansim_Csv(myplatform.ProviderWrapper):
         Do the fetch.
 
         Can only support single series queries...
-        :param series_meta: myplatform.SeriesMetaData
+        :param series_meta: econ_platform_core.SeriesMetaData
         :return: list
         """
         query_ticker = series_meta.ticker_query
         try:
             table_name, vector = query_ticker.split('|')
         except:
-            raise myplatform.TickerError('CANSIM_CSV ticker format: <table>|<vector>; invalid ticker = {0}'.format(
+            raise econ_platform_core.TickerError('CANSIM_CSV ticker format: <table>|<vector>; invalid ticker = {0}'.format(
                                          query_ticker))
         parsed_name = self.GetTimeSeriesFile(table_name)
         if not os.path.exists(parsed_name):
-            myplatform.log('Table file does not exist, attempting to unzip')
+            econ_platform_core.log('Table file does not exist, attempting to unzip')
             try:
                 self.UnzipFile(table_name)
             except:
-                raise myplatform.TickerNotFoundError(
+                raise econ_platform_core.TickerNotFoundError(
                     'Table {0} needs to be downloaded as a zip file'.format(table_name))
             self.ParseUnzipped(table_name)
         items = []
@@ -74,10 +73,10 @@ class ProviderCansim_Csv(myplatform.ProviderWrapper):
             for row_raw in f:
                 row = row_raw.split('\t')
                 if row[0] == vector:
-                    ddate = myplatform.utils.iso_string_to_date(row[1])
+                    ddate = econ_platform_core.utils.iso_string_to_date(row[1])
                     items.append((ddate, float(row[2])))
         if len(items) == 0:
-            raise myplatform.TickerNotFoundError('Vector {0} not found in CANSIM table {1}'.format(vector, table_name))
+            raise econ_platform_core.TickerNotFoundError('Vector {0} not found in CANSIM table {1}'.format(vector, table_name))
         items.sort()
         values = [x[1] for x in items]
         dates = [x[0] for x in items]
@@ -106,7 +105,7 @@ class ProviderCansim_Csv(myplatform.ProviderWrapper):
     def ParseDate(self, date_str):
         if len(date_str) == 7:
             # Monthly?
-            ddate = myplatform.utils.align_by_month(date_str[0:4], date_str[-2:], freq='M')
+            ddate = econ_platform_core.utils.align_by_month(date_str[0:4], date_str[-2:], freq='M')
         else:
             raise NotImplementedError('Unknown CANSIM date format: {0}'.format(date_str))
         return ddate
@@ -118,8 +117,8 @@ class ProviderCansim_Csv(myplatform.ProviderWrapper):
         target_col_names = ['vector', 'ref_date', 'value']
         last_rows = {}
         with open(self.GetTimeSeriesFile(table_name), 'w') as f_series:
-            out_header = ['vector', myplatform.PlatformConfiguration['Database']['dates_column'],
-                      myplatform.PlatformConfiguration['Database']['values_column']]
+            out_header = ['vector', econ_platform_core.PlatformConfiguration['Database']['dates_column'],
+                          econ_platform_core.PlatformConfiguration['Database']['values_column']]
             f_series.write('\t'.join(out_header) +'\n')
             with open(os.path.join(self.DirectoryParsed, 'snapshot_{0}.csv'.format(table_name)), 'w') as f_meta:
                 with open(target, 'r') as csvfile:
@@ -128,12 +127,12 @@ class ProviderCansim_Csv(myplatform.ProviderWrapper):
                     header = next(reader)
                     header = [x.replace('"', '') for x in header]
                     # There seems to be some garbage in the first entry; nuke it from orbit.
-                    header = [myplatform.utils.remove_non_ascii(x) for x in header]
+                    header = [econ_platform_core.utils.remove_non_ascii(x) for x in header]
                     f_meta.write('\t'.join(header))
                     # Find the columns
                     try:
-                        targ_col_n = [myplatform.utils.entry_lookup(x, header, case_sensitive=False)
-                                     for x in target_col_names]
+                        targ_col_n = [econ_platform_core.utils.entry_lookup(x, header, case_sensitive=False)
+                                      for x in target_col_names]
                     except KeyError:
                         print('CANSIM CSV format changed!')
                         raise
@@ -162,12 +161,12 @@ def main():
     Routine used in testing. Not really a good candidate for test-driven development...
     :return:
     """
-    myplatform.configuration.print_configuration()
-    myplatform.start_log()
+    econ_platform_core.configuration.print_configuration()
+    econ_platform_core.start_log()
     obj = ProviderCansim_Csv()
     # obj.ParseUnzipped('10100002')
-    ser = myplatform.fetch('CCSV@10100002|v86822808')
-    myplatform.quick_plot(ser)
+    ser = econ_platform_core.fetch('CCSV@10100002|v86822808')
+    econ_platform.analysis.quick_plot.quick_plot(ser)
 
 
 if __name__ == '__main__':

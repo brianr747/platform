@@ -1,5 +1,5 @@
 """
-Python script that hooks in the CANSIM_CSV code (found in providers).
+Python script that hooks in SQLite database.
 
 Copyright 2019 Brian Romanchuk
 
@@ -17,16 +17,16 @@ limitations under the License.
 
 """
 
-import myplatform
-import myplatform.providers.provider_cansim_csv
+import econ_platform_core
+import econ_platform_core.databases.database_sqlite3
 
 
-extension_name = 'CANSIM (CSV)'
+extension_name = 'SQLite Database (sqlite3)'
 
 def main():
     """
     Insert the provider into the platform list
     :return:
     """
-    obj = myplatform.providers.provider_cansim_csv.ProviderCansim_Csv()
-    myplatform.Providers.AddProvider(obj)
+    obj = econ_platform_core.databases.database_sqlite3.DatabaseSqlite3()
+    econ_platform_core.Databases.AddDatabase(obj)
