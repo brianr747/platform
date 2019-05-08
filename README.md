@@ -5,7 +5,8 @@
 all my code is  in a single PyCharm project, I can refactor the name easily, but users 
 need to know that the package name may shift. The current front runner is *econ_platform*.)
 
-Python 3 only. I work on Python 3.7, and no idea about backward compatibility issues.
+Python 3.7 is needed (possibly 3.6); I use variable type hints which are not supported
+by 3.5.
 
 This repository is mainly for my own use for now; I am transferring my platform to a new computer, and decided to do a clean up 
 at the same time. In particular, the MySQL interface is not implemented.
