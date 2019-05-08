@@ -12,9 +12,9 @@ is just told (if they look) that the extension was not loaded.
 This will not work for unit testing; extension tests will have to be configured so that
 the unit test suite will run even if some modules cannot be imported.
 
-I will only worry about this if other people start using the package and report unit
-test problems. Installing and and uninstalling packages continuously to test the 
-integrity of unit tests is not a priority for me.
+The solution appears to be: have modules that have import dependencies that are 
+anything other than base modules or pandas throw a SkipException (?) before
+any imports unless an environment variable is set to enable the test module.
 
-(One solution is to separate out the extensions into another directory; but that
-messes up my coverage analysis.)
+This way, unit tests "work out of the box," but if people want to test extensions,
+they do so at own risk...

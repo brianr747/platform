@@ -1,15 +1,43 @@
 # platform
 *Platform to download, manipulate and plot data. Mainly Python, with some R.*
 
-(Note: if this is every to be a serious project, it needs a better package name. Since 
-all my code is  in a single PyCharm project, I can refactor the name easily, but users 
-need to know that the package name may shift. The current front runner is *econ_platform*.)
-
 Python 3.7 is needed (possibly 3.6); I use variable type hints which are not supported
 by 3.5.
 
 This repository is mainly for my own use for now; I am transferring my platform to a new computer, and decided to do a clean up 
 at the same time. In particular, the MySQL interface is not implemented.
+
+## Big Refactoring (1)
+
+In order to allow for collaboration, I need to implement the basic design I envisage
+so that it is easier for collaborators to understand where this project is supposed to
+go. 
+
+This means that I am creating a new branch ("refactor_1") which will make some
+serious changes to the Python structure (including renaming the package!).
+
+The refactoring will break all my existing example code, and the code is likely to be
+non-functional as a result of changes. I hope to be past that stage quickly,
+but would not recommend running that branch until it is merged back into the master
+branch.
+
+*Key changes:*
+- Package will be split into two parts: <core> and <extension>. Users would
+normally import the <extension> package (which loads the <core>.) No idea how
+that would work with PyPi packaging.
+- No features will be added in the branch (because that makes things worse...).
+- The <core> package should only depend on *pandas* and built-in packages (including
+SQLite). So long as you have *pandas* installed, the <core> package should import 
+and function properly. 
+- There will be a single tests directory for both package, but test modules for
+extensions that import anything other than *pandas* will skip by default. This 
+means that the unit tests will run even with no other packages installed.
+- Realistically, close to 100% of the <core> package can be covered with unit tests
+and end-to-end tests (I use an environment variable to allow skipping of end-to-end
+tests). As for <extensions>, the unit tests will obviously break if you are missing 
+modules that that extensions import.
+- Hooks for the "update protocol" will be put into place, and the class interfaces
+cleaned up. It should be clearer what interfaces providers/databases need to support.
 
 ## Features
 

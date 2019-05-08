@@ -54,3 +54,24 @@ It likely makes no sense to query on a series-by-series basis always. Instead, a
 single "table fetch" gets an entire table of series from a provider, and all the series
 are updated. The "table fetch" is triggered by an update request on any of the
 series in the table.
+
+# Start Date/End Date
+
+The current code base is greatly simplified because it is dealing with an entire
+time series as unit; it just uses whatever time index the external provider or
+database uses. However, when we want to update series on databases, or if users
+want to specify start date/end date in their *fetch()* calls, we need to 
+standardise how date axes are specified. 
+
+I see the need to support at least types of time axes:
+
+1. Calendar date (no time of day parameter).
+2. Date-time (if someone has intraday data).
+3. Float. Allows us to handle things like model time axes (converting ints to floats
+   if needed).
+   
+One exotic option may be to allow lower frequency dates: monthly, quarterly, etc.
+
+I am going to dodge this question for as long as possible. For my purposes, I only need
+calendar dates and floats (for *sfc_models*). What we can do is have database/provider
+extensions signal that they can support more advanced time axes as well.
