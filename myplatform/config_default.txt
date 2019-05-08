@@ -20,6 +20,16 @@
 # FileName = {Windows Path}
 #
 #
+# NOTE: We only know that this package is installed (somewhere), so the default directory is the package
+# base directory. Default paths are relative to this directory, denoted as {BASE} (case-sensitive).
+# For example, the "text_dabase" subdirectory is specified as '{BASE}/subdirectory'.
+# Note that when parsing defaults, the "/" and "\" characters are replaced by the OS-specific
+# seperator, so the defaults should work on any OS. However, any customised path needs to
+# use the correct separator. See utils.parse_config_path().
+#
+# (This standard for default directories was imposed after the start of development; need to refactor code to use this.)
+
+
 [ActualConfigFile]
 FileName = NA
 [Logging]

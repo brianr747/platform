@@ -1,5 +1,8 @@
 
 import unittest
+import os
+
+import myplatform
 import myplatform.utils as utils
 
 
@@ -16,4 +19,31 @@ class test_functions(unittest.TestCase):
 
     def test_split_ticker(self):
         self.assertEqual(utils.split_ticker_information('D@ticker'), ('D', 'ticker'))
+
+
+
+class test_parse_config_directory(unittest.TestCase):
+    package_dir = os.path.dirname(myplatform.__file__)
+    """
+    Note: These tests will fail if someone relocates utils.py, which is probably what we want to happen.
+    """
+    def test_custom(self):
+        self.assertEqual('foo', utils.parse_config_path('foo'))
+
+    def test_case_sensitive(self):
+        self.assertEqual('{base}', utils.parse_config_path('{base}'))
+
+    def test_without_sep(self):
+        self.assertEqual(test_parse_config_directory.package_dir, utils.parse_config_path('{BASE}'))
+
+    def test_sep1(self):
+        self.assertEqual(os.path.join(test_parse_config_directory.package_dir, 'foo'),
+                         utils.parse_config_path('{BASE}\\foo'))
+
+    def test_sep2(self):
+        self.assertEqual(os.path.join(test_parse_config_directory.package_dir, 'foo'),
+                         utils.parse_config_path('{BASE}/foo'))
+
+
+
 

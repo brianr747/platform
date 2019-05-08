@@ -75,11 +75,14 @@ def convert_ticker_to_variable(ticker):
 def split_ticker_information(ticker):
     """
     Split a ticker into a (source_code, source_ticker) pair.
+    DEPRECATED: use ticker.py
 
     For now, no error handling...
     :param ticker: str
     :return: tuple
     """
+    # Leave this off for now.
+    # logging.warning('split_ticker_information() is deprecated.')
     source_code, source_ticker = ticker.split('@')
     return (source_code, source_ticker)
 
@@ -91,6 +94,30 @@ def get_platform_directory():
     """
     return os.path.dirname(__file__)
 
+
+def parse_config_path(fpath):
+    """
+    Parse a path in config files.
+
+    (1) If the path does not contain '{BASE}', it is a non-default path, so return unchanged.
+    (2) If the path contains '{BASE}', it is a default that is going into the platform package
+    directory structure. (Why? These are the only directories that we now exist, other than the current
+    directory.)
+
+    (a) The term '{BASE}' is replaced with the directory of this file (assumed to be the base of the package.)
+    (b) All directory seperators ("/", "\") are replaced with the correct path seperator for the OS.
+
+    :param fpath: str
+    :return: str
+    """
+    if '{BASE}' not in fpath:
+        return fpath
+    # Default path; go to work.
+    # Make all seperators the same.
+    fpath = fpath.replace('\\', '/')
+    fpath_s = fpath.split('/')
+    new_path = os.path.sep.join(fpath_s)
+    return new_path.replace('{BASE}', os.path.dirname(__file__))
 
 def entry_lookup(target, row, case_sensitive=True):
     """
