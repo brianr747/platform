@@ -164,8 +164,5 @@ within pandas already. Instead, the effort is getting everything wrapped into a 
 
 ## More Information
 
-Plans.txt has some thoughts on my plans for this project.
-
-EarlyAdopters.md has some comments aimed at anyone who wants to use this package.
-
-DesignNotes.md has (suprisingly enough) design notes.
+See the other text files (*.md) in this directory for more information, like
+design notes.

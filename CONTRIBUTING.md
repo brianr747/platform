@@ -23,7 +23,8 @@ other than simple bug fixes or cleanup.)
 
 Other areas:
 
-- Documentation. (There isn't even a docs folder at the time of writing!)
+- Documentation. (There isn't even a docs folder at the time of writing! "Who let the doc's
+[sic] out! Woof Woof!")
 - Programming best practices experts.
 - SQL experrts.
 - Pricing algorithm experts (for integration of existing libraries).
