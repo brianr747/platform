@@ -20,7 +20,15 @@ Put this marker above the tests that you want to skip.
 
 
 import os
+import unittest
+
+import loc_utils
+
+# Testing the skip functionality
+loc_utils.skip_this_extension_module()
 
 skip_end_to_end = os.getenv('DontRunEndToEnd')
 
-#
+class dummy_test(unittest.TestCase):
+    def test_fail(self):
+        self.assertTrue(False)

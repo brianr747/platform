@@ -34,15 +34,19 @@ class test_parse_config_directory(unittest.TestCase):
         self.assertEqual('{base}', utils.parse_config_path('{base}'))
 
     def test_without_sep(self):
-        self.assertEqual(test_parse_config_directory.package_dir, utils.parse_config_path('{BASE}'))
+        self.assertEqual(test_parse_config_directory.package_dir, utils.parse_config_path('{CORE}'))
 
     def test_sep1(self):
         self.assertEqual(os.path.join(test_parse_config_directory.package_dir, 'foo'),
-                         utils.parse_config_path('{BASE}\\foo'))
+                         utils.parse_config_path('{CORE}\\foo'))
 
     def test_sep2(self):
         self.assertEqual(os.path.join(test_parse_config_directory.package_dir, 'foo'),
-                         utils.parse_config_path('{BASE}/foo'))
+                         utils.parse_config_path('{CORE}/foo'))
+
+    def test_sep3(self):
+        self.assertEqual(os.path.join(test_parse_config_directory.package_dir, 'data'),
+                         utils.parse_config_path('{DATA}'))
 
 
 

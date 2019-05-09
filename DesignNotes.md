@@ -1,46 +1,28 @@
 # Design Notes
 
+2019-05-08 
+In the middle of a big refactoring of the structure. Documentation may be out of date...
+
 2019-05-06
 I am writing these notes now as I hope to start working on other projects; I want to 
 lay out my thinking for when I get back to this.
 
 ## Name Issue
 
-The current name of the package is a placeholder, but I think I need to change it soon.
-
-My preference is *economics_platform*, but open to suggestions. It will be easy to refactor
-until people start using it. 
+The package has been renamed and split into two: "econ_platform" and
+"econ_platform_core."  Although it may appear more logical to call the non-core
+package "econ_platform_extensions," the expectation is that this is the package that
+will always be imported; hence it has the easier-to-remember name.
 
 ## Start-Up Issue
 
-I want the package to be extremely efficient to use. I want to be able to do either:
+I wanted to be able to "start up" the package with importing it. This will not
+do anything that will normally fail, but will have side effects - reading config
+files, importing extensions (which can monkey patch over base code).
 
-    import {package/module}
-
-or 
-
-    from {package/module} import *
-
-and have the package:
-1) Import base modules.
-2) Import extensions.
-3) Load configuration information from config files.
-4) Allow for automatic monkey-patching from within an extension.
-
-Furthermore, I wanted the names of the imported functions to be short.
-
-The problem is that (2) & (3) & (4) all have side effects, which is a disaster for
-unit testing.
-
-The solution appears to be that I will create a *script* startup.py that is inside the package.
-Importing it launches the start up configuration protocol. The initialisation code
-that is in \_\_init__.py will not be invoked automatically. 
-
-It looks like this solution will cover all of my objectives, and make importing the base package
-have almost no side effects (other than the declaration of abstract base classes, and initialising
-the containers for database provider wrappers).
-
-This change will break my existing example code; better to do it now than later.
+The solution was to create a script (*start.py*) that does the set up on import. 
+Purists can call the initialise package function in *econ_platform*. This will
+help unit testing. 
 
 ## Circular Imports
 
@@ -54,12 +36,6 @@ which is why they migrated to the base package \_\_init__.py.
 If I cannot get that migration to work, I may move all the code inside the abstract base class
 to another base class in the appropriate sub-package (e.g., "BaseProvider" and "BaseDatabase"),
 and just leave the public interface definition in the base \_\_init__.py.
-
-Other high level modules:
-- **configuration.py** It makes sense to pull the front end to ConfigParser into a separate module.
-- **utils.py** The code in utils.py are things I do all the time with standard Python code.
-  It should not import any other modules from this package, so it should avoid circular
-  import problems.
   
 ## Extensions
 
@@ -103,8 +79,17 @@ work, or they don't.
 - I will have to create a "MockProvider" that just has a few fixed responses, and we can use that
 to test the base class fetch/update/store functionality.
 - I can use the in-memory SQLite database for database unit tests.
-- The initialisation code is currently automatically triggered; I need to turn that off (as
-discussed earlier).
+- The split into econ_platform_core and econ_platform helps. The coverage standard
+for 100% will be first targeted for econ_platform_core; the extensions can be
+sloppier.
+
+I realised that this code will end up having a huge number of external imports.
+This will mean that unit tests will fail unless the tester installs all the
+packages. (The platform initialisation will just note failed extension
+imports.) However, the core package really only needs standard Python libraries and
+pandas. So we need to split the tests into two groups, and by default only run the
+tests that do not rely on external API's. The tester can set an environment
+variable to turn on the remaining tests (and deal with the import errors).
 
 I want to get the SQLite database functioning first (so I can start working with the platform
 myself); once that milestone is ready, I will try to freeze Python development until I have time

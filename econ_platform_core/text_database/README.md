@@ -1,1 +1,0 @@
-This directory will hold a "text database" file

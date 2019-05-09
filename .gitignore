@@ -1,13 +1,13 @@
 # Project specific
-myplatform/logs/*.txt
-myplatform/config.txt
-myplatform/text_database/*.txt
+econ_platform_core/logs/*.txt
+econ_platform_core/config.txt
+econ_platform_core/data/text_database/*.txt
 legacy/R/images/*.png
 legacy/R/text_database/*.txt
 legacy/R/log*.txt
 scripts/log*.txt
 # sqlite databases
-myplatform/*.db
+econ_platform_core/data/*.db
 
 
 # R files

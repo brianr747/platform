@@ -31,9 +31,8 @@ class DatabaseText(econ_platform_core.DatabaseManager):
 
     def CheckDirectory(self):
         if self.Directory is None:
-            self.Directory = econ_platform_core.PlatformConfiguration['D_TEXT']['directory']
-            if self.Directory == 'text_database':
-                self.Directory = os.path.join(econ_platform_core.utils.get_platform_directory(), 'text_database')
+            self.Directory = econ_platform_core.utils.parse_config_path(
+                econ_platform_core.PlatformConfiguration['D_TEXT']['directory'])
 
     @staticmethod
     def GetFileName(ticker):

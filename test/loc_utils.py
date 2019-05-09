@@ -19,3 +19,4 @@ def skip_this_extension_module():
     """
     # TODO: Insert conditional logic here
     raise unittest.SkipTest('this module is skipped because it is an extension module')
+

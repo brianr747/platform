@@ -12,6 +12,7 @@ document.
 
 Stuff that can be summarised easily.
 
+- Migrate extensions that use external API's to econ_platform package (out of core).
 - Refactor code to use the *tickers.py* module. Eiminate ambiguity about what a ticker
 string represents.
 - Add "series name"/"series description" as fields that exist for all series. 

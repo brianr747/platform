@@ -99,25 +99,31 @@ def parse_config_path(fpath):
     """
     Parse a path in config files.
 
-    (1) If the path does not contain '{CORE}', it is a non-default path, so return unchanged.
+    (1) If the path does not contain '{CORE}' or '{DATA}', it is a non-default path, so return unchanged.
     (2) If the path contains '{CORE}', it is a default that is going into the platform package
     directory structure. (Why? These are the only directories that we now exist, other than the current
     directory.)
 
-    (a) The term '{CORE}' is replaced with the directory of this file (assumed to be the base of the package.)
+    (a) The term '{CORE}' is replaced with the directory of this file (assumed to be the base of the package.),
+    or '{DATA}' with '{CORE}/data'.
     (b) All directory seperators ("/", "\") are replaced with the correct path seperator for the OS.
+
+
 
     :param fpath: str
     :return: str
     """
-    if '{CORE}' not in fpath:
+    if not(('{CORE}' in fpath) or ('{DATA}' in fpath)):
         return fpath
     # Default path; go to work.
     # Make all seperators the same.
     fpath = fpath.replace('\\', '/')
     fpath_s = fpath.split('/')
     new_path = os.path.sep.join(fpath_s)
-    return new_path.replace('{CORE}', os.path.dirname(__file__))
+    new_path = new_path.replace('{DATA}', os.path.join('{CORE}', 'data'))
+    new_path = new_path.replace('{CORE}', os.path.dirname(__file__))
+    return new_path
+
 
 def entry_lookup(target, row, case_sensitive=True):
     """

@@ -33,7 +33,7 @@
 [ActualConfigFile]
 FileName = NA
 [Logging]
-# Default in the "logs" directory below myplatform.
+# Default in the "logs" directory below base directory.
 LogDirectory = {CORE}/logs
 [Options]
 UseMonkeyPatchExample = False
@@ -59,9 +59,9 @@ SQLite Database=SQLITE
 # Data associated with each database are saved as separate sections.
 # Naming convention: D_{database_ticker}
 [D_TEXT]
-directory=text_database
+directory={DATA}\text_database
 [D_SQLITE]
-file_name={CORE}\platform.db
+file_name={DATA}\platform.db
 # Generic provider options
 [ProviderOptions]
 echo_access=True
