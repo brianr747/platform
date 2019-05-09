@@ -22,19 +22,19 @@ but would not recommend running that branch until it is merged back into the mas
 branch.
 
 *Key changes:*
-- Package will be split into two parts: <core> and <extension>. Users would
-normally import the <extension> package (which loads the <core>.) No idea how
+- Package will be split into two parts: "core" and "extension". Users would
+normally import the "extension" package (which loads the "core".) No idea how
 that would work with PyPi packaging.
 - No features will be added in the branch (because that makes things worse...).
-- The <core> package should only depend on *pandas* and built-in packages (including
-SQLite). So long as you have *pandas* installed, the <core> package should import 
+- The "core" package should only depend on *pandas* and built-in packages (including
+SQLite). So long as you have *pandas* installed, the "core" package should import 
 and function properly. 
 - There will be a single tests directory for both package, but test modules for
 extensions that import anything other than *pandas* will skip by default. This 
 means that the unit tests will run even with no other packages installed.
-- Realistically, close to 100% of the <core> package can be covered with unit tests
+- Realistically, close to 100% of the "core" package can be covered with unit tests
 and end-to-end tests (I use an environment variable to allow skipping of end-to-end
-tests). As for <extensions>, the unit tests will obviously break if you are missing 
+tests). As for "extensions", the unit tests will obviously break if you are missing 
 modules that that extensions import.
 - Hooks for the "update protocol" will be put into place, and the class interfaces
 cleaned up. It should be clearer what interfaces providers/databases need to support.
