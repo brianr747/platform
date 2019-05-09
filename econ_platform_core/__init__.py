@@ -49,10 +49,10 @@ from logging import info as log, debug as log_debug, warning as log_warning, err
 import econ_platform_core.configuration
 from econ_platform_core import utils as utils
 import econ_platform_core.extensions
+from econ_platform_core.tickers import TickerFull, TickerDataType, TickerFetch, TickerLocal, TickerProviderCode, \
+    map_string_to_ticker
 
 PlatformConfiguration = configparser.ConfigParser()
-
-
 
 
 # Get the logging information. Users can either programmatically change the LogInfo.LogDirectory or
@@ -69,20 +69,110 @@ def start_log(fname=None):
     global LogInfo
     LogInfo.StartLog(fname)
 
+class PlatformEntity(object):
+    """
+    Base class for objects in the platform. Give an action-logging interface.
+    """
+    _IgnoreRegisterActions = True
+    def __init__(self):
+        self._Actions = []
 
-class SeriesMetaData(object):
+    def _RegisterAction(self, action_class, action_msg, *args):
+        """
+        Register actions in the object "_Actions" property.
+
+        Used for unit-testing/debugging.
+
+        The *args are parsed via msg.format(args). (We skip the formatting effort if
+        we skip registration.)
+
+        Does nothing if PlatformEntity._IgnoreRegisterActions is True (default).
+
+        (This eliminates the performance hit of registration when used in production.)
+
+        :param action_class: str
+        :param action_msg: str
+        :param args: tuple
+        :return:
+        """
+        if self._IgnoreRegisterActions:
+            return
+        self._Actions.append((action_class, action_msg.format(args)))
+
+    def _ClearActions(self):
+        """
+        Clear the action list. (Call ahead of running tests.
+        :return:
+        """
+        self._Actions = []
+
+    def _HasAction(self, action_class=None, msg_substring=None):
+        """
+        Convenience method for testing.
+
+        Set either action_class or msg_substring.
+
+        Looks for an actions that:
+
+        (1) action_class matches *exactly* the search parameter
+        (2) msg_substring appears in the  action message.
+
+        If both are set, both consitions must hold for a single action.
+
+        :param action_class: str
+        :param msg_substring: str
+        :return: bool
+        """
+        if action_class is not None and msg_substring is None:
+            return action_class in [x[0] for x in self._Actions]
+        if action_class is None and msg_substring is not None:
+            for x in self._Actions:
+                if msg_substring in x[1]:
+                    return True
+            return False
+        if action_class is not None and msg_substring is not None:
+            for x in self._Actions:
+                if action_class == x[0] and msg_substring in x[1]:
+                    return True
+            return False
+        raise ValueError('Must have at least one non-None input to HasAction()')
+
+
+class SeriesMetaData(PlatformEntity):
     """
     Class that holds series meta data used on the platform.
     """
     def __init__(self):
         # Kind of strange, but does this series yet exist on the database in question?
+        super().__init__()
         self.Exists = False
         self.series_id = -1
         self.series_provider_code = ''
         self.ticker_full = ''
         self.ticker_local = ''
+        self.ticker_datatype = ''
         self.ticker_query = ''
         self.ProviderMetaData = {}
+
+    def AssertValid(self):
+        """
+        Are tickers valid? Use this call defensively to force internal calls to use the Ticker objects,
+        not strings.
+
+        Tickers can either be empty strings, or else of the valid ticker type.
+        :return:
+        """
+        things_to_test = (('series_provider_code', TickerProviderCode),
+                          ('ticker_full', TickerFull),
+                          ('ticker_local', TickerLocal),
+                          ('ticker_datatype', TickerDataType),
+                          ('ticker_query', TickerFetch))
+        for attrib, targ in things_to_test:
+            obj = getattr(self, attrib)
+            OK = (len(str(obj)) == 0) or (type(obj) is targ)
+            if not OK:
+                raise PlatformError('Invalid SeriesMetaData: {0} is not {1}'.format(attrib, targ))
+        return True
 
     def __str__(self):
         out = ''
@@ -92,13 +182,15 @@ class SeriesMetaData(object):
             out += '{0}\t{1}\n'.format(name, str(getattr(self, name)))
         return out
 
-class DatabaseManager(object):
+
+class DatabaseManager(PlatformEntity):
     """
     This is the base class for Database Managers.
 
     Note: Only support full series replacement for now.
     """
     def __init__(self, name='Virtual Object'):
+        super().__init__()
         self.Name = name
         # This is overridden by the AdvancedDatabase constructor.
         # By extension, everything derived from this base class (like the TEXT dabase is "not advanced."
@@ -113,16 +205,17 @@ class DatabaseManager(object):
         :param ticker: str
         :return: SeriesMetaData
         """
-        try:
-            provider_code, query_ticker = ticker.split('@')
-        except:
-            return self._FindLocal(ticker)
+
+        ticker_obj = map_string_to_ticker(ticker)
+        if type(ticker_obj) is TickerLocal:
+            return self._FindLocal(ticker_obj)
+        if type(ticker_obj) is TickerDataType:
+            return self._FindDataType(ticker_obj)
         meta = SeriesMetaData()
         meta.ticker_local = ''
-        meta.ticker_full = ticker
-        meta.ticker_query = query_ticker
-        meta.series_provider_code  = provider_code
-        meta.Exists = self.Exists(ticker)
+        meta.ticker_full = ticker_obj
+        meta.series_provider_code, meta.ticker_query = ticker_obj.SplitTicker()
+        meta.Exists = self.Exists(meta)
         # Provider-specific meta data data not supported yet.
         return meta
 
@@ -130,16 +223,24 @@ class DatabaseManager(object):
         """
         Databases that support local tickers should override this method.
 
-        :param local_ticker: SeriesMetaData
+        :param local_ticker: TickerLocal
         :return:
         """
         raise NotImplementedError('This database does not support local tickers')
+
+    def _FindDataType(self, datatype_ticker):
+        """
+
+        :param datatype_ticker: TickerDataYype
+        :return:
+        """
+        raise NotImplementedError('This database does not support data type tickers')
 
 
     def Exists(self, ticker):
         """
 
-        :param ticker: str
+        :param ticker: econ_platform_core.tickers._TickerAbstract
         :return: bool
         """
         raise NotImplementedError()
@@ -167,6 +268,7 @@ class DatabaseManager(object):
         :return: list
         """
         meta = self.GetMeta(full_ticker)
+        meta.AssertValid()
         ser = self.Retrieve(meta)
         return ser, meta
 
@@ -181,11 +283,12 @@ class DatabaseManager(object):
         """
         raise NotImplementedError()
 
-class DatabaseList(object):
+class DatabaseList(PlatformEntity):
     """
     List of all Database managers. Developers can push their own DatabaseManagers into the global object.
     """
     def __init__(self):
+        super().__init__()
         self.DatabaseDict = {}
 
     def Initialise(self):
@@ -229,7 +332,7 @@ class DatabaseList(object):
 Databases = DatabaseList()
 
 
-class ProviderWrapper(object):
+class ProviderWrapper(PlatformEntity):
     """
     Data provider class. Note that we call them "providers" and not "sources" since the source is the
     agency in the real world that calculates the data. The provider and the source can be the same - for example,
@@ -239,6 +342,7 @@ class ProviderWrapper(object):
     Name: str
 
     def __init__(self, name='VirtualObject'):
+        super().__init__()
         self.Name = name
         self.ProviderCode = ''
         self.IsExternal = True
@@ -249,11 +353,12 @@ class ProviderWrapper(object):
         raise NotImplementedError
 
 
-class ProviderList(object):
+class ProviderList(PlatformEntity):
     """
     List of all proviser wrappers. Developers can push their own DatabaseManagers into the global object.
     """
     def __init__(self):
+        super().__init__()
         self.ProviderDict = {}
         self.EchoAccess = False
 
@@ -274,7 +379,8 @@ class ProviderList(object):
         :param item: str
         :return: ProviderWrapper
         """
-        return self.ProviderDict[item]
+        # Need to convert to string since we are likely passed a ticker.
+        return self.ProviderDict[str(item)]
 
 Providers = ProviderList()
 
@@ -295,7 +401,7 @@ class TickerNotFoundError(PlatformError):
     pass
 
 
-class UpdateProtocol(object):
+class UpdateProtocol(PlatformEntity):
     """
     Class to handle the management of data updates.
 
@@ -319,7 +425,7 @@ class UpdateProtocol(object):
         return database_manager.Retrieve(series_meta)
 
 
-class UpdateProtocolManager(object):
+class UpdateProtocolManager(PlatformEntity):
     """
     Base class for series update protocols.
 
@@ -331,6 +437,7 @@ class UpdateProtocolManager(object):
     not needed...
     """
     def __init__(self):
+        super().__init__()
         self.Protocols = {}
 
     def __getitem__(self, item):
@@ -370,6 +477,7 @@ def fetch(ticker, database='Default', dropna=True):
         database = PlatformConfiguration["Database"]["Default"]
     database_manager: DatabaseManager = Databases[database]
     series_meta = database_manager.Find(ticker)
+    series_meta.AssertValid()
     provider_code = series_meta.series_provider_code
     try:
         provider_manager: ProviderWrapper = Providers[provider_code]

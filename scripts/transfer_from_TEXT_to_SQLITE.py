@@ -5,8 +5,8 @@ Note: the TEXT database series to have the correct ticker_full as the column hea
 """
 
 
-
 import econ_platform_core
+import econ_platform.start
 
 econ_platform_core.start_log()
 econ_platform_core.Databases['SQLITE'].LogSQL = True

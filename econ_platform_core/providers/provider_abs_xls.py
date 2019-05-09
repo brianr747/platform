@@ -52,9 +52,10 @@ class ProviderAbsXls(econ_platform_core.ProviderWrapper):
         """
         # This will not be needed once the platform code is switched over to using the tickers module.
         full_ticker = tickers.TickerFull(series_meta.ticker_full)
-        provider_code, series_code = full_ticker.SplitTicker()
+        #provider_code, series_code = full_ticker.SplitTicker()
+        series_code = series_meta.ticker_query
         df = self.SearchForSeriesCode(str(series_code))
-        # Need to eiminate the after "Series ID"
+        # Need to eliminate the after "Series ID"
         l_index = list(df.index)
         pos = l_index.index('Series ID')
         pos += 1

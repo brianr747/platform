@@ -35,6 +35,9 @@ class _TickerAbstract(object):
     def __str__(self):
         return self.Text
 
+    def __len__(self):
+        return len(self.Text)
+
     def IsValid(self):
         return InvalidTickerError('Should never instantiate this base class in code.')
 

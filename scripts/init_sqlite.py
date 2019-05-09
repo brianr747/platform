@@ -4,6 +4,7 @@ Script to initialise the sqlite3 database. Needs to be run before using the data
 
 import os
 
+import econ_platform.start
 import econ_platform_core.databases.database_sqlite3
 
 

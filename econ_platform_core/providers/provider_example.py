@@ -1,12 +1,7 @@
 """
-provider_quandl.py
+provider_example.py
 
-Functions to fetch data from Quandl, and convert to standard format.
-
-Quandl website: https://www.quandl.com/
-
-You need an API key if you do more than 50 (?) queries per day.
-
+Dummy provider used for testing
 
 Copyright 2019 Brian Romanchuk
 
@@ -25,34 +20,37 @@ limitations under the License.
 
 """
 
-import quandl
 
 
 import econ_platform_core
+import pandas
+import datetime
 
 
-class ProviderQuandl(econ_platform_core.ProviderWrapper):
+def add_example_provider():
     """
-    Quandl interface (https://www.quandl.com/)
-
+    Call this function to add the "TEST" provider.
+    :return:
     """
+    econ_platform_core.Providers.AddProvider(ProviderExample())
+
+class ProviderExample(econ_platform_core.ProviderWrapper):
     def __init__(self):
-        super(ProviderQuandl, self).__init__(name='QUANDL')
+        super(ProviderExample, self).__init__(name='Example Provider')
 
 
     def fetch(self, series_meta):
         """
-        Do the fetch; will puke if you do too many queries in a day without an API key.
 
-
-        Can only support single series queries...
         :param series_meta: econ_platform_core.SeriesMetaData
         :return: list
         """
-        query_ticker = series_meta.ticker_query
-        df = quandl.get(str(query_ticker))
-        # Need to convert to series.
-        ser = df["Value"]
-        ser.index = df.index
-        ser.name = str(series_meta.ticker_full)
-        return [ser,]
+        query_ticker = str(series_meta.ticker_query)
+        if query_ticker == 'TEST1':
+            x = [1, 2,]
+            data = pandas.Series(x)
+            data.index = [datetime.date(2000, 1, 1), datetime.date(2000, 1, 2)]
+            data.name = str(series_meta.ticker_full)
+            return [data,]
+
+        raise econ_platform_core.TickerNotFoundError('Not found on TEST: {0}'.format(query_ticker))

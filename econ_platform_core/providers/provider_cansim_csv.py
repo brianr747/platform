@@ -53,7 +53,7 @@ class ProviderCansim_Csv(econ_platform_core.ProviderWrapper):
         :param series_meta: econ_platform_core.SeriesMetaData
         :return: list
         """
-        query_ticker = series_meta.ticker_query
+        query_ticker = str(series_meta.ticker_query)
         try:
             table_name, vector = query_ticker.split('|')
         except:

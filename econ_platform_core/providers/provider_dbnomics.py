@@ -66,7 +66,7 @@ class ProviderDBnomics(econ_platform_core.ProviderWrapper):
         :param series_meta: econ_platform_core.SeriesMetaData
         :return: list
         """
-        query_ticker = series_meta.ticker_query
+        query_ticker = str(series_meta.ticker_query)
         df = dbnomics.fetch_series(query_ticker)
         tickers = set(df.series_code)
         if len(tickers) > 1:

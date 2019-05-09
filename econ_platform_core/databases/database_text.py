@@ -36,21 +36,17 @@ class DatabaseText(econ_platform_core.DatabaseManager):
                 econ_platform_core.PlatformConfiguration['D_TEXT']['directory'])
 
     @staticmethod
-    def GetFileName(ticker):
-        return econ_platform_core.utils.convert_ticker_to_variable(ticker) + '.txt'
+    def GetFileName(series_meta):
+        return econ_platform_core.utils.convert_ticker_to_variable(str(series_meta.ticker_full)) + '.txt'
 
-    def Exists(self, ticker):
+    def Exists(self, series_meta):
         self.CheckDirectory()
-        full_file = os.path.join(self.Directory, DatabaseText.GetFileName(ticker))
+        full_file = os.path.join(self.Directory, DatabaseText.GetFileName(series_meta))
         return os.path.exists(full_file)
 
     def Retrieve(self, series_meta):
-        try:
-            ticker = series_meta.ticker_full
-        except:
-            ticker = series_meta
         self.CheckDirectory()
-        full_name = os.path.join(self.Directory, DatabaseText.GetFileName(ticker))
+        full_name = os.path.join(self.Directory, DatabaseText.GetFileName(series_meta))
         df = pandas.read_csv(filepath_or_buffer=full_name, sep='\t', parse_dates=True, index_col=0)
         ser = pandas.Series(df[df.columns[0]])
         return ser
@@ -91,8 +87,7 @@ class DatabaseText(econ_platform_core.DatabaseManager):
         self.CheckDirectory()
         if not overwrite:
             raise NotImplementedError()
-        ticker = series_meta.ticker_full
-        full_name = os.path.join(self.Directory, DatabaseText.GetFileName(ticker))
+        full_name = os.path.join(self.Directory, DatabaseText.GetFileName(series_meta))
         ser.to_csv(path_or_buf=full_name, sep='\t', header=True)
 
     def GetAllValidSeriesTickers(self):

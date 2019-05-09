@@ -49,6 +49,6 @@ class ProviderFred(econ_platform_core.ProviderWrapper):
             # KeyError - ha, ha, I kill myself...
             raise KeyError('Error: need to set the FRED API key in the config.txt; available from St. Louis Fed.')
         fred = fredapi.Fred(api_key=api_key)
-        data = fred.get_series(query_ticker)
-        data.name = series_meta.ticker_full
+        data = fred.get_series(str(query_ticker))
+        data.name = str(series_meta.ticker_full)
         return [data,]
