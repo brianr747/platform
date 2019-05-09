@@ -299,6 +299,33 @@ class TickerError(PlatformError):
 class TickerNotFoundError(PlatformError):
     pass
 
+
+class UpdateProtocol(object):
+    """
+    Class to handle the management of data updates.
+
+    The base class behaviour is to not update data already on the database. More
+    sophisticated handlers will pushed over top of this default object during the initialisation step.
+
+    (The more sophisticated managers will be developed in another module.)
+
+    """
+    def Update(self, series_meta, provider_wrapper, database_manager):
+        """
+        Procedure to handle updates. The default behaviour is to not update; just retrieve from the
+        database.
+
+        :param series_meta: SeriesMetaData
+        :param provider_wrapper: ProviderWrapper
+        :param database_manager: DatabaseManager
+        :return:
+        """
+        log_debug('Fetching {0} from {1}'.format(series_meta.ticker_full, database_manager.Name))
+        return database_manager.Retrieve(series_meta)
+
+
+UpdateProtocolManager = UpdateProtocol()
+
 def fetch(ticker, database='Default', dropna=True):
     """
     Fetch a series from database; may create series and/or update as needed.
@@ -323,8 +350,8 @@ def fetch(ticker, database='Default', dropna=True):
     if series_meta.Exists:
         # TODO: Handle series updates.
         # Return what is on the database.
-        log_debug('Fetching {0} from {1}'.format(ticker, database_manager.Name))
-        return database_manager.Retrieve(series_meta)
+        global UpdateProtocolManager
+        return UpdateProtocolManager.Update(series_meta, provider_manager, database_manager)
     else:
         if provider_manager.IsExternal:
             _hook_fetch_external(provider_manager, ticker)
