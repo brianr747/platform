@@ -25,9 +25,35 @@ import sqlite3
 import datetime
 
 import econ_platform_core
+import econ_platform_core.databases
 import econ_platform_core.utils
 
-class DatabaseSqlite3(econ_platform_core.DatabaseManager):
+
+class AdvancedDatabase(econ_platform_core.DatabaseManager):
+    """
+    Abstract base class for all "advanced" databases; similar functionality to SQL databases
+    """
+    def __init__(self, name='Advanced Database (Abstract)'):
+        super().__init__(name=name)
+        self.IsAdvanced = True
+
+
+class DBapiDatabase(AdvancedDatabase):
+    """
+    Abstract base class for DBAPI2-compliant databases. (Note: not an expert on DBAPI, so this name
+    may be shaky.
+    """
+    def __init__(self, name='DBapi2-compliant SQL Database'):
+        super().__init__(name)
+
+class DatabaseSqlite3(DBapiDatabase):
+    """
+    Class that implements the interface to an SQLite database. This is in the core platform,
+    as the sqlite3 library is part of the standard library.
+
+    NOTE: Code will migrate to super-classes. Overall logic into the AdvancedDatabase, SQL high-level logic into
+    DBapiDatabase, and low level connection fetching (and SQL syntax) left in here.
+    """
     Cursor: sqlite3.Cursor
     Directory: str
     Connection: sqlite3.Connection

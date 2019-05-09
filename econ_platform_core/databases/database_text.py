@@ -21,6 +21,7 @@ import os
 import pandas
 
 import econ_platform_core
+import econ_platform_core.databases
 import econ_platform_core.utils
 
 

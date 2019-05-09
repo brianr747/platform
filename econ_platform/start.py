@@ -27,4 +27,4 @@ limitations under the License.
 """
 
 from econ_platform import *
-econ_platform.init_core_plus_extensions()
+econ_platform.init_econ_platform()

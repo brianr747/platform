@@ -1,11 +1,27 @@
 """
 econ_platform_core - Glue code for a unified work environment.
 
-*Under Construction* See Plans.txt (in the parent directory) to see what is going on.
+The center-piece of the package is *fetch()* a function which dynamically loads a pandas time series (Series object)
+from any supported provider or database interface. The fetch command will determine whether the series exists in the
+local database, or whether to query the external provider. If it already exists, the platform will decide whether it
+is time to seek a refresh. (NOTE: That update protocol is not implemented at the time of writing.)
 
-Note: importing this file triggers configuration loading. If this blows up, just importing the module
-causes Python to throw up all over you. I may make this behaviour more graceful, but for now, I assume that
-users are Python programmers who can figure out what went wrong from the error messages.
+For a user, this is all done "under the hood" within a single line of code. The same plotting routines will always
+work, even if the computer is cut off from external providers and the user has to grab locally archived data.
+
+Normally, users will import econ_platform and call init_econ_platform(), which will
+initialise this package.
+
+Importing this file alone is supposed to have minimal side effects. However, configuration information is not
+loaded, and so most functions will crash. This means that end uses will almost always want to call the initialisation
+function (or import econ_platform.start, which is a script that initialises the platform).
+
+This package is supposed to only depend on standard Python libraries and *pandas*. Anything else (including
+thinge like matplotlib) are pushed into econ_platform, where code is meant to be loaded as extesnions. If an extension
+cannot be loaded (missing API packages, for example), econ_platform will still load up, it will just report that
+an extension load failed.
+
+Since sqlite3 is in the standard Python libraries, base SQL functionality will be implemented here.
 
 Copyright 2019 Brian Romanchuk
 
@@ -84,6 +100,9 @@ class DatabaseManager(object):
     """
     def __init__(self, name='Virtual Object'):
         self.Name = name
+        # This is overridden by the AdvancedDatabase constructor.
+        # By extension, everything derived from this base class (like the TEXT dabase is "not advanced."
+        self.IsAdvanced = False
         if not name == 'Virtual Object':
             self.Code = PlatformConfiguration['DatabaseList'][name]
         self.ReplaceOnly = True
@@ -161,7 +180,6 @@ class DatabaseManager(object):
         :return:
         """
         raise NotImplementedError()
-
 
 class DatabaseList(object):
     """
@@ -264,30 +282,7 @@ LoadedExtensions = []
 FailedExtensions = []
 DecoratedFailedExtensions = []
 
-def init_package():
-    """
-    Call to initialise the package, other than configuration file (and logging set up).
-    :return:
-    """
-    global PlatformConfiguration
-    try:
-        # It would be good to log the loading of configuration information, except that the logging
-        # configuration is loaded in this step!
-        # Try to load configuration silently...
-        PlatformConfiguration = econ_platform_core.configuration.load_platform_configuration(display_steps=False)
-    except:
-        # it failed, so try again, showing the steps...
-        PlatformConfiguration = econ_platform_core.configuration.load_platform_configuration(display_steps=True)
-    # By default, go into the "logs" directory below this file.
-    if len(LogInfo.LogDirectory) == 0:
-        # If it has not been set manually, use the config information.
-        LogInfo.LogDirectory = utils.parse_config_path(PlatformConfiguration['Logging']['LogDirectory'])
-    Databases.Initialise()
-    Providers.Initialise()
-    global LoadedExtensions
-    global FailedExtensions
-    global DecoratedFailedExtensions
-    LoadedExtensions, FailedExtensions, DecoratedFailedExtensions = econ_platform_core.extensions.load_extensions()
+
 
 
 class PlatformError(Exception):
@@ -324,7 +319,41 @@ class UpdateProtocol(object):
         return database_manager.Retrieve(series_meta)
 
 
-UpdateProtocolManager = UpdateProtocol()
+class UpdateProtocolManager(object):
+    """
+    Base class for series update protocols.
+
+    Implements the 'NOUPDATE' protocol, which unsurprisingly, never updates series.
+
+    Add subclasses to the UpdateProtocolList to offer more interesting options.
+
+    Eventually, need to offer the ability to choose which to use. Since we only have one option,
+    not needed...
+    """
+    def __init__(self):
+        self.Protocols = {}
+
+    def __getitem__(self, item):
+        """
+
+        :param item: UpdateProtocol
+        :return:
+        """
+        try:
+            return self.Protocols[item]
+        except KeyError:
+            raise PlatformError('Unknown UpdateProtocol code: {0}'.format(item))
+
+    def Initialise(self):
+        """
+        Get the NOUPDATE protocol manager
+        :return:
+        """
+        self.Protocols['NOUPDATE'] = UpdateProtocol()
+
+
+UpdateProtocolList = UpdateProtocolManager()
+
 
 def fetch(ticker, database='Default', dropna=True):
     """
@@ -348,10 +377,10 @@ def fetch(ticker, database='Default', dropna=True):
         raise KeyError('Unknown provider_code: ' + provider_code)
 
     if series_meta.Exists:
-        # TODO: Handle series updates.
         # Return what is on the database.
-        global UpdateProtocolManager
-        return UpdateProtocolManager.Update(series_meta, provider_manager, database_manager)
+        global UpdateProtocolList
+        # TODO: Allow for choice of protocol.
+        return UpdateProtocolList["NOUPDATE"].Update(series_meta, provider_manager, database_manager)
     else:
         if provider_manager.IsExternal:
             _hook_fetch_external(provider_manager, ticker)
@@ -368,6 +397,7 @@ def fetch(ticker, database='Default', dropna=True):
         ser = ser_list[0]
         database_manager.Write(ser, series_meta)
     return ser_list[0]
+
 
 def fetch_df(ticker, database='Default', dropna=True):
     """
@@ -422,3 +452,29 @@ def log_last_error():
     msg = traceback.format_exc()
     log_error(msg)
 
+
+def init_package():
+    """
+    Call to initialise the package, other than configuration file (and logging set up).
+    :return:
+    """
+    global PlatformConfiguration
+    try:
+        # It would be good to log the loading of configuration information, except that the logging
+        # configuration is loaded in this step!
+        # Try to load configuration silently...
+        PlatformConfiguration = econ_platform_core.configuration.load_platform_configuration(display_steps=False)
+    except:
+        # it failed, so try again, showing the steps...
+        PlatformConfiguration = econ_platform_core.configuration.load_platform_configuration(display_steps=True)
+    # By default, go into the "logs" directory below this file.
+    if len(LogInfo.LogDirectory) == 0:
+        # If it has not been set manually, use the config information.
+        LogInfo.LogDirectory = utils.parse_config_path(PlatformConfiguration['Logging']['LogDirectory'])
+    Databases.Initialise()
+    Providers.Initialise()
+    UpdateProtocolList.Initialise()
+    global LoadedExtensions
+    global FailedExtensions
+    global DecoratedFailedExtensions
+    LoadedExtensions, FailedExtensions, DecoratedFailedExtensions = econ_platform_core.extensions.load_extensions()

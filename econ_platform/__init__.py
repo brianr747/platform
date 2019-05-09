@@ -53,7 +53,7 @@ def _quick_plot_stub(ser, title):
     raise PlatformError('quick_plot() not initialised properly; probably matplotlib is not installed.')
 
 
-def init_core_plus_extensions():
+def init_econ_platform():
     """
     Call this to initialise the core pcakage, plus add in extensions here.
 
