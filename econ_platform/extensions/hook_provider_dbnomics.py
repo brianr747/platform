@@ -18,7 +18,8 @@ limitations under the License.
 """
 
 import econ_platform_core
-import econ_platform_core.providers.provider_dbnomics
+import econ_platform
+import econ_platform.providers.provider_dbnomics
 
 extension_name = 'DB.nomics'
 
@@ -27,5 +28,5 @@ def main():
     Insert the provider into the platform list
     :return:
     """
-    obj = econ_platform_core.providers.provider_dbnomics.ProviderDBnomics()
+    obj = econ_platform.providers.provider_dbnomics.ProviderDBnomics()
     econ_platform_core.Providers.AddProvider(obj)

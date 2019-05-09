@@ -23,6 +23,8 @@ fetches from the database worked fine.
 
 NOTE: Without the "xlrd" module, the pandas.read_excel() call will fail.
 
+This dependency on xlrd (which was not installed when I did a pip install on pandas) means that this module is not
+inside econ_platform_core, even though there are no visible problematic imports.
 """
 
 

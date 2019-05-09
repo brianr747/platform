@@ -5,6 +5,9 @@ Handles CANSIM (or whatever StatsCan calls their database now) CSV files.
 
 Will switch over to SDMX (maybe), but the text files are easy to work with...
 
+Since this module has no dependencies on anything outside econ_platform_core or standard libraries, can stay in the
+core.
+
 Copyright 2019 Brian Romanchuk
 
 Licensed under the Apache License, Version 2.0 (the "License");
@@ -27,7 +30,6 @@ import csv
 import os
 import pandas
 
-import econ_platform.analysis.quick_plot
 import econ_platform_core
 from econ_platform_core import log, log_warning
 import econ_platform_core.configuration
@@ -166,7 +168,7 @@ def main():
     obj = ProviderCansim_Csv()
     # obj.ParseUnzipped('10100002')
     ser = econ_platform_core.fetch('CCSV@10100002|v86822808')
-    econ_platform.analysis.quick_plot.quick_plot(ser)
+    # econ_platform.analysis.quick_plot.quick_plot(ser)
 
 
 if __name__ == '__main__':

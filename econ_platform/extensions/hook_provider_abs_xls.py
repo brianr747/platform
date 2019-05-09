@@ -1,6 +1,7 @@
 """
 Python script that hooks in the ABSXLS code (found in providers).
 
+
 Copyright 2019 Brian Romanchuk
 
 Licensed under the Apache License, Version 2.0 (the "License");
@@ -18,7 +19,7 @@ limitations under the License.
 """
 
 import econ_platform_core
-import econ_platform_core.providers.provider_abs_xls
+import econ_platform.providers.provider_abs_xls
 
 
 extension_name = 'Australian Bureau Statistics (XLS)'
@@ -28,5 +29,5 @@ def main():
     Insert the provider into the platform list
     :return:
     """
-    obj = econ_platform_core.providers.provider_abs_xls.ProviderAbsXls()
+    obj = econ_platform.providers.provider_abs_xls.ProviderAbsXls()
     econ_platform_core.Providers.AddProvider(obj)

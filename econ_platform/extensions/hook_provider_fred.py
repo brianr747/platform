@@ -1,5 +1,5 @@
 """
-Python script that hooks in the quandl code (found in providers).
+Python script that hooks in the FRED code (found in providers).
 
 Copyright 2019 Brian Romanchuk
 
@@ -18,15 +18,15 @@ limitations under the License.
 """
 
 import econ_platform_core
-import econ_platform_core.providers.provider_quandl
+import econ_platform.providers.provider_fred
 
 
-extension_name = 'Quandl'
+extension_name = 'FRED (St. Louis Fed)'
 
 def main():
     """
     Insert the provider into the platform list
     :return:
     """
-    obj = econ_platform_core.providers.provider_quandl.ProviderQuandl()
+    obj = econ_platform.providers.provider_fred.ProviderFred()
     econ_platform_core.Providers.AddProvider(obj)
