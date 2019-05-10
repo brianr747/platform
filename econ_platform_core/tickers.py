@@ -30,7 +30,7 @@ class _TickerAbstract(object):
     def __init__(self, txt=''):
         self.Text = txt
         # This will blow up for the base class!
-        self.IsValid()
+        self.AssertValid()
 
     def __str__(self):
         return self.Text
@@ -39,7 +39,16 @@ class _TickerAbstract(object):
         return len(self.Text)
 
     def IsValid(self):
-        return InvalidTickerError('Should never instantiate this base class in code.')
+        """
+        Should not be instantiating these objects.
+        :return:
+        """
+        return False
+
+    def AssertValid(self):
+        if not self.IsValid():
+            raise InvalidTickerError('{0} not a valid ticker for this ticker type {1}'.format(self.Text,
+                                                                                              type(self)))
 
 
 class TickerFull(_TickerAbstract):
