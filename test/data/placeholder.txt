@@ -1,0 +1,7 @@
+This directory is where data for unit tests should end up (or sub-dirs...).
+
+Note: we may need to populate this directory with binary files (pickled fetches from providers). These files
+will need to be populated for tests that rely on them work properly.
+
+The test writer will have to figure out how to skip tests for which the user cannot get the initial binary download
+to work.

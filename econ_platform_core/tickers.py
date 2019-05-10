@@ -71,7 +71,7 @@ class TickerFull(_TickerAbstract):
         try:
             s1, s2 = self.Text.split(TickerFull.DelimiterSplit, 1)
             return TickerProviderCode(s1), TickerFetch(s2)
-        except:
+        except:  # pragma: nocover
             # Probably should not get here.
             raise InvalidTickerError('{0} is not a valid full ticker; cannot be split'.format(self.Text))
 
@@ -125,7 +125,7 @@ class TickerDataType(_TickerAbstract):
         Current rules.
 
         (1) Cannot qualify as a "full ticker" (not TickerFull.DelimiterSplit ("@")
-        (2) Contains at least one DeliiterData character.
+        (2) Contains at least one DelimiterData character.
 
         :return: bool
         """

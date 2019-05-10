@@ -47,16 +47,20 @@ from logging import info as log, debug as log_debug, warning as log_warning, err
 
 
 import econ_platform_core.configuration
+from econ_platform_core.utils import PlatformEntity
 from econ_platform_core import utils as utils
 import econ_platform_core.extensions
-from econ_platform_core.tickers import TickerFull, TickerDataType, TickerFetch, TickerLocal, TickerProviderCode, \
-    map_string_to_ticker
 
-PlatformConfiguration = configparser.ConfigParser()
+from econ_platform_core.tickers import TickerFull, TickerDataType, TickerFetch, TickerLocal, TickerProviderCode
+
+import econ_platform_core.tickers
+
 
 
 # Get the logging information. Users can either programmatically change the LogInfo.LogDirectory or
 # use a config file before calling start_log()
+from econ_platform_core.utils import PlatformEntity
+
 LogInfo = utils.PlatformLogger()
 
 def start_log(fname=None):
@@ -69,74 +73,8 @@ def start_log(fname=None):
     global LogInfo
     LogInfo.StartLog(fname)
 
-class PlatformEntity(object):
-    """
-    Base class for objects in the platform. Give an action-logging interface.
-    """
-    _IgnoreRegisterActions = True
-    def __init__(self):
-        self._Actions = []
 
-    def _RegisterAction(self, action_class, action_msg, *args):
-        """
-        Register actions in the object "_Actions" property.
-
-        Used for unit-testing/debugging.
-
-        The *args are parsed via msg.format(args). (We skip the formatting effort if
-        we skip registration.)
-
-        Does nothing if PlatformEntity._IgnoreRegisterActions is True (default).
-
-        (This eliminates the performance hit of registration when used in production.)
-
-        :param action_class: str
-        :param action_msg: str
-        :param args: tuple
-        :return:
-        """
-        if self._IgnoreRegisterActions:
-            return
-        self._Actions.append((action_class, action_msg.format(args)))
-
-    def _ClearActions(self):
-        """
-        Clear the action list. (Call ahead of running tests.
-        :return:
-        """
-        self._Actions = []
-
-    def _HasAction(self, action_class=None, msg_substring=None):
-        """
-        Convenience method for testing.
-
-        Set either action_class or msg_substring.
-
-        Looks for an actions that:
-
-        (1) action_class matches *exactly* the search parameter
-        (2) msg_substring appears in the  action message.
-
-        If both are set, both consitions must hold for a single action.
-
-        :param action_class: str
-        :param msg_substring: str
-        :return: bool
-        """
-        if action_class is not None and msg_substring is None:
-            return action_class in [x[0] for x in self._Actions]
-        if action_class is None and msg_substring is not None:
-            for x in self._Actions:
-                if msg_substring in x[1]:
-                    return True
-            return False
-        if action_class is not None and msg_substring is not None:
-            for x in self._Actions:
-                if action_class == x[0] and msg_substring in x[1]:
-                    return True
-            return False
-        raise ValueError('Must have at least one non-None input to HasAction()')
-
+PlatformConfiguration = configparser.ConfigParser()
 
 class SeriesMetaData(PlatformEntity):
     """
@@ -205,8 +143,7 @@ class DatabaseManager(PlatformEntity):
         :param ticker: str
         :return: SeriesMetaData
         """
-
-        ticker_obj = map_string_to_ticker(ticker)
+        ticker_obj = econ_platform_core.tickers.map_string_to_ticker(ticker)
         if type(ticker_obj) is TickerLocal:
             return self._FindLocal(ticker_obj)
         if type(ticker_obj) is TickerDataType:

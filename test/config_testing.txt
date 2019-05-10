@@ -1,4 +1,5 @@
-# Default Configuration File
+# Unit test config file.
+# the function reset_config() in loc_utils will throe
 #
 # Managed by configuration.py; uses built-in configparser.
 #
@@ -22,8 +23,6 @@
 #
 # (This standard for default directories was imposed after the start of development; need to refactor code to use this.)
 
-
-
 [Logging]
 # Default in the "logs" directory below base directory.
 LogDirectory = {CORE}/logs
@@ -31,10 +30,7 @@ LogDirectory = {CORE}/logs
 
 [Options]
 UseMonkeyPatchExample = False
-# Users set the variable below (the name of which can be overriden in the "site config" to specify the config
-# file they want loaded for user-specific customisation. I point mine to a file outside the repository, so it
-# cannot get checked in.
-UserConfigEnvironmentVariableName = PLATFORM_USER_CONFIG
+UserConfigEnvironmentVariableName = NO_USER_CONFIG_FILE_PLEASE
 
 #------------------------------------------------------------------
 # High level "database parameters." For a particular database (like MySQL), it should have its
@@ -57,9 +53,9 @@ SQLite Database=SQLITE
 # Data associated with each database are saved as separate sections.
 # Naming convention: D_{database_ticker}
 [D_TEXT]
-directory={DATA}\text_database
+directory={CORE}\test\data
 [D_SQLITE]
-file_name={DATA}\platform.db
+file_name={CORE}\test\data\platform.db
 # Generic provider options
 [ProviderOptions]
 echo_access=True
@@ -79,10 +75,10 @@ Example Provider=TEST
 # Provider-specific Info Pre-pend "P_" to name
 [P_FRED]
 # Need to get a free API key from the St. Louis FED. (Put into an external config file if you are using GIT),
-api_key=NONE
+api_key=THIS_TEXT_SHOULD_NOT_APPEAR_IN_TEST
 [P_CCSV]
 # Directory information . Note that if these defaults are used, this means it goes below the providers directory.
 # Which means that we don't need to worry about the directory separaor in this case.
-zip_directory = {CORE}\providers\cansim_csv
-parsed_directory = {CORE}\providers\cansim_csv\parsed
+zip_directory = {CORE}\test\data\cansim_csv
+parsed_directory = {CORE}\test\data\cansim_csv
 zip_tail=-eng.zip

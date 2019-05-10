@@ -25,46 +25,84 @@ import configparser
 import os
 
 import econ_platform_core
+import econ_platform_core.utils
 
 
-def load_platform_configuration(display_steps=True):
+class ConfigParserWrapper(econ_platform_core.utils.PlatformEntity):
+    """
+    A wrapper class for the platform configuration loading. All the real work is done by ConfigParser; but
+    we need to track that the correct sequence of files is opened.
+
+    This is way over-designed, but I need to be able to control config file parsing closely if we want unit tests
+    to work (and want to cover these lines).
+    """
+    def __init__(self):
+        super().__init__()
+        self.ConfigParser = configparser.ConfigParser()
+
+    def Load(self, file_list, display_steps=False):
+        """
+        Load a list of config files. Only work done here:
+        (1) Map file paths to the repository directory.
+        (2) Unit test support by logging actions.
+
+        :param file_list:
+        :param display_steps:
+        :return:
+        """
+        for fname in file_list:
+            fname = econ_platform_core.utils.parse_config_path(fname)
+            if os.path.exists(fname):
+                self._RegisterAction('CONFIG:LOAD', fname)
+                if display_steps: # pragma: nocover
+                    print('Loading config file: ' + fname)
+                self.ConfigParser.read(fname)
+            else:
+                self._RegisterAction('CONFIG:NOTFILE', fname)
+        return self.ConfigParser
+
+
+def load_platform_configuration(display_steps=True, return_wrapper=False):
     """
     Goes through the configuration file loading protocol
     :return: configparser.ConfigParser
     """
-    config = configparser.ConfigParser()
-    code_directory = os.path.dirname(__file__)
-    # The default file should always exist...
-    if display_steps:
-        print('Loading default config:', os.path.join(code_directory, 'config_default.txt'))
-    config.read(os.path.join(code_directory, 'config_default.txt'))
-    if os.path.exists(os.path.join(code_directory, 'config.txt')):
-        if display_steps:
-            print('Loading user config:', os.path.join(code_directory, 'config.txt'))
-        config.read(os.path.join(code_directory, 'config.txt'))
-    # Did the user point to another file?
-    # Hey, this is fun!
-    act_file = config['ActualConfigFile']['FileName']
-    if os.path.exists(act_file):
-        if display_steps:
-            print('Loading ActualLogFile', act_file)
-        config.read(act_file)
-    return config
+    obj = ConfigParserWrapper()
+    # NOTE: Do not worry about the file separators below! They will be fixed by
+    # parse_config_path()
+    config = obj.Load(('{CORE}/config_default.txt', '{CORE}/config.txt'), display_steps)
+    env_variable_name = config['Options']['UserConfigEnvironmentVariableName']
+    user_config_file = os.getenv(env_variable_name)
+    if user_config_file is not None:
+        obj.Load((user_config_file,), display_steps)
+    if return_wrapper:
+        return obj
+    else: # pragma: nocover
+        return obj.ConfigParser
 
-
-def print_configuration(config=None):
-    if config is None:
+def print_configuration(config=None, return_string=False):
+    """
+    Dump configuration information on the console.
+    :param config: configparser.ConfigParser
+    :param return_string: bool
+    :return:
+    """
+    if config is None: # pragma: nocover Probably a bad idea to test this...
         config = econ_platform_core.PlatformConfiguration
+    msg = ''
     for sec in config.sections():
-        print('[{0}]'.format(sec))
+        msg += '[{0}]\n'.format(sec)
         for k in config[sec]:
             if k.lower() in ('api_key', 'password'):
-                print(k, '= *********')
+                msg += '{0} = {1}\n'.format(k, '*********')
             else:
-                print(k, '=', config[sec][k])
+                msg += '{0} = {1}\n'.format(k, config[sec][k])
+    if return_string:
+        return msg
+    print(msg)  # pragma: nocover
 
 
-def main():
+def main(): # pragma: nocover
     """
     Function for manual testing. Does not make sense to unit test this...
     :return: None
@@ -74,7 +112,5 @@ def main():
     print_configuration(obj)
 
 
-
-
-if __name__ == '__main__':
+if __name__ == '__main__':  # pragma: nocover
     main()

@@ -11,6 +11,8 @@ Since this is not particularly important, not worth making platform-agnostic.
 """
 
 import datetime
+# This is why I can't call my package "platform"!
+import platform
 
 try:
     import winsound
@@ -29,6 +31,10 @@ def beep_on_windows(*args):
     Note: This function overwrites _hook_fetch_external. It ignores the parameters that are passed.
     :return:
     """
+    if not platform.system() == 'Windows':
+        # I think there's a cross-platform "beep" command, but no idea how annoying it is...
+        # A non-Windows user can insert there own beeping code if they want.
+        return
     # Don't beep more than once every 5 seconds.
     global last_beep
     nnow = datetime.datetime.now()
@@ -37,7 +43,7 @@ def beep_on_windows(*args):
             return
     last_beep = nnow
     try:
-        winsound.PlaySound('SystemAsterisk', winsound.SND_ALIAS)
+        winsound.PlaySound('SystemAsterisk', winsound.SND_ALIAS | winsound.SND_ASYNC)
     except:
         pass
 
