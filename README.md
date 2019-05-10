@@ -39,6 +39,7 @@ modules that that extensions import.
 - Hooks for the "update protocol" will be put into place, and the class interfaces
 cleaned up. It should be clearer what interfaces providers/databases need to support.
 
+
 ## Features
 
 Please note that all features listed are minimal implementations. However, they offer an idea
