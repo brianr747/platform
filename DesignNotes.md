@@ -68,33 +68,19 @@ The objective is that coding extensions should be extremely easy to do. Ideally:
 
 ## Unit Tests
 
-My current test coverage is probably about 0.1% of the package; I want to move that to "100%".
+Unit test coverage is better, but a lot more work to do.
 
-How will I achieve this?
+The split between *econ_platform_core* and *econ_platform* helps; if things are
+done properly, pretty much the only code outside econ_platform_core is very difficult to 
+test: calls into external API's. Unless people want to build mocks for providers,
+coverage would be skipped.
 
-- It makes no sense to have unit tests for external provider or database API wrappers. 
-Unfortunately, those are moving targets, nor do I want to inundate data providers with
-garbage requests to test error handling. Either the external interfaces (including databases)
-work, or they don't.
-- I will have to create a "MockProvider" that just has a few fixed responses, and we can use that
-to test the base class fetch/update/store functionality.
-- I can use the in-memory SQLite database for database unit tests.
-- The split into econ_platform_core and econ_platform helps. The coverage standard
-for 100% will be first targeted for econ_platform_core; the extensions can be
-sloppier.
+At the time of writing (2019-05-10), the peripheral top-level modules in *econ_platform_core*
+are covered. The big task is \_\_init__.py. I could cover most of this with just one or two
+end-to-end tests, but it's better to have granular tests.
 
-I realised that this code will end up having a huge number of external imports.
-This will mean that unit tests will fail unless the tester installs all the
-packages. (The platform initialisation will just note failed extension
-imports.) However, the core package really only needs standard Python libraries and
-pandas. So we need to split the tests into two groups, and by default only run the
-tests that do not rely on external API's. The tester can set an environment
-variable to turn on the remaining tests (and deal with the import errors).
-
-I want to get the SQLite database functioning first (so I can start working with the platform
-myself); once that milestone is ready, I will try to freeze Python development until I have time
-to get test coverage to "100%." (Since there will be a lot of ignored external API-dependent
-code, that 100% coverage is a bit of a cheat.)
+I want to switch over to using the platform for my work, so I will stop extending test
+coverage for awhile.
 
 ## SQL
 

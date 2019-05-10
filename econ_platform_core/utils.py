@@ -99,13 +99,14 @@ class PlatformLogger(PlatformEntity):
     Add a convenient front end to the logging module
     """
     def __init__(self):
+        super().__init__()
         self.LogDirectory = ''
         self.LogName = 'log.txt'
         self.Format = '%(asctime)s\t%(levelname)s\t%(message)s'
         self.DateFormat = '%Y-%m-%d %H:%M:%S'
         self.FileMode = 'w'
 
-    def StartLog(self, log_name=None):
+    def StartLog(self, log_name=None): # pragma: nocover  Pretty brutal effort needed to test this...
         if log_name is None:
             log_name = os.path.basename(sys.argv[0])
             pos = log_name.rfind('.')
@@ -156,14 +157,6 @@ def split_ticker_information(ticker):
     return (source_code, source_ticker)
 
 
-def get_platform_directory():
-    """
-    Where is the directory of this package? (Used as default position for files).
-    :return: str
-    """
-    return os.path.dirname(__file__)
-
-
 def parse_config_path(fpath):
     """
     Parse a path in config files.
@@ -176,8 +169,6 @@ def parse_config_path(fpath):
     (a) The term '{CORE}' is replaced with the directory of this file (assumed to be the base of the package.),
     or '{DATA}' with '{CORE}/data'.
     (b) All directory seperators ("/", "\") are replaced with the correct path seperator for the OS.
-
-
 
     :param fpath: str
     :return: str
@@ -216,7 +207,7 @@ def entry_lookup(target, row, case_sensitive=True):
         raise KeyError('{0} not found'.format(target))
 
 
-def remove_non_ascii(x):
+def remove_non_ascii(x): # pragma: nocover  (No idea how to generate non-ASCII characters..
     """
     Assumes utf-8
     Taken from https://stackoverflow.com/questions/1342000/how-to-make-the-python-interpreter-correctly-handle-non-ascii-characters-in-stri

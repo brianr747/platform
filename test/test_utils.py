@@ -1,6 +1,7 @@
 
 import unittest
 import os
+import datetime
 
 import econ_platform_core
 import econ_platform_core.utils as utils
@@ -19,6 +20,51 @@ class test_functions(unittest.TestCase):
 
     def test_split_ticker(self):
         self.assertEqual(utils.split_ticker_information('D@ticker'), ('D', 'ticker'))
+
+    def test_convert_2_ticker(self):
+        self.assertEqual('c_a_t', utils.convert_ticker_to_variable('c$a$t'))
+
+    def test_convert_2_ticker_exception(self):
+        with self.assertRaises(TypeError):
+            utils.convert_ticker_to_variable(['a'])
+
+    def test_entry_lookup_1(self):
+        row = ['a', 'b', 'c']
+        self.assertEqual(1, utils.entry_lookup('b', row))
+
+    def test_entry_lookup_2(self):
+        row = ['a', 'b', 'c']
+        with self.assertRaises(KeyError):
+            self.assertEqual(1, utils.entry_lookup('B', row))
+
+    def test_entry_lookup_3(self):
+        row = ['a', 'b', 'c']
+        self.assertEqual(1, utils.entry_lookup('B', row, case_sensitive=False))
+
+    def test_entry_lookup_4(self):
+        row = ['a', 'b', 'c']
+        with self.assertRaises(KeyError):
+            self.assertEqual(1, utils.entry_lookup('x', row, case_sensitive=False))
+
+    def test_align_by_month(self):
+        self.assertEqual(datetime.date(2000, 1, 1), utils.align_by_month(2000, 1, freq='M'))
+
+    def test_align_by_month_not_implemented(self):
+        with self.assertRaises(NotImplementedError):
+            utils.align_by_month(2000, 1, freq='ZZ')
+
+    def test_ISO_string_to_date(self):
+        self.assertEqual(datetime.date(2000, 1, 1), utils.iso_string_to_date('2000-01-01 BLAH BLAH TIME'))
+
+    def test_coerce_date_to_string(self):
+        self.assertEqual('2000-01-01', utils.coerce_date_to_string(datetime.date(2000, 1, 1)))
+
+    def test_coerce_numeric_date_to_string(self):
+        # Note sure what format 1. will be converted to as a string.
+        self.assertEqual(str(1.), utils.coerce_date_to_string(1.))
+
+
+
 
 
 
@@ -47,6 +93,50 @@ class test_parse_config_directory(unittest.TestCase):
     def test_sep3(self):
         self.assertEqual(os.path.join(test_parse_config_directory.package_dir, 'data'),
                          utils.parse_config_path('{DATA}'))
+
+
+class test_PlatformEntity(unittest.TestCase):
+    def setUp(self) -> None:
+        utils.PlatformEntity._IgnoreRegisterActions = False
+
+    def test_no_actions(self):
+        utils.PlatformEntity._IgnoreRegisterActions = True
+        obj = utils.PlatformEntity()
+        self.assertEqual([], obj._Actions)
+        obj._RegisterAction('A', 'B')
+        self.assertEqual([], obj._Actions)
+        # We want to register actions in unit tests; make sure this is reset.
+        utils.PlatformEntity._IgnoreRegisterActions = False
+
+    def test_msg_false(self):
+        obj = utils.PlatformEntity()
+        obj._RegisterAction('', 'x')
+        self.assertFalse(obj._HasAction(None, 'Y'))
+
+    def test_both_miss(self):
+        obj = utils.PlatformEntity()
+        obj._RegisterAction('a', 'b')
+        obj._RegisterAction('c', 'd')
+        self.assertFalse(obj._HasAction('b', 'a'))
+
+    def test_no_test(self):
+        obj = utils.PlatformEntity()
+        with self.assertRaises(ValueError):
+            obj._HasAction()
+
+    def test_find_action(self):
+        obj = utils.PlatformEntity()
+        obj._RegisterAction('a', 'b')
+        obj._RegisterAction('c', 'd')
+        self.assertTrue(obj._HasAction('a', None))
+
+    def test_find_msg(self):
+        obj = utils.PlatformEntity()
+        obj._RegisterAction('a', 'bbb')
+        obj._RegisterAction('c', 'ddd')
+        self.assertTrue(obj._HasAction(None, 'bb'))
+
+
 
 
 
