@@ -9,6 +9,8 @@ at the same time. In particular, the MySQL interface is not implemented.
 
 ## Big Refactoring (1)
 
+**UPDATE 2019-05-09** The refactoring discusses here has been completed (I hope...).
+
 In order to allow for collaboration, I need to implement the basic design I envisage
 so that it is easier for collaborators to understand where this project is supposed to
 go. 
