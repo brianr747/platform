@@ -11,36 +11,18 @@ at the same time. In particular, the MySQL interface is not implemented.
 
 **UPDATE 2019-05-09** The refactoring discusses here has been completed (I hope...).
 
-In order to allow for collaboration, I need to implement the basic design I envisage
-so that it is easier for collaborators to understand where this project is supposed to
-go. 
+The refactoring has been completed. The package has been renamed and split into 
+*econ_platform_core* and *econ_platform*. 
+- Initially, *econ_platform_core* has the bulk of the code, and the platform logic. It only
+depends on *pandas* and the Python standard libraries. It should install cleanly on any Python 3.7+
+with *pandas*.
+- The package *econ_platform* has extensions. These mainly represent managers for data providers,
+as well as databases. Each will have its own API, and the *econ_platform_core* could have a very large
+number of dependencies. The extension loading skips over failed extension imports, so users only
+have to worry about installing API's they need.
 
-This means that I am creating a new branch ("refactor_1") which will make some
-serious changes to the Python structure (including renaming the package!).
-
-The refactoring will break all my existing example code, and the code is likely to be
-non-functional as a result of changes. I hope to be past that stage quickly,
-but would not recommend running that branch until it is merged back into the master
-branch.
-
-*Key changes:*
-- Package will be split into two parts: "core" and "extension". Users would
-normally import the "extension" package (which loads the "core".) No idea how
-that would work with PyPi packaging.
-- No features will be added in the branch (because that makes things worse...).
-- The "core" package should only depend on *pandas* and built-in packages (including
-SQLite). So long as you have *pandas* installed, the "core" package should import 
-and function properly. 
-- There will be a single tests directory for both package, but test modules for
-extensions that import anything other than *pandas* will skip by default. This 
-means that the unit tests will run even with no other packages installed.
-- Realistically, close to 100% of the "core" package can be covered with unit tests
-and end-to-end tests (I use an environment variable to allow skipping of end-to-end
-tests). As for "extensions", the unit tests will obviously break if you are missing 
-modules that that extensions import.
-- Hooks for the "update protocol" will be put into place, and the class interfaces
-cleaned up. It should be clearer what interfaces providers/databases need to support.
-
+There has also been a serious code clean up. For example, classes are used to manage the variety of 
+tickers used in the platform.
 
 ## Features
 
@@ -56,16 +38,16 @@ of where this project is going.
 - FRED (St. Louis Fed)
 - CANSIM manual downloaded table (CSV) parsing.
 - Quandl.
-- Australian Bureau of Statistics via Excel. (Very minimal...)
+- Australian Bureau of Statistics via Excel.
 
 ### Databases
 
 - TEXT: Save each series as a text file in a local directory. This is
 good enough for a casual user, and is useful for debugging and unit testing.
-- SQLITE: The SQLite database is supported, although with minimal features.
+- SQLITE: The SQLite database is supported, although with minimal features. The SQL interface
+will be refactored heavily once the rest of the platform is covered with unit tests.
 
-Meta-data support is extremely minimal. Although useful, not a priority for my
-own work. So it will wait until after refactoring is underway.
+Meta-data support is extremely minimal. Once the SQL design is stable, will add more fields.
 
 (Note: Starting with sqlite3, since that is installed with Python. Will worry 
 about compatability with other SQL formats later.)
@@ -162,8 +144,6 @@ There may very well be a similar package out there; I did not even bother lookin
 could switch over to working wit it. However, since most of what I am doing is small wrappers on top of fairly standard
 libraries, not seeing that as worthwhile. I am not too familiar with pandas, and it looks like most of what I would be doing is
 within pandas already. Instead, the effort is getting everything wrapped into a high productivity environment.
-
-
 
 ## More Information
 

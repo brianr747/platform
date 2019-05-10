@@ -24,7 +24,9 @@ Should do quickly, as every provider has to support this!
 - Provider-specific meta-data.
 - The *fetch()* command needs to ensure uniformity of dates coming from external
 providers. 
-- Create config settings to bave default database per provider (e.g., certain commercial providers only allow data to go to a particular machine, so that data goes to SQLite).
+- Create config settings to bave default database per provider (e.g., certain commercial providers 
+only allow data to go to a particular machine, so that data goes to SQLite).
+- Open the provider website based on a platform ticker. Could tie into a local database browser.
 
 # Update Protocol
 
