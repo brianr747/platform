@@ -153,19 +153,16 @@ class DatabaseSqlite3(DBapiDatabase):
             self.Connection.commit()
         return self.Cursor
 
-    def Exists(self, full_ticker):
+    def Exists(self, series_meta):
         self.GetConnection()
         search_query = 'SELECT COUNT(*) FROM {0} WHERE ticker_full = ?'.format(self.MetaTable)
-        cursor = self.Execute(search_query, full_ticker)
+        cursor = self.Execute(search_query, str(series_meta.ticker_full))
         res = cursor.fetchall()
         return res[0][0] > 0
 
     def Retrieve(self, series_meta):
         self.GetConnection()
-        try:
-            ticker_full = series_meta.ticker_full
-        except:
-            ticker_full = series_meta
+        ticker_full = str(series_meta.ticker_full)
         series_id = self.GetSeriesID(ticker_full)
         if series_id is None:
             raise econ_platform_core.TickerNotFoundError('{0} not found on database'.format(ticker_full))
@@ -220,6 +217,7 @@ DELETE FROM {0} WHERE series_id = ?""".format(self.DataTable)
         self.Execute(cmd, info, commit_after=True, is_many=True)
 
     def GetSeriesID(self, full_ticker):
+        full_ticker = str(full_ticker)
         self.GetConnection()
         cmd = """
         SELECT series_id FROM {0} WHERE ticker_full = ?""".format(self.MetaTable)
