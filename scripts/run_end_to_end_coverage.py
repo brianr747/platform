@@ -34,20 +34,24 @@ interpreter = sys.executable
 
 print('Running from', interpreter)
 
-def main():
+def main(run_end_to_end=True):
     print('Invoking coverage')
     parent = Path(os.path.dirname(__file__)).parent
     test_dir = os.path.join(parent, 'test')
     print('Running in ', test_dir)
     os.chdir(test_dir)
+    if run_end_to_end:
+        os.environ['RUN_END_TO_END'] = 'T'
+    else:
+        # Override settings...
+        os.environ['RUN_END_TO_END'] = 'F'
     print('Starting')
     cov = coverage.Coverage(omit=["loc_utils.py", '*site-package*', 'test*'])
     cov.start()
     tester = unittest.TestLoader()
-    x = tester.discover('.')
-    result = unittest.TestResult()
-    x.run(result)
-    print('TODO: Figure out how to display test results...')
+    suite = tester.discover('.')
+    runner = unittest.TextTestRunner(verbosity=2)
+    runner.run(suite)
     cov.stop()
     cov.html_report(directory='htmlcov')
 

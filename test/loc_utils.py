@@ -14,6 +14,11 @@ import econ_platform_core.configuration
 # Need this setting if we want to register actions, which we do when unit testing.
 econ_platform_core.utils.PlatformEntity._IgnoreRegisterActions = False
 
+try:
+    run_end_to_end = os.environ['RUN_END_TO_END'].lower() == 't'
+except KeyError:
+    run_end_to_end = False
+
 def skip_this_extension_module():
     """
     Call this function at the very top of modules that import extensions that import non-standard modules
@@ -23,8 +28,8 @@ def skip_this_extension_module():
 
     :return:
     """
-    # TODO: Insert conditional logic here
-    raise unittest.SkipTest('this module is skipped because it is an extension module')
+    if not run_end_to_end:
+        raise unittest.SkipTest('this module is skipped because it is an extension module')
 
 def use_test_configuration():
     """

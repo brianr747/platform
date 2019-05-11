@@ -18,17 +18,17 @@ Put this marker above the tests that you want to skip.
 
 """
 
+# For modules to be skipped: always do this before other imports!
+import loc_utils
+loc_utils.skip_this_extension_module()
 
 import os
 import unittest
+import econ_platform.start
 
-import loc_utils
 
-# Testing the skip functionality
-loc_utils.skip_this_extension_module()
 
-skip_end_to_end = os.getenv('DontRunEndToEnd')
 
 class dummy_test(unittest.TestCase):
-    def test_fail(self):
-        self.assertTrue(False)
+    def test_yay(self):
+        ser = econ_platform.fetch('F@DGS10')
