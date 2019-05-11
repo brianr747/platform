@@ -47,6 +47,7 @@ class DatabaseText(econ_platform_core.DatabaseManager):
     def Retrieve(self, series_meta):
         self.CheckDirectory()
         full_name = os.path.join(self.Directory, DatabaseText.GetFileName(series_meta))
+        econ_platform_core.log_debug('Loading from %s', full_name)
         df = pandas.read_csv(filepath_or_buffer=full_name, sep='\t', parse_dates=True, index_col=0)
         ser = pandas.Series(df[df.columns[0]])
         return ser
@@ -88,6 +89,7 @@ class DatabaseText(econ_platform_core.DatabaseManager):
         if not overwrite:
             raise NotImplementedError()
         full_name = os.path.join(self.Directory, DatabaseText.GetFileName(series_meta))
+        econ_platform_core.log_debug('Writing to %s', full_name)
         ser.to_csv(path_or_buf=full_name, sep='\t', header=True)
 
     def GetAllValidSeriesTickers(self):

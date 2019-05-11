@@ -74,6 +74,7 @@ User=U
 CANSIM_CSV=CCSV
 Quandl=Q
 ABS_XLS=ABSXLS
+RBA_XLS=RBAXLS
 Example Provider=TEST
 #+++++++++++++++++++++++++++++
 # Provider-specific Info Pre-pend "P_" to name
@@ -86,3 +87,5 @@ api_key=NONE
 zip_directory = {CORE}\providers\cansim_csv
 parsed_directory = {CORE}\providers\cansim_csv\parsed
 zip_tail=-eng.zip
+[P_RBAXLS]
+directory={DATA}\rba_xls

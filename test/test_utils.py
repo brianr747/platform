@@ -25,7 +25,7 @@ class test_functions(unittest.TestCase):
         self.assertEqual('c_a_t', utils.convert_ticker_to_variable('c$a$t'))
 
     def test_convert_2_ticker_exception(self):
-        with self.assertRaises(TypeError):
+        with self.assertRaises(ValueError):
             utils.convert_ticker_to_variable(['a'])
 
     def test_entry_lookup_1(self):

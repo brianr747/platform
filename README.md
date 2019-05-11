@@ -4,25 +4,13 @@
 Python 3.7 is needed (possibly 3.6); I use variable type hints which are not supported
 by 3.5.
 
-This repository is mainly for my own use for now; I am transferring my platform to a new computer, and decided to do a clean up 
-at the same time. In particular, the MySQL interface is not implemented.
+(I expect to get some collaboration on this project. I am using it for my own research, and 
+I am working off the MASTER branch. If there are other users, I will switch to a 
+MASTER/DEVELOPMENT  structure, so that my work doesn't break other people's work. I would
+argue that it is too soon for anyone else to adopt as a work platform, unless 
+they want to either go off in their own direction, or willing to keep up with the
+design changes that will hit until the project structure matures. - Brian R)
 
-## Big Refactoring (1)
-
-**UPDATE 2019-05-09** The refactoring discusses here has been completed (I hope...).
-
-The refactoring has been completed. The package has been renamed and split into 
-*econ_platform_core* and *econ_platform*. 
-- Initially, *econ_platform_core* has the bulk of the code, and the platform logic. It only
-depends on *pandas* and the Python standard libraries. It should install cleanly on any Python 3.7+
-with *pandas*.
-- The package *econ_platform* has extensions. These mainly represent managers for data providers,
-as well as databases. Each will have its own API, and the *econ_platform_core* could have a very large
-number of dependencies. The extension loading skips over failed extension imports, so users only
-have to worry about installing API's they need.
-
-There has also been a serious code clean up. For example, classes are used to manage the variety of 
-tickers used in the platform.
 
 ## Features
 
@@ -130,6 +118,23 @@ module, or if I am ambitious, *quantlib*. Needless to say, my focus
 would be on fixed income calculations (e.g., calculating total returns
 from par coupon data, forward rate approximations, etc.)
 
+## Big Refactoring (1)
+
+**UPDATE 2019-05-09** The refactoring discusses here has been completed.
+
+The refactoring has been completed. The package has been renamed and split into 
+*econ_platform_core* and *econ_platform*. 
+- Initially, *econ_platform_core* has the bulk of the code, and the platform logic. It only
+depends on *pandas* and the Python standard libraries. It should install cleanly on any Python 3.7+
+with *pandas*.
+- The package *econ_platform* has extensions. These mainly represent managers for data providers,
+as well as databases. Each will have its own API, and the *econ_platform_core* could have a very large
+number of dependencies. The extension loading skips over failed extension imports, so users only
+have to worry about installing API's they need.
+
+There has also been a serious code clean up. For example, classes are used to manage the variety of 
+tickers used in the platform. Unit test coverage is being thrown over the project.
+
 ## Comments
 
 With a fair amount of effort, users could replicate my examples. However, there will be example wrappers for various web interfaces
@@ -141,7 +146,7 @@ My plotting code is in R. I am not that great a R programmer, and my code is a m
 different languages.
 
 There may very well be a similar package out there; I did not even bother looking. If there is a similar project, I guess I 
-could switch over to working wit it. However, since most of what I am doing is small wrappers on top of fairly standard
+could switch over to working with it. However, since most of what I am doing is small wrappers on top of fairly standard
 libraries, not seeing that as worthwhile. I am not too familiar with pandas, and it looks like most of what I would be doing is
 within pandas already. Instead, the effort is getting everything wrapped into a high productivity environment.
 

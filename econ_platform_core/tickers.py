@@ -28,7 +28,7 @@ class _TickerAbstract(object):
     fetch() command, in which case we need to map the raw str object to one of the ticker sub-classes.
     """
     def __init__(self, txt=''):
-        self.Text = txt
+        self.Text = str(txt)
         # This will blow up for the base class!
         self.AssertValid()
 

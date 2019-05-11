@@ -39,6 +39,8 @@ class ConfigParserWrapper(econ_platform_core.utils.PlatformEntity):
     def __init__(self):
         super().__init__()
         self.ConfigParser = configparser.ConfigParser()
+        self.LoadedFiles = []
+        self.NonexistentFiles = []
 
     def Load(self, file_list, display_steps=False):
         """
@@ -57,15 +59,17 @@ class ConfigParserWrapper(econ_platform_core.utils.PlatformEntity):
                 if display_steps: # pragma: nocover
                     print('Loading config file: ' + fname)
                 self.ConfigParser.read(fname)
+                self.LoadedFiles.append(fname)
             else:
                 self._RegisterAction('CONFIG:NOTFILE', fname)
+                self.NonexistentFiles.append(fname)
         return self.ConfigParser
 
 
-def load_platform_configuration(display_steps=True, return_wrapper=False):
+def load_platform_configuration(display_steps=True):
     """
     Goes through the configuration file loading protocol
-    :return: configparser.ConfigParser
+    :return: configparser.ConfigParser, ConfigrParserWrapper
     """
     obj = ConfigParserWrapper()
     # NOTE: Do not worry about the file separators below! They will be fixed by
@@ -75,10 +79,8 @@ def load_platform_configuration(display_steps=True, return_wrapper=False):
     user_config_file = os.getenv(env_variable_name)
     if user_config_file is not None:
         obj.Load((user_config_file,), display_steps)
-    if return_wrapper:
-        return obj
-    else: # pragma: nocover
-        return obj.ConfigParser
+    return obj.ConfigParser, obj
+
 
 def print_configuration(config=None, return_string=False):
     """

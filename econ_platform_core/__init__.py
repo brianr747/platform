@@ -74,7 +74,8 @@ def start_log(fname=None):
     LogInfo.StartLog(fname)
 
 
-PlatformConfiguration = configparser.ConfigParser()
+PlatformWrappedConfiguration = econ_platform_core.configuration.ConfigParserWrapper()
+PlatformConfiguration = PlatformWrappedConfiguration.ConfigParser
 
 class SeriesMetaData(PlatformEntity):
     """
@@ -503,15 +504,17 @@ def init_package():
     Call to initialise the package, other than configuration file (and logging set up).
     :return:
     """
-    global PlatformConfiguration
+    global PlatformConfiguration, PlatformWrappedConfiguration
     try:
         # It would be good to log the loading of configuration information, except that the logging
         # configuration is loaded in this step!
         # Try to load configuration silently...
-        PlatformConfiguration = econ_platform_core.configuration.load_platform_configuration(display_steps=False)
+        PlatformConfiguration, PlatformWrappedConfiguration = \
+            econ_platform_core.configuration.load_platform_configuration(display_steps=True)
     except:
+        raise
         # it failed, so try again, showing the steps...
-        PlatformConfiguration = econ_platform_core.configuration.load_platform_configuration(display_steps=True)
+        # PlatformConfiguration = econ_platform_core.configuration.load_platform_configuration(display_steps=True)
     # By default, go into the "logs" directory below this file.
     if len(LogInfo.LogDirectory) == 0:
         # If it has not been set manually, use the config information.

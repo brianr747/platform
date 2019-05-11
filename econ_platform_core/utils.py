@@ -134,8 +134,7 @@ def convert_ticker_to_variable(ticker):
     try:
         ticker = re.sub('[^0-9a-zA-Z_]', '_', ticker)
     except:
-        print('Failure parsing', ticker)
-        raise
+        raise ValueError('Cannot parse ticker: {0}'.format(ticker))
     # Not sure how to this with re
     if ticker[0].isdigit():
         ticker = '_' + ticker

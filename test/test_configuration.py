@@ -34,7 +34,7 @@ class ConfigTester(unittest.TestCase):
     def test_load_platform_config(self):
         # Just check that the main files were loaded. Override the environment variable.
         os.environ['PLATFORM_USER_CONFIG'] = "SNERT!"
-        obj = configuration.load_platform_configuration(display_steps=False, return_wrapper=True)
+        config, obj = configuration.load_platform_configuration(display_steps=False)
         # Since we cannot be sure the files exist, just see whether they appear in a message
         self.assertTrue(obj._HasAction(msg_substring='config_default'))
         self.assertTrue(obj._HasAction(msg_substring='config.txt'))
@@ -43,7 +43,7 @@ class ConfigTester(unittest.TestCase):
     def test_load_platform_config_2(self):
         # Just check that the main files were loaded. Override the environment variable.
         os.environ['PLATFORM_USER_CONFIG'] = os.path.join(os.path.dirname(loc_utils.__file__), 'config_testing.txt')
-        obj = configuration.load_platform_configuration(display_steps=False, return_wrapper=True)
+        config, obj = configuration.load_platform_configuration(display_steps=False)
         # Since we cannot be sure the files exist, just see whether they appear in a message
         self.assertTrue(obj._HasAction(msg_substring='config_default'))
         self.assertTrue(obj._HasAction(msg_substring='config.txt'))

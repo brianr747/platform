@@ -19,6 +19,12 @@ any imports unless an environment variable is set to enable the test module.
 This way, unit tests "work out of the box," but if people want to test extensions,
 they do so at own risk...
 
+## Isues with Testing
+
+- The unit tests change an environment variable so that the user config is
+not loaded (this should only effect the current shell?). This might cause 
+confusion when going back to running regularly. 
+
 ## run_coverage.bat
 
 This batch file runs the coverage command. Unfortunately, it is specific to my (Brian's) computer, 
