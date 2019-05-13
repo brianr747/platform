@@ -11,7 +11,6 @@ argue that it is too soon for anyone else to adopt as a work platform, unless
 they want to either go off in their own direction, or willing to keep up with the
 design changes that will hit until the project structure matures. - Brian R)
 
-
 ## Features
 
 Please note that all features listed are minimal implementations. However, they offer an idea
@@ -119,6 +118,42 @@ On the analytics side, I might try to interface with my *simple_pricers*
 module, or if I am ambitious, *quantlib*. Needless to say, my focus
 would be on fixed income calculations (e.g., calculating total returns
 from par coupon data, forward rate approximations, etc.)
+
+## Version 1.0
+
+I hope to reach "Version 1.0" "soon." There are two areas that need to be
+completed.
+
+**1. Meta-Data.** The larger challenge is to implement meta-data support, which means that
+the SQLite database extension needs extensive revision. (Other SQL database
+will first build on the SQLite data structure and code.) This needs to be built
+soon, as "providers" will be the source of meta-data. This means that the provider
+code needs to know the meta-data interface. (Currently, the only "meta-data"
+are ticker information. The TEXT database only supports this model. Users can
+add providers that only do this, and not worry about gathering meta-data.)
+
+Until the meta-data model is stabilised, I would not recommend using anything
+other than the TEXT database. There is a script to import all series from 
+TEXT to SQLite, which is how I stock the SQLite database in development; 
+I just delete the SQLite database and run the transfer script. This is because
+all provider code will need to provide at least some non-ticker meta-data to
+be useful.
+
+(Since I am continuously adding providers, I need to bite the bullet and get 
+the meta-data support fixed, as back-filling features is a pain.)
+
+**2. Unit Test Coverage.** I want to get *econ_platform_core* to 100% unit test
+coverage (with some areas skipped). Once this is in place, it will be possible for
+users to use the code and know that they have not broken anything when they
+make changes. Covering the extensions is an eventual objective, but most of
+the non-core code is going to be hard to unit test anyway.
+
+After this in place, the programming structure should be stable. All that
+happens is that extensions are added. For example, financial market users 
+will need SQL table structure that has multiple data types for a security in
+a single table. That would just be a new "database extension" that might re-use
+existing code, but it would run independently of the existing single-column
+database structure.
 
 ## Big Refactoring (1)
 
