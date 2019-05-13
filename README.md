@@ -27,6 +27,7 @@ of where this project is going.
 - CANSIM manual downloaded table (CSV) parsing.
 - Quandl.
 - Australian Bureau of Statistics via Excel.
+- Reserve Bank of Australia (RBA) via Excel.
 
 ### Databases
 
@@ -90,10 +91,11 @@ example, you need an API key for the St. Louis FRED interface for
 Python.)
 - Users can use the extension interface to monkey-patch the platform,
 so that any parts of the code that are horrifying can be replaced.
-- Unfortunately, very little in the way of unit tests (although some
-exist). The most important code here are  API calls and database interface, 
-which are painful for unit testing. (I should backfit some end-to-end testing,
-based on looking at text files.)
+- Unit test coverage has started. The core of the platform should eventually
+have 100% coverage (other than some obviously non-testable code), while
+the extensions are likely to have spotty coverage. No clean way to test
+external API's other than finding people who want to develop a mock
+framework that covers practically everything (providers and databases).
 
 ### Analysis Support
 

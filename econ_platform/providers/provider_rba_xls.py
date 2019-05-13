@@ -51,7 +51,7 @@ class ProviderRbaXls(econ_platform_core.ProviderWrapper):
         # Look up config only when fetch is called, since configuration parsing may
         # not yet have happened.
         self.Directory = None
-        self.TickerLabel = 'Mnemonic'
+        self.TickerLabels = ('Mnemonic', 'Series ID')
 
 
     def fetch(self, series_meta):
@@ -73,7 +73,7 @@ class ProviderRbaXls(econ_platform_core.ProviderWrapper):
             if ser is None:
                 ser = partial_ser
             else:
-                ser = ser.update(partial_ser)
+                ser = ser.combine_first(partial_ser)
         return [ser,]
 
     def SearchForSeriesCode(self, series_code):
@@ -99,15 +99,15 @@ class ProviderRbaXls(econ_platform_core.ProviderWrapper):
                 sheet = sheets[sheet_name]
                 list_index = list(sheet.index)
                 # We ignore sheets that do not match the desired format.
-                targ_field = self.TickerLabel
-                if targ_field not in list_index:
-                    continue
-                for c in sheet.columns:
-                    if sheet[c][targ_field] == series_code:
-                        # Fixes ABS spreadsheet
-                        list_index[0] = 'series_name'
-                        sheet.index = list_index
-                        out.append(sheet[c])
+                for targ_field in self.TickerLabels:
+                    if targ_field not in list_index:
+                        continue
+                    for c in sheet.columns:
+                        if sheet[c][targ_field] == series_code:
+                            # Fixes ABS spreadsheet
+                            list_index[0] = 'series_name'
+                            sheet.index = list_index
+                            out.append(sheet[c])
         # Did not find it; puke.
         if len(out) == 0:
             raise econ_platform_core.TickerNotFoundError('Could not find series ID = {0}'.format(series_code))
@@ -122,7 +122,16 @@ class ProviderRbaXls(econ_platform_core.ProviderWrapper):
         :return:
         """
         l_index = list(df.index)
-        pos = l_index.index(self.TickerLabel)
+        pos = -1
+        for targ in self.TickerLabels:
+            if pos == -1:
+                try:
+                    pos = l_index.index(targ)
+                except:
+                    pos = -1
+        if pos == -1:
+            # Should never get here.
+            raise ValueError('Internal logic error; cannot find data row')
         pos += 1
         ser = pandas.Series(df.values[pos:])
         ser.index = l_index[pos:]

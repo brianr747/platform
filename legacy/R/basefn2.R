@@ -247,7 +247,17 @@ SetXAxis <- function(pp,start,numyears=1){
     y = as.numeric(year(Sys.Date())) + numyears
     ddate = paste(as.character(y),"-01-01",sep="")
   }
-  pp <- pp + coord_cartesian(xlim=as.Date(c(start,ddate)))
+  ylim = pp$coordinates$limits$y
+  # Some dimwits made expand=TRUE default.
+  # pp < pp + scale_x_date(limits=c(as.Date(start),as.Date(ddate)))
+  pp <- pp + coord_cartesian(xlim=as.Date(c(start,ddate)), ylim=ylim, expand=FALSE)
+  return(pp)
+}
+
+SetYAxis <- function(pp, mmin, mmax){
+  # print(c(mmin, mmax))
+  pp <- pp + coord_cartesian(ylim=c(mmin, mmax), expand=FALSE)
+  return(pp)
 }
 
 AddText <-function(pp,xpos,ypos,txt){
@@ -255,26 +265,50 @@ AddText <-function(pp,xpos,ypos,txt){
   return(pp)
 }
 
+# InsertFootnote <- function(foottext,footnote_y=2){
+# # Footnote
+# size = .8
+# color = grey(.05)
+# righttext <- GetFootText()
+# 
+# pushViewport(viewport())
+# grid.text(label=foottext,
+# 	x = 0,
+#              y= unit(footnote_y, "mm"),
+#              just=c("left", "bottom"),
+#              gp=gpar(cex= size, col=color))
+# grid.text(label=righttext,
+# 	x = unit(1,"npc") - unit(footnote_y, "mm"),
+#              y= unit(footnote_y, "mm"),
+#              just=c("right", "bottom"),
+#              gp=gpar(cex= size, col=color))
+# 
+# popViewport()
+# }
+
+
 InsertFootnote <- function(foottext,footnote_y=2){
-# Footnote
-size = .6
-color = grey(.05)
-righttext <- GetFootText()
-
-pushViewport(viewport())
-grid.text(label=foottext,
-	x = 0,
-             y= unit(footnote_y, "mm"),
-             just=c("left", "bottom"),
-             gp=gpar(cex= size, col=color))
-grid.text(label=righttext,
-	x = unit(1,"npc") - unit(2, "mm"),
-             y= unit(footnote_y, "mm"),
-             just=c("right", "bottom"),
-             gp=gpar(cex= size, col=color))
-
-popViewport()
+  # Footnote
+  size = .6
+  color = grey(.05)
+  righttext <- GetFootText()
+  
+  pushViewport(viewport())
+  grid.text(label=foottext,
+            x = unit(3, "mm"),
+            y= unit(footnote_y, "mm"),
+            just=c("left", "bottom"),
+            gp=gpar(cex= size, col=color))
+  grid.text(label=righttext,
+            x = unit(1,"npc") - unit(2, "mm"),
+            y= unit(footnote_y, "mm"),
+            just=c("right", "bottom"),
+            gp=gpar(cex= size, col=color))
+  
+  popViewport()
 }
+
+
 
 ResizeText <- function(pp){
   pp <- pp + theme(plot.title=element_text(size=10,family="serif"),
@@ -298,6 +332,7 @@ PlotFromLowLevel <- function(p1,fname="tmp.png",foottext="",tiny=F,footnote_y = 
 
   png(fname,width=round(4.5*r),height=round(3*r),res=r)
   
+  p1 = p1 + theme(plot.margin= unit(c(0.05, .15, .5, .2), "cm"))
   print(p1)
   InsertFootnote(foottext,footnote_y)
   dev.off() 
@@ -340,7 +375,18 @@ Plot3FromLowLevel <- function(p1,p2,p3,fname="tmp.png",foottext="",seekingAlpha=
 }
 
 
-
+AutoY <- function(pp, ser){
+  mmin <- min(ser)
+  mmax <- max(ser)
+  rng <- mmax - mmin
+  if (rng==0){
+    rng = 1
+  }
+  mmin = mmin - rng/10
+  mmax = mmax + rng/10
+  return (SetYAxis(pp, mmin, mmax))
+  
+}
 
 PlotLowLevel1 <- function(ser,ylab="",main="",show_watermark=T){
 dates <- time(ser)
@@ -354,8 +400,9 @@ if (show_watermark){
 	#pp <- pp + annotate("text",x=dates[1],y=-Inf,label="bondeconomics.com",color="white",vjust=-.4,hjust=-.05,size=18,alpha=.8,family="Impact")
 }
 pp <- pp + geom_line()
+pp <- AutoY(pp, ser)
 pp <- pp + ylab(ylab)
-pp <- pp + theme(axis.title.x = element_blank())
+pp <- pp + theme(axis.title.x = element_blank()) + theme(plot.title = element_text(hjust = 0.5))
 pp <- pp + ggtitle(main)
 return(pp)
 }

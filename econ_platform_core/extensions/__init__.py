@@ -33,7 +33,11 @@ import os
 import econ_platform_core
 
 
-def load_extensions():
+# This function will be replaced with straight import statements. Only leaving this dynamic
+# since the design is changing rapidly at this stage. Once the core has stabilised, we will just import
+# the "core extensions". As a result, no point in figuring out unit test techniques.
+# Also: may create a "ExtensionManager" class to do this work.
+def load_extensions():  # pragma: nocover
     """
     Imports all *.py files in this directory (in alphabetical order).
 

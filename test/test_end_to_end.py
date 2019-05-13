@@ -30,5 +30,7 @@ import econ_platform.start
 
 
 class dummy_test(unittest.TestCase):
-    def test_yay(self):
+    def test_fetch(self):
         ser = econ_platform.fetch('F@DGS10')
+        # TODO: actually test something...
+        # This is here just to see how adding this affects coverage.

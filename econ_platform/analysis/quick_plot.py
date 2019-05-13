@@ -24,7 +24,7 @@ from pandas.plotting import register_matplotlib_converters
 register_matplotlib_converters()
 
 
-def quick_plot(ser, title=None):
+def quick_plot(ser, title=None):  # pragma: nocover  No sensible way to cover this unless it is turned into a class
     """
     There's some overhead with plotting...
     :param ser: pandas.Series

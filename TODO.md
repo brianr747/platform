@@ -30,6 +30,10 @@ only allow data to go to a particular machine, so that data goes to SQLite).
 - Define series that are simple functions of other series directly in the database. E.g., a series
 that is created by joining an old series to a new one.
 - Marking series as "discontinued" so that no time is wasted attempting updates.
+- Create an "extension manager" class that handles and logs extension loading.
+Will be needed if this project grows and new extensions depend on other non-standard
+extensions. (Although this is overkill for now, might as well build it before
+the back-filling is too complex.)
 
 # Update Protocol
 
