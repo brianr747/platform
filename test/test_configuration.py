@@ -23,18 +23,20 @@ class ConfigTester(unittest.TestCase):
         obj = econ_platform_core.configuration.ConfigParserWrapper()
         # Assumes that loc_utils is in the same directory as config_testing.txt, which it has to be for
         # the funtion to work.
+        self.assertFalse(obj.LoadedAny)
         fpath = os.path.join(os.path.dirname(loc_utils.__file__), 'config_testing.txt')
         # Just in case something else sneaks in...
         obj._ClearActions()
         obj.Load((fpath,), display_steps=False)
+        self.assertTrue(obj.LoadedAny)
         self.assertTrue(obj._HasAction(action_class='CONFIG:LOAD', msg_substring='config_testing'))
-        msg = configuration.print_configuration(obj.ConfigParser, return_string=True)
+        msg = configuration.print_configuration(obj, return_string=True)
         self.assertTrue('api_key = ****' in msg)
 
     def test_load_platform_config(self):
         # Just check that the main files were loaded. Override the environment variable.
         os.environ['PLATFORM_USER_CONFIG'] = "SNERT!"
-        config, obj = configuration.load_platform_configuration(display_steps=False)
+        obj = configuration.load_platform_configuration(display_steps=False)
         # Since we cannot be sure the files exist, just see whether they appear in a message
         self.assertTrue(obj._HasAction(msg_substring='config_default'))
         self.assertTrue(obj._HasAction(msg_substring='config.txt'))
@@ -43,7 +45,7 @@ class ConfigTester(unittest.TestCase):
     def test_load_platform_config_2(self):
         # Just check that the main files were loaded. Override the environment variable.
         os.environ['PLATFORM_USER_CONFIG'] = os.path.join(os.path.dirname(loc_utils.__file__), 'config_testing.txt')
-        config, obj = configuration.load_platform_configuration(display_steps=False)
+        obj = configuration.load_platform_configuration(display_steps=False)
         # Since we cannot be sure the files exist, just see whether they appear in a message
         self.assertTrue(obj._HasAction(msg_substring='config_default'))
         self.assertTrue(obj._HasAction(msg_substring='config.txt'))

@@ -74,8 +74,7 @@ def start_log(fname=None):
     LogInfo.StartLog(fname)
 
 
-PlatformWrappedConfiguration = econ_platform_core.configuration.ConfigParserWrapper()
-PlatformConfiguration = PlatformWrappedConfiguration.ConfigParser
+PlatformConfiguration = econ_platform_core.configuration.ConfigParserWrapper()
 
 class SeriesMetaData(PlatformEntity):
     """
@@ -321,13 +320,11 @@ class ProviderList(PlatformEntity):
         # Need to convert to string since we are likely passed a ticker.
         return self.ProviderDict[str(item)]
 
-Providers = ProviderList()
 
+Providers = ProviderList()
 LoadedExtensions = []
 FailedExtensions = []
 DecoratedFailedExtensions = []
-
-
 
 
 class PlatformError(Exception):
@@ -506,22 +503,17 @@ def init_package(configuration_wrapper=None):
     :param configuration_wrapper: econ_platform_core.configuration.ConfigParserWrapper
     :return:
     """
-    global PlatformConfiguration, PlatformWrappedConfiguration
-    if configuration_wrapper is None:
+    global PlatformConfiguration
+    if not PlatformConfiguration.LoadedAny:
         try:
             # It would be good to log the loading of configuration information, except that the logging
             # configuration is loaded in this step!
             # Try to load configuration silently...
-            PlatformConfiguration, PlatformWrappedConfiguration = \
-                econ_platform_core.configuration.load_platform_configuration(display_steps=True)
+            PlatformConfiguration = econ_platform_core.configuration.load_platform_configuration(display_steps=True)
         except:
             raise
-    else:
-        PlatformWrappedConfiguration = configuration_wrapper
-        PlatformConfiguration = configuration_wrapper.ConfigParser
-
-        # it failed, so try again, showing the steps...
-        # PlatformConfiguration = econ_platform_core.configuration.load_platform_configuration(display_steps=True)
+            # it failed, so try again, showing the steps...
+            # PlatformConfiguration = econ_platform_core.configuration.load_platform_configuration(display_steps=True)
     # By default, go into the "logs" directory below this file.
     if len(LogInfo.LogDirectory) == 0:
         # If it has not been set manually, use the config information.

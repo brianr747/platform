@@ -48,6 +48,7 @@ class ConfigParserWrapper(econ_platform_core.utils.PlatformEntity):
         self.ConfigParser = configparser.ConfigParser()
         self.LoadedFiles = []
         self.NonexistentFiles = []
+        self.LoadedAny = False
 
     def Load(self, file_list=None, display_steps=False):
         """
@@ -69,6 +70,7 @@ class ConfigParserWrapper(econ_platform_core.utils.PlatformEntity):
                     print('Loading config file: ' + fname)
                 self.ConfigParser.read(fname)
                 self.LoadedFiles.append(fname)
+                self.LoadedAny = True
             else:
                 self._RegisterAction('CONFIG:NOTFILE', fname)
                 self.NonexistentFiles.append(fname)
@@ -95,7 +97,7 @@ def load_platform_configuration(display_steps=True):
     user_config_file = os.getenv(env_variable_name)
     if user_config_file is not None:
         obj.Load((user_config_file,), display_steps)
-    return obj.ConfigParser, obj
+    return obj
 
 
 def print_configuration(config=None, return_string=False):
@@ -108,7 +110,7 @@ def print_configuration(config=None, return_string=False):
     if config is None: # pragma: nocover Probably a bad idea to test this...
         config = econ_platform_core.PlatformConfiguration
     msg = ''
-    for sec in config.sections():
+    for sec in config.ConfigParser.sections():
         msg += '[{0}]\n'.format(sec)
         for k in config[sec]:
             if k.lower() in ('api_key', 'password'):

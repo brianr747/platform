@@ -39,8 +39,8 @@ def use_test_configuration():
     obj = econ_platform_core.configuration.ConfigParserWrapper()
     # Outside the core, so need to look at relative to this file.
     fpath = os.path.join(os.path.dirname(__file__), 'config_testing.txt')
-    config = obj.Load((fpath,), display_steps=False)
-    econ_platform_core.PlatformConfiguration = config
+    obj.Load((fpath,), display_steps=False)
+    econ_platform_core.PlatformConfiguration = obj
     return obj
 
 def delete_data_file(fname):
