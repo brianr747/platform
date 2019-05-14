@@ -17,7 +17,7 @@ loaded, and so most functions will crash. This means that end uses will almost a
 function (or import econ_platform.start, which is a script that initialises the platform).
 
 This package is supposed to only depend on standard Python libraries and *pandas*. Anything else (including
-thinge like matplotlib) are pushed into econ_platform, where code is meant to be loaded as extesnions. If an extension
+things like matplotlib) are pushed into econ_platform, where code is meant to be loaded as extensions. If an extension
 cannot be loaded (missing API packages, for example), econ_platform will still load up, it will just report that
 an extension load failed.
 
@@ -40,11 +40,9 @@ limitations under the License.
 
 import pandas
 import traceback
-import configparser
 
 # As a convenience, use the "logging.info" function as log.
 from logging import info as log, debug as log_debug, warning as log_warning, error as log_error
-
 
 import econ_platform_core.configuration
 from econ_platform_core.utils import PlatformEntity
@@ -55,15 +53,14 @@ from econ_platform_core.tickers import TickerFull, TickerDataType, TickerFetch, 
 
 import econ_platform_core.tickers
 
-
-
 # Get the logging information. Users can either programmatically change the LogInfo.LogDirectory or
 # use a config file before calling start_log()
 from econ_platform_core.utils import PlatformEntity
 
 LogInfo = utils.PlatformLogger()
 
-def start_log(fname=None):
+
+def start_log(fname=None):  # pragma: nocover
     """
     Call this function if you want a log. By default, the log name is based on the base Python script name
     (sys.argv[0]), and goes into the default directory (LonInfo.LogDirectory).
@@ -76,10 +73,12 @@ def start_log(fname=None):
 
 PlatformConfiguration = econ_platform_core.configuration.ConfigParserWrapper()
 
+
 class SeriesMetaData(PlatformEntity):
     """
     Class that holds series meta data used on the platform.
     """
+
     def __init__(self):
         # Kind of strange, but does this series yet exist on the database in question?
         super().__init__()
@@ -109,6 +108,7 @@ class SeriesMetaData(PlatformEntity):
                           ('ticker_query', TickerFetch))
         for attrib, targ in things_to_test:
             obj = getattr(self, attrib)
+            # noinspection PyPep8Naming
             OK = (len(str(obj)) == 0) or (type(obj) is targ)
             if not OK:
                 raise PlatformError('Invalid SeriesMetaData: {0} is not {1}'.format(attrib, targ))
@@ -129,11 +129,12 @@ class DatabaseManager(PlatformEntity):
 
     Note: Only support full series replacement for now.
     """
+
     def __init__(self, name='Virtual Object'):
         super().__init__()
         self.Name = name
         # This is overridden by the AdvancedDatabase constructor.
-        # By extension, everything derived from this base class (like the TEXT dabase is "not advanced."
+        # By extension, everything derived from this base class (like the TEXT database is "not advanced."
         self.IsAdvanced = False
         self.Code = ''
         self.ReplaceOnly = True
@@ -157,7 +158,7 @@ class DatabaseManager(PlatformEntity):
         # Provider-specific meta data data not supported yet.
         return meta
 
-    def _FindLocal(self, local_ticker):
+    def _FindLocal(self, local_ticker):  # pragma: nocover
         """
         Databases that support local tickers should override this method.
 
@@ -166,16 +167,15 @@ class DatabaseManager(PlatformEntity):
         """
         raise NotImplementedError('This database does not support local tickers')
 
-    def _FindDataType(self, datatype_ticker):
+    def _FindDataType(self, datatype_ticker):  # pragma: nocover
         """
 
-        :param datatype_ticker: TickerDataYype
+        :param datatype_ticker: TickerDataType
         :return:
         """
         raise NotImplementedError('This database does not support data type tickers')
 
-
-    def Exists(self, ticker):
+    def Exists(self, ticker):  # pragma: nocover
         """
 
         :param ticker: econ_platform_core.tickers._TickerAbstract
@@ -183,7 +183,7 @@ class DatabaseManager(PlatformEntity):
         """
         raise NotImplementedError()
 
-    def Retrieve(self, series_meta):
+    def Retrieve(self, series_meta):  # pragma: nocover
         """
 
         :param series_meta: SeriesMetaData
@@ -191,7 +191,7 @@ class DatabaseManager(PlatformEntity):
         """
         raise NotImplementedError()
 
-    def GetMeta(self, full_ticker):
+    def GetMeta(self, full_ticker):  # pragma: nocover
         raise NotImplementedError()
 
     def RetrieveWithMeta(self, full_ticker):
@@ -210,8 +210,15 @@ class DatabaseManager(PlatformEntity):
         ser = self.Retrieve(meta)
         return ser, meta
 
+    def Delete(self, series_meta):  # pragma: nocover
+        """
+        Delete a series.
+        :param series_meta: SeriesMetaData
+        :return:
+        """
+        raise NotImplementedError()
 
-    def Write(self, ser, series_meta, overwrite=True):
+    def Write(self, ser, series_meta, overwrite=True):  # pragma: nocover
         """
 
         :param ser: pandas.Series
@@ -221,10 +228,12 @@ class DatabaseManager(PlatformEntity):
         """
         raise NotImplementedError()
 
+
 class DatabaseList(PlatformEntity):
     """
     List of all Database managers. Developers can push their own DatabaseManagers into the global object.
     """
+
     def __init__(self):
         super().__init__()
         self.DatabaseDict = {}
@@ -289,14 +298,21 @@ class ProviderWrapper(PlatformEntity):
         if not name == 'VirtualObject':
             self.ProviderCode = PlatformConfiguration['ProviderList'][name]
 
-    def fetch(self, series_meta):
+    def fetch(self, series_meta):  # pragma: nocover
+        """
+        Fetch a series from a provider.
+
+        :param series_meta: SeriesMetaData
+        :return: pandas.Series
+        """
         raise NotImplementedError
 
 
 class ProviderList(PlatformEntity):
     """
-    List of all proviser wrappers. Developers can push their own DatabaseManagers into the global object.
+    List of all provider wrappers. Developers can push their own DatabaseManagers into the global object.
     """
+
     def __init__(self):
         super().__init__()
         self.ProviderDict = {}
@@ -306,12 +322,12 @@ class ProviderList(PlatformEntity):
         self.EchoAccess = PlatformConfiguration['ProviderOptions'].getboolean('echo_access')
 
     def AddProvider(self, obj):
-         """
+        """
          Add a provider
          :param obj: ProviderWrapper
          :return:
          """
-         self.ProviderDict[obj.ProviderCode] = obj
+        self.ProviderDict[obj.ProviderCode] = obj
 
     def __getitem__(self, item):
         """
@@ -334,8 +350,10 @@ DecoratedFailedExtensions = []
 class PlatformError(Exception):
     pass
 
+
 class TickerError(PlatformError):
     pass
+
 
 class TickerNotFoundError(PlatformError):
     pass
@@ -351,6 +369,8 @@ class UpdateProtocol(PlatformEntity):
     (The more sophisticated managers will be developed in another module.)
 
     """
+
+    # noinspection PyMethodMayBeStatic,PyUnusedLocal
     def Update(self, series_meta, provider_wrapper, database_manager):
         """
         Procedure to handle updates. The default behaviour is to not update; just retrieve from the
@@ -376,6 +396,7 @@ class UpdateProtocolManager(PlatformEntity):
     Eventually, need to offer the ability to choose which to use. Since we only have one option,
     not needed...
     """
+
     def __init__(self):
         super().__init__()
         self.Protocols = {}
@@ -411,16 +432,16 @@ def fetch(ticker, database='Default', dropna=True):
     :param ticker: str
     :param database: str
     :param dropna: bool
-    :param always_list: bool
     :return: pandas.Series
     """
     # NOTE: This will get fancier, but don't over-design for now...
-    if database.lower()=='default':
+    if database.lower() == 'default':
         database = PlatformConfiguration["Database"]["Default"]
     database_manager: DatabaseManager = Databases[database]
     series_meta = database_manager.Find(ticker)
     series_meta.AssertValid()
     provider_code = series_meta.series_provider_code
+    # noinspection PyPep8
     try:
         provider_manager: ProviderWrapper = Providers[provider_code]
     except:
@@ -456,6 +477,7 @@ def fetch_df(ticker, database='Default', dropna=True):
     :param dropna: bool
     :return: pandas.DataFrame
     """
+    # noinspection PyPep8
     try:
         ser = fetch(ticker, database, dropna)
         df = pandas.DataFrame({'series_dates': ser.index, 'series_values': ser.values})
@@ -465,7 +487,7 @@ def fetch_df(ticker, database='Default', dropna=True):
         raise
 
 
-def log_extension_status():
+def log_extension_status():  # pragma: nocover
     """
     After the fact logging of what extensions were loaded. Useful for R
     :return:
@@ -477,10 +499,11 @@ def log_extension_status():
         log_debug('No extension loads failed.')
         return
     log_warning('Failed Extension Initialisation')
-    for f,warn in DecoratedFailedExtensions:
+    for f, warn in DecoratedFailedExtensions:
         log_warning('Extension_File\t{0}\tMessage:\t{1}'.format(f, warn))
 
 
+# noinspection PyUnusedLocal
 def _hook_fetch_external(provider_manager, ticker):
     """
     Hook for customisation when external reference is hit.
@@ -490,7 +513,8 @@ def _hook_fetch_external(provider_manager, ticker):
    """
     pass
 
-def log_last_error():
+
+def log_last_error():  # pragma: nocover
     """
     Convenience function to log the last error.
     :return:
@@ -499,23 +523,16 @@ def log_last_error():
     log_error(msg)
 
 
-def init_package(configuration_wrapper=None):
+def init_package():
     """
     Call to initialise the package, other than configuration file (and logging set up).
-    :param configuration_wrapper: econ_platform_core.configuration.ConfigParserWrapper
     :return:
     """
     global PlatformConfiguration
     if not PlatformConfiguration.LoadedAny:
-        try:
-            # It would be good to log the loading of configuration information, except that the logging
-            # configuration is loaded in this step!
-            # Try to load configuration silently...
-            PlatformConfiguration = econ_platform_core.configuration.load_platform_configuration(display_steps=True)
-        except:
-            raise
-            # it failed, so try again, showing the steps...
-            # PlatformConfiguration = econ_platform_core.configuration.load_platform_configuration(display_steps=True)
+        # May switch over to "silent" loading, but not knowing which config files were loaded can
+        # cause a lot of errors...
+        PlatformConfiguration = econ_platform_core.configuration.load_platform_configuration(display_steps=True)
     # By default, go into the "logs" directory below this file.
     if len(LogInfo.LogDirectory) == 0:
         # If it has not been set manually, use the config information.
@@ -523,6 +540,7 @@ def init_package(configuration_wrapper=None):
     Databases.Initialise()
     Providers.Initialise()
     UpdateProtocolList.Initialise()
+    # Replace this with an "extension manager"
     global LoadedExtensions
     global FailedExtensions
     global DecoratedFailedExtensions

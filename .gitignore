@@ -6,6 +6,8 @@ legacy/R/images/*.png
 legacy/R/text_database/*.txt
 legacy/R/log*.txt
 scripts/log*.txt
+test/data/*.txt
+test/data/*.db
 # sqlite databases
 econ_platform_core/data/*.db
 

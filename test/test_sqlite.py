@@ -1,3 +1,19 @@
+"""
+
+SQLite database testing.
+
+In order to support ease of development, I am using a database on disk. This way I can follow test-driven
+development, and still be able to see what is happening in the database with a database browser.
+
+Will switch over to an in-memory database, which will be faster and more stable for testing (since it
+will be recreated from scratch every test run), but we cannot see what is happening with external tools.
+
+
+"""
+
+
+
+
 import loc_utils
 
 # loc_utils.skip_this_extension_module()
@@ -21,6 +37,8 @@ class TestEndToEnd(unittest.TestCase):
         ser.index = pandas.Series(ddate)
         obj = database_sqlite3.DatabaseSqlite3()
         meta = obj.Find('TEST@test_write_1')
+        meta.series_name = 'Test series test_write_1'
+        meta.series_description = 'Series to support test test_write()'
         obj.Write(ser, meta)
         ser2 = obj.Retrieve(meta)
         self.assertEqual(ser2.index[0], ser.index[0])
