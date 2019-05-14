@@ -68,11 +68,13 @@ class DatabaseSqlite3(DBapiDatabase):
         self.DatabaseFile = ''
         self.Connection = None
         self.Cursor = None
-        self.MetaTable = ''
-        self.DataTable = ''
+        self.TableMeta = ''
+        self.TableData = ''
         # Allow customisation later...
-        self.LocalTable = 'TickerLocal'
-        self.LookupView = 'TickerLookup'
+        self.TableLocal = 'TickerLocal'
+        self.TableTickerDataType = 'TickerDataType'
+        self.ViewLookup = 'TickerLookup'
+        self.TableProviderMeta = 'ProviderMeta'
         self.LogSQL = False
 
     def GetConnection(self, test_tables=True, auto_create=True):
@@ -97,8 +99,8 @@ class DatabaseSqlite3(DBapiDatabase):
         # Set data from config file, unless previously set
         # List of (class_member, config_attribute) pairs.
         info = [('DatabaseFile', 'file_name'),
-                ('MetaTable', 'meta_table'),
-                ('DataTable', 'data_table')]
+                ('TableMeta', 'meta_table'),
+                ('TableData', 'data_table')]
         for attrib, config_name in info:
             # If len() > 0, then already set
             if len(getattr(self, attrib)) == 0:
@@ -117,11 +119,11 @@ class DatabaseSqlite3(DBapiDatabase):
         # If the meta table is there, so it the values table?
         # Don't know how to validate existence of SQL objects, so do it this way
         try:
-            cursor.execute('SELECT * FROM {0} LIMIT 1'.format(self.MetaTable))
+            cursor.execute('SELECT * FROM {0} LIMIT 1'.format(self.TableMeta))
         except sqlite3.OperationalError as ex:
             # Expected error message: 'no such table: {table_name}'
             econ_platform_core.log_warning('sqlite3 error %s', ex)
-            if self.MetaTable.lower() in ex.args[0].lower():
+            if self.TableMeta.lower() in ex.args[0].lower():
                 raise econ_platform_core.PlatformError('Tables do not exist. Need to run the initialisation script init_sqlite.py in the scripts directory.')
             else:
                 print(str(ex))
@@ -169,7 +171,7 @@ class DatabaseSqlite3(DBapiDatabase):
 
     def Exists(self, series_meta):
         self.GetConnection()
-        search_query = 'SELECT COUNT(*) FROM {0} WHERE ticker_full = ?'.format(self.MetaTable)
+        search_query = 'SELECT COUNT(*) FROM {0} WHERE ticker_full = ?'.format(self.TableMeta)
         cursor = self.Execute(search_query, str(series_meta.ticker_full))
         res = cursor.fetchall()
         return res[0][0] > 0
@@ -182,7 +184,7 @@ class DatabaseSqlite3(DBapiDatabase):
             raise econ_platform_core.TickerNotFoundError('{0} not found on database'.format(ticker_full))
         cmd = """
 SELECT series_dates, series_values FROM {0} WHERE series_id = ?
-        """.format(self.DataTable)
+        """.format(self.TableData)
         res = self.Execute(cmd, series_id, commit_after=False).fetchall()
         def mapper(s):
             try:
@@ -219,8 +221,10 @@ SELECT series_dates, series_values FROM {0} WHERE series_id = ?
             else:
                 # Delete the existing series
                 cmd = """
-DELETE FROM {0} WHERE series_id = ?""".format(self.DataTable)
+DELETE FROM {0} WHERE series_id = ?""".format(self.TableData)
                 self.Execute(cmd, series_id, commit_after=True)
+        # Cannot write NULL.
+        ser = ser.dropna()
         dates = ser.index
         # Need to coerce to strings.
         dates = [econ_platform_core.utils.coerce_date_to_string(x) for x in dates]
@@ -228,14 +232,14 @@ DELETE FROM {0} WHERE series_id = ?""".format(self.DataTable)
         info = zip(id_list, dates, ser.values)
         cmd = """
         INSERT INTO {0}(series_id, series_dates, series_values) VALUES (?, ?, ?)
-        """.format(self.DataTable)
+        """.format(self.TableData)
         self.Execute(cmd, info, commit_after=True, is_many=True)
 
     def GetSeriesID(self, full_ticker):
         full_ticker = str(full_ticker)
         self.GetConnection()
         cmd = """
-        SELECT series_id FROM {0} WHERE ticker = ? LIMIT 1""".format(self.LookupView)
+        SELECT series_id FROM {0} WHERE ticker = ? LIMIT 1""".format(self.ViewLookup)
         self.Execute(cmd, full_ticker, commit_after=False)
         res = self.Cursor.fetchall()
         if len(res) == 0:
@@ -254,7 +258,7 @@ DELETE FROM {0} WHERE series_id = ?""".format(self.DataTable)
         create_str = """
 INSERT INTO {0} (series_provider_code, ticker_full, ticker_query, series_name, series_description) VALUES
 (?, ?, ?, ?, ?)        
-        """.format(self.MetaTable)
+        """.format(self.TableMeta)
         local_ticker = series_meta.ticker_local
         if len(local_ticker) == 0:
             local_ticker = None
@@ -283,11 +287,11 @@ INSERT INTO {0} (series_provider_code, ticker_full, ticker_query, series_name, s
         series_name TEXT NULL,
         series_description TEXT NULL
         )
-        """.format(self.MetaTable)
+        """.format(self.TableMeta)
         self.Execute(create_1)
         create_2 = """
         CREATE UNIQUE INDEX IF NOT EXISTS index_ticker_full ON {0} (ticker_full)
-        """.format(self.MetaTable)
+        """.format(self.TableMeta)
         self.Execute(create_2)
         create_3 = """
         CREATE TABLE IF NOT EXISTS {0} (
@@ -296,16 +300,16 @@ INSERT INTO {0} (series_provider_code, ticker_full, ticker_query, series_name, s
         series_values REAL NOT NULL,
         FOREIGN KEY(series_id) REFERENCES {1}(series_id) ON DELETE CASCADE ON UPDATE CASCADE,
         PRIMARY KEY (series_id, series_dates)
-        )""".format(self.DataTable, self.MetaTable)
+        )""".format(self.TableData, self.TableMeta)
         self.Execute(create_3)
         create_4 = """
-CREATE VIEW SummaryView as 
+CREATE VIEW ViewSummary as 
 SELECT m.series_id, m.ticker_full, 
- m.series_provider_code, m.ticker_query, m.ticker_local, m.series_name, m.series_description, 
+ m.series_provider_code, m.ticker_query, m.series_name, m.series_description, 
  min(d.series_dates) as start_date, max(d.series_dates) as end_date 
  from {0} as m, {1} as d
-WHERE m.series_id = d.series_id
-                 """.format(self.MetaTable, self.DataTable)
+WHERE m.series_id = d.series_id GROUP BY d.series_id
+                 """.format(self.TableMeta, self.TableData)
         self.Execute(create_4)
         self.Connection.commit()
         create_5 = """
@@ -314,17 +318,41 @@ WHERE m.series_id = d.series_id
         ticker_local TEXT,
         FOREIGN KEY(series_id) REFERENCES {1}(series_id) ON DELETE CASCADE ON UPDATE CASCADE,
         PRIMARY KEY (ticker_local)
-        )""".format(self.LocalTable, self.MetaTable)
+        )""".format(self.TableLocal, self.TableMeta)
         self.Execute(create_5)
-        create_6 = """
-        CREATE VIEW {0} as 
-        SELECT series_id, ticker_full as ticker 
-        FROM {1}
-        UNION 
-        SELECT series_id, ticker_local as ticker FROM {2}
-        ORDER BY series_id
-                         """.format(self.LookupView, self.MetaTable, self.LocalTable)
-        self.Execute(create_6)
+        # create_6 got moved...
+        create_7 = """
+        CREATE TABLE IF NOT EXISTS {0} (
+        series_id INTEGER,
+        series_provider_code TEXT,
+        param TEXT,
+        value TEXT,
+        FOREIGN KEY(series_id) REFERENCES {1}(series_id) ON DELETE CASCADE ON UPDATE CASCADE,
+        PRIMARY KEY (series_id, param)
+        )""".format(self.TableProviderMeta, self.TableMeta)
+        self.Execute(create_7)
+        create_8 = """
+                CREATE TABLE IF NOT EXISTS {0} (
+                series_id INTEGER,
+                ticker_data_type TEXT,
+                security TEXT,
+                data_type TEXT,
+                FOREIGN KEY(series_id) REFERENCES {1}(series_id) ON DELETE CASCADE ON UPDATE CASCADE,
+                PRIMARY KEY (ticker_data_type)
+                )""".format(self.TableTickerDataType, self.TableMeta)
+        self.Execute(create_8)
+        create_9 = """
+                CREATE VIEW {0} as 
+                SELECT series_id, ticker_full as ticker 
+                FROM {1}
+                UNION 
+                SELECT series_id, ticker_local as ticker FROM {2}
+                UNION
+                SELECT series_id, ticker_data_type as ticker FROM {3}
+                ORDER BY series_id
+                                 """.format(self.ViewLookup, self.TableMeta, self.TableLocal,
+                                            self.TableTickerDataType)
+        self.Execute(create_9)
         self.TestTablesExist()
         self.Connection.commit()
 

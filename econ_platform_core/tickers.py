@@ -177,3 +177,15 @@ def map_string_to_ticker(ticker):
             return TickerDataType(ticker)
         except InvalidTickerError:
             return TickerLocal(ticker)
+
+
+def create_ticker_full(ticker_provider, ticker_fetch):
+    """
+    Create a TickerFull object from provider and fetch ticker.
+
+    :param ticker_provider: str
+    :param ticker_fetch: str
+    :return: TickerFull
+    """
+    ticker_str = '{0}{1}{2}'.format(str(ticker_provider), TickerFull.DelimiterSplit, str(ticker_fetch))
+    return TickerFull(ticker_str)

@@ -54,5 +54,13 @@ class TestTickers(unittest.TestCase):
         self.is_equal(tickers.TickerDataType('A|B'), tickers.map_string_to_ticker('A|B'))
         self.is_equal(tickers.TickerLocal('AB'), tickers.map_string_to_ticker('AB'))
 
+    def test_create_ticker_full(self):
+        targ = tickers.TickerFull('A@B')
+        self.assertTrue(self.is_equal(targ, tickers.create_ticker_full('A', 'B')))
+        provider = tickers.TickerProviderCode('A')
+        query = tickers.TickerFetch('B')
+        self.assertTrue(self.is_equal(targ, tickers.create_ticker_full(provider, query)))
+
+
 
 

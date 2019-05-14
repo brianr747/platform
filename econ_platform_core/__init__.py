@@ -295,6 +295,13 @@ class ProviderWrapper(PlatformEntity):
         self.Name = name
         self.ProviderCode = ''
         self.IsExternal = True
+        # Sometimes we fetch an entire table as a side effect of fetching a series.
+        # A provider can mark this possibility by setting TableWasFetched to True, and
+        # loading up TableSeries, TableMeta with series/meta-data. The fetch() function will
+        # store the data.
+        self.TableWasFetched = False
+        self.TableSeries = {}
+        self.TableMeta = {}
         if not name == 'VirtualObject':
             self.ProviderCode = PlatformConfiguration['ProviderList'][name]
 
@@ -456,13 +463,41 @@ def fetch(ticker, database='Default', dropna=True):
         if provider_manager.IsExternal:
             _hook_fetch_external(provider_manager, ticker)
         log_debug('Fetching %s', ticker)
+        # Force this to False, so that ProviderManager extension writers do not need to
+        # remember to do so.
+        provider_manager.TableWasFetched = False
         if Providers.EchoAccess:
             print('Going to {0} to fetch {1}'.format(provider_manager.Name, ticker))
-        ser = provider_manager.fetch(series_meta)
+        try:
+            out = provider_manager.fetch(series_meta)
+        except TickerNotFoundError:
+            # If the table was fetched, write the table, even if the specific series was not there...
+            if provider_manager.TableWasFetched:
+                for k in provider_manager.TableSeries:
+                    t_ser = provider_manager.TableSeries[k]
+                    t_meta = provider_manager.TableMeta[k]
+                    # Don't write the single series again..
+                    if str(t_meta.ticker_full) == str(series_meta.ticker_full):
+                        continue
+                    database_manager.Write(t_ser, t_meta)
+            raise
+        if out is pandas.Series:
+            ser = out
+        else:
+            ser, series_meta = out
         if dropna:
             ser = ser.dropna()
         log('Writing %s', ticker)
         database_manager.Write(ser, series_meta)
+        if provider_manager.TableWasFetched:
+            for k in provider_manager.TableSeries:
+                t_ser = provider_manager.TableSeries[k]
+                t_meta = provider_manager.TableMeta[k]
+                # Don't write the single series again..
+                if str(t_meta.ticker_full) == str(series_meta.ticker_full):
+                    continue
+                database_manager.Write(t_ser, t_meta)
+
     return ser
 
 
