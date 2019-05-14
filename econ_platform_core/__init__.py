@@ -134,8 +134,7 @@ class DatabaseManager(PlatformEntity):
         # This is overridden by the AdvancedDatabase constructor.
         # By extension, everything derived from this base class (like the TEXT dabase is "not advanced."
         self.IsAdvanced = False
-        if not name == 'Virtual Object':
-            self.Code = PlatformConfiguration['DatabaseList'][name]
+        self.Code = ''
         self.ReplaceOnly = True
 
     def Find(self, ticker):
@@ -238,6 +237,8 @@ class DatabaseList(PlatformEntity):
         :param wrapper: DatabaseManager
         :return:
         """
+        code = PlatformConfiguration['DatabaseList'][wrapper.Name]
+        wrapper.Code = code
         self.DatabaseDict[wrapper.Code] = wrapper
 
     def __getitem__(self, item):
@@ -420,7 +421,7 @@ def fetch(ticker, database='Default', dropna=True):
     try:
         provider_manager: ProviderWrapper = Providers[provider_code]
     except:
-        raise KeyError('Unknown provider_code: ' + provider_code)
+        raise KeyError('Unknown provider_code: ' + str(provider_code))
 
     if series_meta.Exists:
         # Return what is on the database.
@@ -499,20 +500,26 @@ def log_last_error():
     log_error(msg)
 
 
-def init_package():
+def init_package(configuration_wrapper=None):
     """
     Call to initialise the package, other than configuration file (and logging set up).
+    :param configuration_wrapper: econ_platform_core.configuration.ConfigParserWrapper
     :return:
     """
     global PlatformConfiguration, PlatformWrappedConfiguration
-    try:
-        # It would be good to log the loading of configuration information, except that the logging
-        # configuration is loaded in this step!
-        # Try to load configuration silently...
-        PlatformConfiguration, PlatformWrappedConfiguration = \
-            econ_platform_core.configuration.load_platform_configuration(display_steps=True)
-    except:
-        raise
+    if configuration_wrapper is None:
+        try:
+            # It would be good to log the loading of configuration information, except that the logging
+            # configuration is loaded in this step!
+            # Try to load configuration silently...
+            PlatformConfiguration, PlatformWrappedConfiguration = \
+                econ_platform_core.configuration.load_platform_configuration(display_steps=True)
+        except:
+            raise
+    else:
+        PlatformWrappedConfiguration = configuration_wrapper
+        PlatformConfiguration = configuration_wrapper.ConfigParser
+
         # it failed, so try again, showing the steps...
         # PlatformConfiguration = econ_platform_core.configuration.load_platform_configuration(display_steps=True)
     # By default, go into the "logs" directory below this file.

@@ -70,6 +70,9 @@ class DatabaseSqlite3(DBapiDatabase):
         self.Cursor = None
         self.MetaTable = ''
         self.DataTable = ''
+        # Allow customisation later...
+        self.LocalTable = 'TickerLocal'
+        self.LookupView = 'TickerLookup'
         self.LogSQL = False
 
     def GetConnection(self, test_tables=True, auto_create=True):
@@ -77,7 +80,10 @@ class DatabaseSqlite3(DBapiDatabase):
             return self.Connection
         self.SetParameters()
         full_name = self.DatabaseFile
-        did_not_exist = not os.path.exists(full_name)
+        if full_name == ':memory:':
+            did_not_exist = False
+        else:
+            did_not_exist = not os.path.exists(full_name)
         self.Connection = sqlite3.Connection(full_name)
         if did_not_exist and auto_create:
             create_sqlite3_tables()
@@ -144,9 +150,17 @@ class DatabaseSqlite3(DBapiDatabase):
                 econ_platform_core.log(cmd)
         if len(args) > 0:
             if is_many:
+                # No ticker conversion here, but unlikely to appear in an executemany()
                 self.Cursor.executemany(cmd, args[0])
             else:
-                self.Cursor.execute(cmd, args)
+                # Quietly convert tickers to str
+                clean_args = []
+                for x in args:
+                    if issubclass(x.__class__, econ_platform_core.tickers._TickerAbstract):
+                        clean_args.append(str(x))
+                    else:
+                        clean_args.append(x)
+                self.Cursor.execute(cmd, clean_args)
         else:
             self.Cursor.execute(cmd)
         if commit_after:
@@ -220,7 +234,7 @@ DELETE FROM {0} WHERE series_id = ?""".format(self.DataTable)
         full_ticker = str(full_ticker)
         self.GetConnection()
         cmd = """
-        SELECT series_id FROM {0} WHERE ticker_full = ?""".format(self.MetaTable)
+        SELECT series_id FROM {0} WHERE ticker = ? LIMIT 1""".format(self.LookupView)
         self.Execute(cmd, full_ticker, commit_after=False)
         res = self.Cursor.fetchall()
         if len(res) == 0:
@@ -237,19 +251,19 @@ DELETE FROM {0} WHERE series_id = ?""".format(self.DataTable)
         # Need to make sure initialised
         self.GetConnection()
         create_str = """
-INSERT INTO {0} (series_provider_code, ticker_full, ticker_local, ticker_query) VALUES
-(?, ?, ?, ?)        
+INSERT INTO {0} (series_provider_code, ticker_full, ticker_query) VALUES
+(?, ?, ?)        
         """.format(self.MetaTable)
         local_ticker = series_meta.ticker_local
         if len(local_ticker) == 0:
             local_ticker = None
-        self.Execute(create_str, series_meta.series_provider_code, series_meta.ticker_full,
-                     local_ticker, series_meta.ticker_query, commit_after=True)
+        self.Execute(create_str, str(series_meta.series_provider_code), str(series_meta.ticker_full),
+                     series_meta.ticker_query, commit_after=True)
 
 
     def CreateSqlite3Tables(self):
         """
-        Can invoke this by running the
+        Can invoke this by running a script in the scripts directory.
         :return:
 
         """
@@ -263,8 +277,7 @@ INSERT INTO {0} (series_provider_code, ticker_full, ticker_local, ticker_query) 
         series_id INTEGER PRIMARY KEY, 
         ticker_full TEXT NOT NULL, 
         series_provider_code TEXT NOT NULL, 
-        ticker_query TEXT NOT NULL,
-        ticker_local TEXT
+        ticker_query TEXT NOT NULL
         )
         """.format(self.MetaTable)
         self.Execute(create_1)
@@ -291,6 +304,23 @@ WHERE m.series_id = d.series_id
                  """.format(self.MetaTable, self.DataTable)
         self.Execute(create_4)
         self.Connection.commit()
+        create_5 = """
+        CREATE TABLE IF NOT EXISTS {0} (
+        series_id INTEGER,
+        ticker_local TEXT,
+        FOREIGN KEY(series_id) REFERENCES {1}(series_id) ON DELETE CASCADE ON UPDATE CASCADE,
+        PRIMARY KEY (ticker_local)
+        )""".format(self.LocalTable, self.MetaTable)
+        self.Execute(create_5)
+        create_6 = """
+        CREATE VIEW {0} as 
+        SELECT series_id, ticker_full as ticker 
+        FROM {1}
+        UNION 
+        SELECT series_id, ticker_local as ticker FROM {2}
+        ORDER BY series_id
+                         """.format(self.LookupView, self.MetaTable, self.LocalTable)
+        self.Execute(create_6)
         self.TestTablesExist()
         self.Connection.commit()
 

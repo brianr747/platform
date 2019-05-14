@@ -27,6 +27,21 @@ import pandas
 import datetime
 
 
+def get_test_series(str_ticker):
+    """
+    Pull this logic out so that test code can directly call this with just the string.
+    """
+    if str_ticker == 'TEST1':
+        x = [1, 2, ]
+        data = pandas.Series(x)
+        data.index = [datetime.date(2000, 1, 1), datetime.date(2000, 1, 2)]
+        data.name = 'TEST1'
+        return data
+    # If we get here, boum.
+    raise KeyError('Unknown test series ' + str_ticker)
+
+
+
 def add_example_provider():
     """
     Call this function to add the "TEST" provider.
@@ -46,11 +61,8 @@ class ProviderExample(econ_platform_core.ProviderWrapper):
         :return: list
         """
         query_ticker = str(series_meta.ticker_query)
-        if query_ticker == 'TEST1':
-            x = [1, 2,]
-            data = pandas.Series(x)
-            data.index = [datetime.date(2000, 1, 1), datetime.date(2000, 1, 2)]
-            data.name = str(series_meta.ticker_full)
+        try:
+            data = get_test_series(query_ticker)
             return [data,]
-
-        raise econ_platform_core.TickerNotFoundError('Not found on TEST: {0}'.format(query_ticker))
+        except KeyError:
+            raise econ_platform_core.TickerNotFoundError('Not found on TEST: {0}'.format(query_ticker))

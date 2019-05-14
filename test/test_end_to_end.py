@@ -24,13 +24,21 @@ loc_utils.skip_this_extension_module()
 
 import os
 import unittest
-import econ_platform.start
+import econ_platform_core
+from econ_platform_core.providers.provider_example import get_test_series
 
 
 
 
 class dummy_test(unittest.TestCase):
     def test_fetch(self):
-        ser = econ_platform.fetch('F@DGS10')
-        # TODO: actually test something...
-        # This is here just to see how adding this affects coverage.
+        config_wrapper = loc_utils.use_test_configuration()
+        econ_platform_core.init_package(config_wrapper)
+        loc_utils.delete_data_file('TEST_TEST1.txt')
+        ser = econ_platform_core.fetch('TEST@TEST1', database='TEXT')
+        targ = get_test_series('TEST1')
+        self.assertTrue(targ.equals(ser))
+        self.assertTrue(os.path.exists(os.path.join(os.path.dirname(__file__), 'data', 'TEST_TEST1.txt')))
+        # fetch again, will be from file.
+        ser = econ_platform_core.fetch('TEST@TEST1', database='TEXT')
+        self.assertTrue(targ.equals(ser))

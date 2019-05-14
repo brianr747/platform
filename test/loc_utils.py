@@ -39,5 +39,17 @@ def use_test_configuration():
     obj = econ_platform_core.configuration.ConfigParserWrapper()
     # Outside the core, so need to look at relative to this file.
     fpath = os.path.join(os.path.dirname(__file__), 'config_testing.txt')
-    obj.Load((fpath,), display_steps=False)
+    config = obj.Load((fpath,), display_steps=False)
+    econ_platform_core.PlatformConfiguration = config
+    return obj
+
+def delete_data_file(fname):
+    """
+    Delete a file (if it exists) from the data directory.
+    :param fname: str
+    :return:
+    """
+    targ = os.path.join(os.path.dirname(__file__), 'data', fname)
+    if os.path.exists(targ):
+        os.remove(targ)
 

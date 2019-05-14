@@ -71,8 +71,11 @@ def load_extensions():  # pragma: nocover
     failed_extensions = []
     decorated_fails = []
     use_monkey_example = econ_platform_core.PlatformConfiguration['Options'].getboolean('UseMonkeyPatchExample')
+    use_example_provider = econ_platform_core.PlatformConfiguration['Options'].getboolean('UseExampleProvider')
     if not use_monkey_example:
         exclusion_list.append('monkey_patch_example')
+    if not use_example_provider:
+        exclusion_list.append('hook_provider_example')
     for fname in flist:
         fname = fname.lower()
         if not fname.endswith('.py'):

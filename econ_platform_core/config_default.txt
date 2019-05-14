@@ -31,6 +31,7 @@ LogDirectory = {CORE}/logs
 
 [Options]
 UseMonkeyPatchExample = False
+UseExampleProvider = False
 # Users set the variable below (the name of which can be overriden in the "site config" to specify the config
 # file they want loaded for user-specific customisation. I point mine to a file outside the repository, so it
 # cannot get checked in.

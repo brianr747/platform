@@ -30,6 +30,7 @@ LogDirectory = {CORE}/logs
 
 [Options]
 UseMonkeyPatchExample = False
+UseExampleProvider = True
 UserConfigEnvironmentVariableName = NO_USER_CONFIG_FILE_PLEASE
 
 #------------------------------------------------------------------
@@ -53,9 +54,9 @@ SQLite Database=SQLITE
 # Data associated with each database are saved as separate sections.
 # Naming convention: D_{database_ticker}
 [D_TEXT]
-directory={CORE}\test\data
+directory={PARENT}\test\data
 [D_SQLITE]
-file_name={CORE}\test\data\platform.db
+file_name={PARENT}\test\data\platform.db
 # Generic provider options
 [ProviderOptions]
 echo_access=True
@@ -79,6 +80,6 @@ api_key=THIS_TEXT_SHOULD_NOT_APPEAR_IN_TEST
 [P_CCSV]
 # Directory information . Note that if these defaults are used, this means it goes below the providers directory.
 # Which means that we don't need to worry about the directory separaor in this case.
-zip_directory = {CORE}\test\data\cansim_csv
-parsed_directory = {CORE}\test\data\cansim_csv
+zip_directory = {PARENT}\test\data\cansim_csv
+parsed_directory = {PARENT}\test\data\cansim_csv
 zip_tail=-eng.zip

@@ -23,6 +23,7 @@ import sys
 import os
 import re
 import datetime
+import pathlib
 
 
 class PlatformEntity(object):
@@ -172,13 +173,14 @@ def parse_config_path(fpath):
     :param fpath: str
     :return: str
     """
-    if not(('{CORE}' in fpath) or ('{DATA}' in fpath)):
+    if not(('{CORE}' in fpath) or ('{DATA}' in fpath) or ('{PARENT}' in fpath)):
         return fpath
     # Default path; go to work.
-    # Make all seperators the same.
+    # Make all separators the same.
     fpath = fpath.replace('\\', '/')
     fpath_s = fpath.split('/')
     new_path = os.path.sep.join(fpath_s)
+    new_path = new_path.replace('{PARENT}', str(pathlib.Path(os.path.dirname(__file__)).parent))
     new_path = new_path.replace('{DATA}', os.path.join('{CORE}', 'data'))
     new_path = new_path.replace('{CORE}', os.path.dirname(__file__))
     return new_path
