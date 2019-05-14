@@ -58,7 +58,7 @@ class ProviderRbaXls(econ_platform_core.ProviderWrapper):
         """
 
         :param series_meta: myplattform.SeriesMetaData
-        :return:
+        :return: pandas.Series
         """
         if self.Directory is None:
             self.Directory = econ_platform_core.utils.parse_config_path(
@@ -74,7 +74,7 @@ class ProviderRbaXls(econ_platform_core.ProviderWrapper):
                 ser = partial_ser
             else:
                 ser = ser.combine_first(partial_ser)
-        return [ser,]
+        return ser
 
     def SearchForSeriesCode(self, series_code):
         """

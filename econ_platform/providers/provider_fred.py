@@ -51,4 +51,4 @@ class ProviderFred(econ_platform_core.ProviderWrapper):
         fred = fredapi.Fred(api_key=api_key)
         data = fred.get_series(str(query_ticker))
         data.name = str(series_meta.ticker_full)
-        return [data,]
+        return data

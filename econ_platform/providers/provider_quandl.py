@@ -47,7 +47,7 @@ class ProviderQuandl(econ_platform_core.ProviderWrapper):
 
         Can only support single series queries...
         :param series_meta: econ_platform_core.SeriesMetaData
-        :return: list
+        :return: pandas.Series
         """
         query_ticker = series_meta.ticker_query
         df = quandl.get(str(query_ticker))
@@ -55,4 +55,4 @@ class ProviderQuandl(econ_platform_core.ProviderWrapper):
         ser = df["Value"]
         ser.index = df.index
         ser.name = str(series_meta.ticker_full)
-        return [ser,]
+        return ser

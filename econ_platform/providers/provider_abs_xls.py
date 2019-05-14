@@ -64,7 +64,7 @@ class ProviderAbsXls(econ_platform_core.ProviderWrapper):
         ser = pandas.Series(df.values[pos:])
         ser.index = l_index[pos:]
         ser.name = str(full_ticker)
-        return [ser,]
+        return ser
 
     def SearchForSeriesCode(self, series_code):
         """

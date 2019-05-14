@@ -30,10 +30,10 @@ class ProviderUser(econ_platform_core.ProviderWrapper):
         """
         Get a series
         :param series_meta: econ_platform_core.SeriesMetaData
-        :return: list
+        :return: pandas.Series
         """
         query_ticker = series_meta.ticker_query
         fn = self.MapTicker(query_ticker)
         ser = fn(query_ticker)
         ser.name = series_meta.ticker_query
-        return [ser,]
+        return ser

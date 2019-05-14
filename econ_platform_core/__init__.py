@@ -90,6 +90,8 @@ class SeriesMetaData(PlatformEntity):
         self.ticker_local = ''
         self.ticker_datatype = ''
         self.ticker_query = ''
+        self.series_name = None
+        self.series_description = None
         self.ProviderMetaData = {}
 
     def AssertValid(self):
@@ -322,6 +324,8 @@ class ProviderList(PlatformEntity):
 
 
 Providers = ProviderList()
+
+# TODO: Replace these variables with an "Extension Manager".
 LoadedExtensions = []
 FailedExtensions = []
 DecoratedFailedExtensions = []
@@ -402,6 +406,8 @@ def fetch(ticker, database='Default', dropna=True):
     """
     Fetch a series from database; may create series and/or update as needed.
 
+    (May create a "fetchmany()" for fancier fetches that take a slice of the database.)
+
     :param ticker: str
     :param database: str
     :param dropna: bool
@@ -431,16 +437,12 @@ def fetch(ticker, database='Default', dropna=True):
         log_debug('Fetching %s', ticker)
         if Providers.EchoAccess:
             print('Going to {0} to fetch {1}'.format(provider_manager.Name, ticker))
-        ser_list = provider_manager.fetch(series_meta)
+        ser = provider_manager.fetch(series_meta)
         if dropna:
-            ser_list = [x.dropna() for x in ser_list]
-        if len(ser_list) > 1:
-            # Not sure how more than one series will work with the SeriesMetaData
-            raise NotImplementedError('More than one series in a fetch not supported')
+            ser = ser.dropna()
         log('Writing %s', ticker)
-        ser = ser_list[0]
         database_manager.Write(ser, series_meta)
-    return ser_list[0]
+    return ser
 
 
 def fetch_df(ticker, database='Default', dropna=True):

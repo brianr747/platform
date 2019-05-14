@@ -53,7 +53,7 @@ class ProviderCansim_Csv(econ_platform_core.ProviderWrapper):
 
         Can only support single series queries...
         :param series_meta: econ_platform_core.SeriesMetaData
-        :return: list
+        :return: pandas.Series
         """
         query_ticker = str(series_meta.ticker_query)
         try:
@@ -85,7 +85,7 @@ class ProviderCansim_Csv(econ_platform_core.ProviderWrapper):
         data = pandas.Series(values)
         data.index = dates
         data.name = '{0}@{1}'.format(self.ProviderCode, query_ticker)
-        return [data,]
+        return data
 
     def GetTimeSeriesFile(self, table_name):
         return os.path.join(self.DirectoryParsed, 'parsed_{0}.csv'.format(table_name))

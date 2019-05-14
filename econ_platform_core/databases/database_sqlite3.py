@@ -212,6 +212,7 @@ SELECT series_dates, series_values FROM {0} WHERE series_id = ?
         series_id = self.GetSeriesID(series_meta.ticker_full)
         if series_id is None:
             self.CreateSeries(series_meta)
+            series_id = self.GetSeriesID(series_meta.ticker_full)
         else:
             if not overwrite:
                 raise NotImplementedError()
@@ -251,14 +252,15 @@ DELETE FROM {0} WHERE series_id = ?""".format(self.DataTable)
         # Need to make sure initialised
         self.GetConnection()
         create_str = """
-INSERT INTO {0} (series_provider_code, ticker_full, ticker_query) VALUES
-(?, ?, ?)        
+INSERT INTO {0} (series_provider_code, ticker_full, ticker_query, series_name, series_description) VALUES
+(?, ?, ?, ?, ?)        
         """.format(self.MetaTable)
         local_ticker = series_meta.ticker_local
         if len(local_ticker) == 0:
             local_ticker = None
         self.Execute(create_str, str(series_meta.series_provider_code), str(series_meta.ticker_full),
-                     series_meta.ticker_query, commit_after=True)
+                     series_meta.ticker_query, series_meta.series_name , series_meta.series_description,
+                     commit_after=True)
 
 
     def CreateSqlite3Tables(self):
@@ -277,7 +279,9 @@ INSERT INTO {0} (series_provider_code, ticker_full, ticker_query) VALUES
         series_id INTEGER PRIMARY KEY, 
         ticker_full TEXT NOT NULL, 
         series_provider_code TEXT NOT NULL, 
-        ticker_query TEXT NOT NULL
+        ticker_query TEXT NOT NULL,
+        series_name TEXT NULL,
+        series_description TEXT NULL
         )
         """.format(self.MetaTable)
         self.Execute(create_1)
@@ -297,7 +301,7 @@ INSERT INTO {0} (series_provider_code, ticker_full, ticker_query) VALUES
         create_4 = """
 CREATE VIEW SummaryView as 
 SELECT m.series_id, m.ticker_full, 
- m.series_provider_code, m.ticker_query, m.ticker_local,
+ m.series_provider_code, m.ticker_query, m.ticker_local, m.series_name, m.series_description, 
  min(d.series_dates) as start_date, max(d.series_dates) as end_date 
  from {0} as m, {1} as d
 WHERE m.series_id = d.series_id

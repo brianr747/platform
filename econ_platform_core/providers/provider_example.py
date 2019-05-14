@@ -58,11 +58,11 @@ class ProviderExample(econ_platform_core.ProviderWrapper):
         """
 
         :param series_meta: econ_platform_core.SeriesMetaData
-        :return: list
+        :return: pandas.Series
         """
         query_ticker = str(series_meta.ticker_query)
         try:
             data = get_test_series(query_ticker)
-            return [data,]
+            return data
         except KeyError:
             raise econ_platform_core.TickerNotFoundError('Not found on TEST: {0}'.format(query_ticker))
