@@ -49,6 +49,13 @@ class ConfigTester(unittest.TestCase):
         self.assertTrue(obj._HasAction(msg_substring='config.txt'))
         self.assertTrue(obj._HasAction(action_class='CONFIG:LOAD', msg_substring='config_testing.txt'))
 
+    def test_get(self):
+        config = configuration.ConfigParserWrapper()
+        config.Load([os.path.join(os.path.dirname(__file__), 'config_testing.txt')],
+                    display_steps=False)
+        self.assertEqual('ExpectedAnswer', config['Options']['ForUnitTest'])
+
+
 
 
 

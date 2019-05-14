@@ -35,23 +35,32 @@ class ConfigParserWrapper(econ_platform_core.utils.PlatformEntity):
 
     This is way over-designed, but I need to be able to control config file parsing closely if we want unit tests
     to work (and want to cover these lines).
+
+    This probably should have been done by subclassing the ConfigParser class.
+
+    The default loading sequence is put into a static variable: DefaultConfigPaths. This allows
+    testing code to override the defaults.
     """
+    DefaultConfigPaths = ('{CORE}/config_default.txt', '{CORE}/config.txt')
+
     def __init__(self):
         super().__init__()
         self.ConfigParser = configparser.ConfigParser()
         self.LoadedFiles = []
         self.NonexistentFiles = []
 
-    def Load(self, file_list, display_steps=False):
+    def Load(self, file_list=None, display_steps=False):
         """
         Load a list of config files. Only work done here:
         (1) Map file paths to the repository directory.
         (2) Unit test support by logging actions.
 
-        :param file_list:
-        :param display_steps:
+        :param file_list: list
+        :param display_steps: bool
         :return:
         """
+        if file_list is None:
+            file_list = ConfigParserWrapper.DefaultConfigPaths
         for fname in file_list:
             fname = econ_platform_core.utils.parse_config_path(fname)
             if os.path.exists(fname):
@@ -65,6 +74,15 @@ class ConfigParserWrapper(econ_platform_core.utils.PlatformEntity):
                 self.NonexistentFiles.append(fname)
         return self.ConfigParser
 
+    def __getitem__(self, item):
+        """
+        Create a lookup function that allows users to index into this object like the contained
+        ConfigParser object.
+        :param item: str
+        :return: configparser.SectionProxy
+        """
+        return self.ConfigParser[item]
+
 
 def load_platform_configuration(display_steps=True):
     """
@@ -72,9 +90,7 @@ def load_platform_configuration(display_steps=True):
     :return: configparser.ConfigParser, ConfigrParserWrapper
     """
     obj = ConfigParserWrapper()
-    # NOTE: Do not worry about the file separators below! They will be fixed by
-    # parse_config_path()
-    config = obj.Load(('{CORE}/config_default.txt', '{CORE}/config.txt'), display_steps)
+    config = obj.Load(display_steps=True)
     env_variable_name = config['Options']['UserConfigEnvironmentVariableName']
     user_config_file = os.getenv(env_variable_name)
     if user_config_file is not None:
@@ -111,7 +127,7 @@ def main(): # pragma: nocover
     """
     print('Configuration information')
     obj = load_platform_configuration()
-    print_configuration(obj)
+    print_configuration()
 
 
 if __name__ == '__main__':  # pragma: nocover

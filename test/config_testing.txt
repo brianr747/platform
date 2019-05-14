@@ -32,7 +32,7 @@ LogDirectory = {CORE}/logs
 UseMonkeyPatchExample = False
 UseExampleProvider = True
 UserConfigEnvironmentVariableName = NO_USER_CONFIG_FILE_PLEASE
-
+ForUnitTest = ExpectedAnswer
 #------------------------------------------------------------------
 # High level "database parameters." For a particular database (like MySQL), it should have its
 # own section of parameters.
