@@ -18,6 +18,10 @@ Stuff that can be summarised easily.
 - Data type tickers. For example "IBM|dividend" to get the dividend for "IBM." (The SQLite 
 database supports these and local tickers, we just need an API call to insert them. Probably
 impemented by the Statscan interface when it is upgraded to handle metadata.)
+- Series defined by simple operations: splicing together series, averaging them, etc. The series
+may or may not be stored on the database, although I think they may need to be stored on the
+database for consistency of treatment with other series (summary view, access by languages
+that do not use the Python interface, etc.).
 - Provider-specific meta-data, specified as key/value pairs. (The SeriesMetadata class has
 a class member to hold such data, but needs to be stored to the SQLite database.)
 - Providers should be able to open a URL that is specific to a particular series. (For 
