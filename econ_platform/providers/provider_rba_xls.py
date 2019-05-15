@@ -55,6 +55,7 @@ class ProviderRbaXls(econ_platform.providers.provider_xls_grab.ProviderXlsGrab):
         self.TickerLabels = ('Mnemonic', 'Series ID')
         self.SeriesNameLabel = 'Title'
         self.SeriesDescriptionLabel = 'Description'
+        self.WebPage = 'https://www.rba.gov.au/statistics/tables/'
 
     def SetDirectory(self):
         self.Directory = econ_platform_core.utils.parse_config_path(

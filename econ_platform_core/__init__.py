@@ -40,6 +40,7 @@ limitations under the License.
 
 import pandas
 import traceback
+import webbrowser
 
 # As a convenience, use the "logging.info" function as log.
 from logging import info as log, debug as log_debug, warning as log_warning, error as log_error
@@ -91,6 +92,7 @@ class SeriesMetaData(PlatformEntity):
         self.ticker_query = ''
         self.series_name = None
         self.series_description = None
+        self.series_web_page = None
         self.ProviderMetaData = {}
 
     def AssertValid(self):
@@ -302,6 +304,7 @@ class ProviderWrapper(PlatformEntity):
         self.TableWasFetched = False
         self.TableSeries = {}
         self.TableMeta = {}
+        self.WebPage = ''
         if not name == 'VirtualObject':
             self.ProviderCode = PlatformConfiguration['ProviderList'][name]
 
@@ -556,6 +559,29 @@ def log_last_error():  # pragma: nocover
     """
     msg = traceback.format_exc()
     log_error(msg)
+
+def get_provider_url(provider_code, open_browser=True):
+    """
+    Get the URL of the provider's data website, if it exists (specified).
+
+    Returns None if not defined.
+
+    Will open a browser if asked.
+
+    :param provider_code: str
+    :return: str
+    """
+    provider_code = str(provider_code)
+    try:
+        url = Providers[provider_code].WebPage
+    except KeyError:
+        raise PlatformError('Provider code not defined: {0}'.format(provider_code))
+    if url is None or len(url) == 0:
+        return None
+    if open_browser:
+        webbrowser.open(url, new=2)
+    return url
+
 
 
 def init_package():

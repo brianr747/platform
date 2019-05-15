@@ -197,7 +197,7 @@ SELECT series_dates, series_values FROM {0} WHERE series_id = ?
             raise econ_platform_core.PlatformError('Corrupted date axis for {0}'.format(ticker_full))
         valz = [x[1] for x in res]
         ser = pandas.Series(valz)
-        ser.index = dates
+        ser.index = pandas.DatetimeIndex(dates)
         ser.name = ticker_full
         return ser
 
@@ -285,7 +285,8 @@ INSERT INTO {0} (series_provider_code, ticker_full, ticker_query, series_name, s
         series_provider_code TEXT NOT NULL, 
         ticker_query TEXT NOT NULL,
         series_name TEXT NULL,
-        series_description TEXT NULL
+        series_description TEXT NULL,
+        series_web_page TEXT NULL
         )
         """.format(self.TableMeta)
         self.Execute(create_1)

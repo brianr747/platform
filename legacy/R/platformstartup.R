@@ -15,8 +15,8 @@ myplatform$start_log()
 myplatform$log_extension_status()
 
 
-pfetch <- function(ticker){
-  df = myplatform$fetch_df(ticker)
+pfetch <- function(ticker, database="Default"){
+  df = myplatform$fetch_df(ticker, database)
   ser = xts(df$series_values, order.by=as.Date(df$series_dates))
   return(ser)
 }
