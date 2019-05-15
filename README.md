@@ -32,8 +32,10 @@ of where this project is going.
 
 - TEXT: Save each series as a text file in a local directory. This is
 good enough for a casual user, and is useful for debugging and unit testing.
-- SQLITE: The SQLite database is supported, although with minimal features. The SQL interface
-will be refactored heavily once the rest of the platform is covered with unit tests.
+- SQLITE: The SQLite database is supported. The SQL interface
+will be refactored heavily once the rest of the platform is covered with unit tests. A base class
+will handle the high level logic, and then sub-classes will deal with the SQL language-specific 
+details.
 
 Meta-data support is extremely minimal. Once the SQL design is stable, will add more fields.
 
@@ -124,29 +126,27 @@ from par coupon data, forward rate approximations, etc.)
 I hope to reach "Version 1.0" "soon." There are two areas that need to be
 completed.
 
-**1. Meta-Data.** The larger challenge is to implement meta-data support, which means that
-the SQLite database extension needs extensive revision. (Other SQL database
-will first build on the SQLite data structure and code.) This needs to be built
-soon, as "providers" will be the source of meta-data. This means that the provider
-code needs to know the meta-data interface. (Currently, the only "meta-data"
-are ticker information. The TEXT database only supports this model. Users can
-add providers that only do this, and not worry about gathering meta-data.)
-
-Until the meta-data model is stabilised, I would not recommend using anything
-other than the TEXT database. There is a script to import all series from 
-TEXT to SQLite, which is how I stock the SQLite database in development; 
-I just delete the SQLite database and run the transfer script. This is because
-all provider code will need to provide at least some non-ticker meta-data to
-be useful.
-
-(Since I am continuously adding providers, I need to bite the bullet and get 
-the meta-data support fixed, as back-filling features is a pain.)
+**1. Metadata.** [Updated 2109-05-15] Metadata support has been expanded, covering the most important
+common fields - series name, series description. Without that information, users have almost no
+idea what series represent (as I discovered on my old platform), and are forced to keep going back
+to the provider web pages to get definitions. What is missing is the dictionary of provider-specific
+(or even table-specific) of key/value pairs. Rather than map those metadata schemes to a common one
+(which is a massive time sink), just preserve the provider scheme as-is. Since the number of
+metadata fields is variable, this is painful for SQL tables. I will dump each entry into a single
+table, and we can worry about creating "provider tables" later. (The problem with putting each entry
+on a separate row is that there is no good way to search over them naturally.)
 
 **2. Unit Test Coverage.** I want to get *econ_platform_core* to 100% unit test
 coverage (with some areas skipped). Once this is in place, it will be possible for
 users to use the code and know that they have not broken anything when they
 make changes. Covering the extensions is an eventual objective, but most of
-the non-core code is going to be hard to unit test anyway.
+the non-core code is going to be hard to unit test anyway. (At the time of writing, coverage
+is less than 100%, but in good shape. A couple of end-to-end tests are doing a lot of the coverage,
+and that will need to be replaced by more granular testing.)
+
+**3. Cleanup.** Some class names and data structure names need to be cleaned up. This probably 
+should be done before people start using it. (I can refactor a variable name change in PyCharm 
+fairly easily, but this will not be available for new users using text editors to develop.)
 
 After this in place, the programming structure should be stable. All that
 happens is that extensions are added. For example, financial market users 
@@ -161,16 +161,6 @@ database structure.
 
 The refactoring has been completed. The package has been renamed and split into 
 *econ_platform_core* and *econ_platform*. 
-- Initially, *econ_platform_core* has the bulk of the code, and the platform logic. It only
-depends on *pandas* and the Python standard libraries. It should install cleanly on any Python 3.7+
-with *pandas*.
-- The package *econ_platform* has extensions. These mainly represent managers for data providers,
-as well as databases. Each will have its own API, and the *econ_platform_core* could have a very large
-number of dependencies. The extension loading skips over failed extension imports, so users only
-have to worry about installing API's they need.
-
-There has also been a serious code clean up. For example, classes are used to manage the variety of 
-tickers used in the platform. Unit test coverage is being thrown over the project.
 
 ## Comments
 

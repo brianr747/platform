@@ -11,22 +11,25 @@ document.
 # Point Form Items
 
 Stuff that can be summarised easily.
-
-- Migrate extensions that use external API's to econ_platform package (out of core).
-- Refactor code to use the *tickers.py* module. Eiminate ambiguity about what a ticker
-string represents.
-- Add "series name"/"series description" as fields that exist for all series. 
-Should do quickly, as every provider has to support this!
+- "Pushed Data provider": data that is pushed to the database; no updates.
 - EViews support.
 - Bloomberg API.
-- local tickers. (Friendly tickers defined by users.)
-- data type tickers. For example "IBM|dividend" to get the dividend for "IBM."
-- Provider-specific meta-data.
+- Local tickers. (Friendly tickers defined by users.) 
+- Data type tickers. For example "IBM|dividend" to get the dividend for "IBM." (The SQLite 
+database supports these and local tickers, we just need an API call to insert them. Probably
+impemented by the Statscan interface when it is upgraded to handle metadata.)
+- Provider-specific meta-data, specified as key/value pairs. (The SeriesMetadata class has
+a class member to hold such data, but needs to be stored to the SQLite database.)
+- Providers should be able to open a URL that is specific to a particular series. (For 
+providers like FRED or DBnomics, each series has a landing page, for others it will be a table
+page, like Statscan.)
+- A *fetch_metadata()* command needs to be implemented for "external users."
 - The *fetch()* command needs to ensure uniformity of dates coming from external
 providers. 
+- Allow multiple SQLite database files to be specified by creating new databases in
+config settings.
 - Create config settings to bave default database per provider (e.g., certain commercial providers 
 only allow data to go to a particular machine, so that data goes to SQLite).
-- Open the provider website based on a platform ticker. Could tie into a local database browser.
 - Define series that are simple functions of other series directly in the database. E.g., a series
 that is created by joining an old series to a new one.
 - Marking series as "discontinued" so that no time is wasted attempting updates.
@@ -34,6 +37,15 @@ that is created by joining an old series to a new one.
 Will be needed if this project grows and new extensions depend on other non-standard
 extensions. (Although this is overkill for now, might as well build it before
 the back-filling is too complex.)
+
+**Completed**
+- Migrate extensions that use external API's to econ_platform package (out of core).
+- Refactor code to use the *tickers.py* module. Eiminate ambiguity about what a ticker
+string represents.
+- Add "series name"/"series description" as fields that exist for all series. 
+Should do quickly, as every provider has to support this!
+- Open the provider website based on a platform ticker. Could tie into a local database browser.
+
 
 # Update Protocol
 
