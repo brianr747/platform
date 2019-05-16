@@ -45,7 +45,7 @@ class ProviderXlsGrab(econ_platform_core.ProviderWrapper):
     def fetch(self, series_meta):
         """
 
-        :param series_meta: econ_platform_core.SeriesMetaData
+        :param series_meta: econ_platform_core.SeriesMetadata
         :return: pandas.Series
         """
         if not self.Dialect == 'Australian':
@@ -132,7 +132,7 @@ class ProviderXlsGrab(econ_platform_core.ProviderWrapper):
         full_ticker = tickers.create_ticker_full(self.ProviderCode, series_code)
         if 'nan' in str(full_ticker):
             raise SkipColumn()
-        meta = econ_platform_core.SeriesMetaData()
+        meta = econ_platform_core.SeriesMetadata()
         meta.ticker_full = full_ticker
         meta.series_provider_code = tickers.TickerProviderCode(self.ProviderCode)
         meta.ticker_query = tickers.TickerFetch(series_code)

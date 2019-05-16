@@ -46,7 +46,7 @@ class ProviderQuandl(econ_platform_core.ProviderWrapper):
 
 
         Can only support single series queries...
-        :param series_meta: econ_platform_core.SeriesMetaData
+        :param series_meta: econ_platform_core.SeriesMetadata
         :return: pandas.Series
         """
         query_ticker = series_meta.ticker_query

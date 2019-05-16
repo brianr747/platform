@@ -206,7 +206,7 @@ SELECT series_dates, series_values FROM {0} WHERE series_id = ?
         """
 
         :param ser: pandas.Series
-        :param ticker: econ_platform_core.SeriesMetaData
+        :param ticker: econ_platform_core.SeriesMetadata
         :param overwrite: bool
         :return:
         """
@@ -250,21 +250,48 @@ DELETE FROM {0} WHERE series_id = ?""".format(self.TableData)
     def CreateSeries(self, series_meta):
         """
 
-        :param series_meta: econ_platform_core.SeriesMetaData
+        :param series_meta: econ_platform_core.SeriesMetadata
         :return:
         """
         # Need to make sure initialised
         self.GetConnection()
         create_str = """
-INSERT INTO {0} (series_provider_code, ticker_full, ticker_query, series_name, series_description) VALUES
-(?, ?, ?, ?, ?)        
+INSERT INTO {0} (series_provider_code, ticker_full, ticker_query, series_name, series_description,
+provider_param_string) VALUES
+(?, ?, ?, ?, ?, ?)        
         """.format(self.TableMeta)
         local_ticker = series_meta.ticker_local
         if len(local_ticker) == 0:
             local_ticker = None
         self.Execute(create_str, str(series_meta.series_provider_code), str(series_meta.ticker_full),
                      series_meta.ticker_query, series_meta.series_name , series_meta.series_description,
+                     econ_platform_core.utils.dict_to_param_string(series_meta.ProviderMetadata),
                      commit_after=True)
+
+    def Delete(self, series_meta, warn_if_non_existent=True):
+        """
+        Deletes a series; if it does not exist, does nothing.
+
+        :param series_meta: econ_platform_core.SeriesMetadata
+        :return: None
+        """
+
+        if (series_meta.ticker_full is None) or (len(series_meta.ticker_full) == 0):
+            raise NotImplementedError('Must delete by TickerFull specification')
+        cmd = """
+        DELETE FROM {0} WHERE ticker_full = ?""".format(self.TableMeta)
+        self.GetConnection()
+        self.Execute(cmd, str(series_meta.ticker_full), commit_after=False)
+        if self.Cursor.rowcount > 1:  # pragma: nocover
+            # This should never be hit, but it could happen if the SQL command is mangled.
+            # Unless cascade deletions are counted...
+            raise econ_platform_core.PlatformError(
+                'Internal Error! Attempted to delete more than one row!')
+        if warn_if_non_existent and 0 == self.Cursor.rowcount:
+            econ_platform_core.log_warning('Series to be deleted did not exist: {0}'.format(
+                str(series_meta.ticker_full)))
+        self.Connection.commit()
+
 
 
     def CreateSqlite3Tables(self):
@@ -286,7 +313,13 @@ INSERT INTO {0} (series_provider_code, ticker_full, ticker_query, series_name, s
         ticker_query TEXT NOT NULL,
         series_name TEXT NULL,
         series_description TEXT NULL,
-        series_web_page TEXT NULL
+        series_web_page TEXT NULL,
+        table_info TEXT NULL,
+        last_update TEXT NULL,
+        last_refresh TEXT NULL,
+        last_meta_change TEXT NULL,
+        discontinued TEXT NULL,
+        provider_param_string TEXT NULL
         )
         """.format(self.TableMeta)
         self.Execute(create_1)
@@ -307,6 +340,7 @@ INSERT INTO {0} (series_provider_code, ticker_full, ticker_query, series_name, s
 CREATE VIEW ViewSummary as 
 SELECT m.series_id, m.ticker_full, 
  m.series_provider_code, m.ticker_query, m.series_name, m.series_description, 
+ m.series_web_page, m.table_info, m.last_update, m.last_refresh, m.last_meta_change,
  min(d.series_dates) as start_date, max(d.series_dates) as end_date 
  from {0} as m, {1} as d
 WHERE m.series_id = d.series_id GROUP BY d.series_id

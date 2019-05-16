@@ -49,6 +49,30 @@ The objective is that coding extensions should be extremely easy to do. Ideally:
  In order to get there, the functionality of the base classes needs to be beefed up. That will
  happen as I iterate on the design.
  
+ The infrastructure for managing extensions will probably be embedded in a class.
+ 
+ We need to distinguish two aspects to loading a Python module.
+ 
+ 1. Importing the package. Ideally, there should be no major side effects of importing a module.
+ The econ_platform_core pushes that by instantiating a lot of global objects, but the instantiation
+ should have little impact (empty lists, etc.).
+ 
+ However, importing a package normally results in triggering its imports. For the *econ_platform*
+ this creates a dependence upon the installation of many API modules, most of which users may
+ not use. (In fact, some are extremely painful to install.) Since users should not be expected
+ to install API's for features they will not use, we have to catch errors during the extension
+ imports and continue on.
+ 
+ 2. Once all modules are imported, we start to initialise them. This should normally be
+triggered by calling the initialise package routine in *econ_platform.* That intialisation
+routine first calls the initialisation of *econ_platform_core*, which reads configuration
+files, and loads the extensions in the core. With those extensions and configuration information
+loaded, it is safe to go to the extensions in *econ_platform*. Users who extend the platform
+should generally aim to have their extensions initialise last, so that the repository code
+initialises itself first properly. Otherwise, changes to the repository code organisation 
+might break user extensions. (At the time of writing, the only mechanism to ensure the order
+of extension loading is the use of alphabetical order in loading the extension modules.)
+ 
  ## A Public Package?
  
  Although I would love that this package would have a life of its own, the reality is that
@@ -85,7 +109,7 @@ coverage for awhile.
 ## SQL
 
 I have minimal SQLite support: series are overwritten completely
-each time. Not much in the way of meta-data.
+each time. Metadata support is improving.
 
 The only thing I might push for is some form of series update support.Once that is
 in place, I will then work on refactoring before adding features.
@@ -93,29 +117,37 @@ in place, I will then work on refactoring before adding features.
 I think a full database wrapper package (SQLalchemy?) might be overkill. Will take a 
 look when I have time.
 
-Unless I go with a database wrapper, my plan is to create a "SQL" base class. Logic
+Unless I go with a database wrapper, my plan is to beef up an abstract "SQL" class. Logic
 will migrate from SQLite class to the  base class, and only the query syntax 
 will be saved as  data in the subclass (if possible). Then adding a new SQL format
-will just be a question of changing the syntax in the data configuration if needed.
+will just be a question of changing the syntax to be SQL-dialect specific.
 
 ## "Tickers" and Multi-Data Type Entities
 
-One of my tasks is to standardise naming conventions. This will be easier now that I have the database;
-variable names should align with database column names. (Current code needs to be standardised.)
+Now that the SQLite code is more solid, I might move to support "local" and possibly "DataType"
+tickers. 
 
-I have used "ticker" to stand for "unique string identifier." This is OK for series with one "data type", but
-when we run into financial market data, we will have things with multiple data types - stocks have prices and 
-dividend yields, bonds have price and yield. It may have been more sensible to use "ticker" to refer to those
-security identifiers. 
+- "Local tickers" are aliases for the more complex Provider tickers. I might create them
+automatically for the Statscan Provider. (Right now, they are table|vector, but we could just use
+the vector.)
+- DataType tickers are typically a combination of "security|data type". This is mainly of 
+interest for financial market users, but I don't have access to much in the way of such data.
+Hence, it is a low priority for. It will make more sense if we have multi-column data tables. 
+Financial market users probably can code their own extensions tailored for their needs.
 
-The key to the design is that we have a unique string identifier locally, as well as a unique string identifier
-for queries. Even if we store related data in multi-column tables, we still need a single identifier for each column
-of data. Since we will not be able to align with provider data type identifiers in our database, we still need a series-by-series mapping.
+## Provider Metadata
 
-What are currently called "local tickers" will allow us to handle these multi-datatype securities. We just need to
-patch in the local ticker, and they will incorporate the local multi-datatype naming convention.
+Different providers have series metadata with a wide variety of parameter names. We could try to
+map them all to a common set of parameters (this is done for the series name and description),
+but that is rather painful to do. My preference is create flexible structures to use the 
+provider parameter structure; larger organisations could do their own mapping work.
 
-I think it is necessary to create classes that manage the ticker rules, and are used 
-internally as parameters. Eliminates the need for defensive coding around tickers.
-Making them classes will make it easier for people to customise ticker
-construction.
+My first stab at this will be to slap a dictionary of key/value pairs into a single string.
+Fairly terrible data structure, but it is possible to filter for equality ('KEY=VALUE' appears).
+The next version is to dynamically add columns to a table for each provider, so we have
+columns matching their parameter names. (I did this on my old system with CANSIM data.) The
+system can generate sprawling tables, but it should be manageable.
+
+Although this was not a high priority, it appears to be needed for a project of mine, so it 
+might be put to the top of my priority list.
+

@@ -49,7 +49,7 @@ class ProviderAbsXls(econ_platform_core.ProviderWrapper):
     def fetch(self, series_meta):
         """
 
-        :param series_meta: myplattform.SeriesMetaData
+        :param series_meta: myplattform.SeriesMetadata
         :return:
         """
         # This will not be needed once the platform code is switched over to using the tickers module.

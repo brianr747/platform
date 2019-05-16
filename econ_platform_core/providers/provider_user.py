@@ -29,7 +29,7 @@ class ProviderUser(econ_platform_core.ProviderWrapper):
     def fetch(self, series_meta):
         """
         Get a series
-        :param series_meta: econ_platform_core.SeriesMetaData
+        :param series_meta: econ_platform_core.SeriesMetadata
         :return: pandas.Series
         """
         query_ticker = series_meta.ticker_query

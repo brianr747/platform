@@ -75,7 +75,7 @@ def start_log(fname=None):  # pragma: nocover
 PlatformConfiguration = econ_platform_core.configuration.ConfigParserWrapper()
 
 
-class SeriesMetaData(PlatformEntity):
+class SeriesMetadata(PlatformEntity):
     """
     Class that holds series meta data used on the platform.
     """
@@ -93,7 +93,7 @@ class SeriesMetaData(PlatformEntity):
         self.series_name = None
         self.series_description = None
         self.series_web_page = None
-        self.ProviderMetaData = {}
+        self.ProviderMetadata = {}
 
     def AssertValid(self):
         """
@@ -113,7 +113,7 @@ class SeriesMetaData(PlatformEntity):
             # noinspection PyPep8Naming
             OK = (len(str(obj)) == 0) or (type(obj) is targ)
             if not OK:
-                raise PlatformError('Invalid SeriesMetaData: {0} is not {1}'.format(attrib, targ))
+                raise PlatformError('Invalid SeriesMetadata: {0} is not {1}'.format(attrib, targ))
         return True
 
     def __str__(self):
@@ -145,14 +145,14 @@ class DatabaseManager(PlatformEntity):
         """
         Can we find the ticker on the database? Default behaviour is generally adequate.
         :param ticker: str
-        :return: SeriesMetaData
+        :return: SeriesMetadata
         """
         ticker_obj = econ_platform_core.tickers.map_string_to_ticker(ticker)
         if type(ticker_obj) is TickerLocal:
             return self._FindLocal(ticker_obj)
         if type(ticker_obj) is TickerDataType:
             return self._FindDataType(ticker_obj)
-        meta = SeriesMetaData()
+        meta = SeriesMetadata()
         meta.ticker_local = ''
         meta.ticker_full = ticker_obj
         meta.series_provider_code, meta.ticker_query = ticker_obj.SplitTicker()
@@ -188,7 +188,7 @@ class DatabaseManager(PlatformEntity):
     def Retrieve(self, series_meta):  # pragma: nocover
         """
 
-        :param series_meta: SeriesMetaData
+        :param series_meta: SeriesMetadata
         :return: pandas.Series
         """
         raise NotImplementedError()
@@ -215,7 +215,7 @@ class DatabaseManager(PlatformEntity):
     def Delete(self, series_meta):  # pragma: nocover
         """
         Delete a series.
-        :param series_meta: SeriesMetaData
+        :param series_meta: SeriesMetadata
         :return:
         """
         raise NotImplementedError()
@@ -224,7 +224,7 @@ class DatabaseManager(PlatformEntity):
         """
 
         :param ser: pandas.Series
-        :param series_meta: SeriesMetaData
+        :param series_meta: SeriesMetadata
         :param overwrite: bool
         :return:
         """
@@ -312,7 +312,7 @@ class ProviderWrapper(PlatformEntity):
         """
         Fetch a series from a provider.
 
-        :param series_meta: SeriesMetaData
+        :param series_meta: SeriesMetadata
         :return: pandas.Series
         """
         raise NotImplementedError
@@ -386,7 +386,7 @@ class UpdateProtocol(PlatformEntity):
         Procedure to handle updates. The default behaviour is to not update; just retrieve from the
         database.
 
-        :param series_meta: SeriesMetaData
+        :param series_meta: SeriesMetadata
         :param provider_wrapper: ProviderWrapper
         :param database_manager: DatabaseManager
         :return:

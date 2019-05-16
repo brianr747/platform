@@ -267,3 +267,26 @@ def coerce_date_to_string(d):
         return str(d)
 
 
+def dict_to_param_string(in_dict, delim = '|'):
+    """
+    Convert a dictionary of param:value pairs to a delimited string of the form "{delim}param=value{delim}..."
+
+    Why? As an easy way to implement different parameter schemes for different providers. We can check for
+    equality by searching for the substring "{delim}param=value{delim}"
+
+    Eats "=" and {delim} (default = '|') characters.
+
+    :param in_dict: dict
+    :param delim: str
+    :return: str
+    """
+    # Force sorted
+    keyz = [str(x) for x in in_dict.keys()]
+    keyz.sort()
+    valz = [in_dict[k] for k in keyz]
+
+    keyz = [x.replace(delim, '_').replace('=', '_') for x in keyz]
+    valz = [str(x).replace(delim, '_').replace('=', '_') for x in valz]
+    out = delim + (delim.join([x + '=' + y for x,y in zip(keyz, valz)])) + delim
+    return out
+

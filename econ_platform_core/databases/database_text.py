@@ -68,7 +68,7 @@ class DatabaseText(econ_platform_core.DatabaseManager):
             dummy, full_ticker = header.split('\t')
         except:
             raise econ_platform_core.PlatformError('Corrupt file: {0}'.format(full_name))
-        meta = econ_platform_core.SeriesMetaData()
+        meta = econ_platform_core.SeriesMetadata()
         meta.ticker_full = full_ticker
         meta.Exists = True
         try:
@@ -81,7 +81,7 @@ class DatabaseText(econ_platform_core.DatabaseManager):
         """
 
         :param ser: pandas.Series
-        :param series_meta: econ_platform_core.SeriesMetaData
+        :param series_meta: econ_platform_core.SeriesMetadata
         :param overwrite: bool
         :return:
         """

@@ -63,7 +63,7 @@ class ProviderDBnomics(econ_platform_core.ProviderWrapper):
         Initial stab at querying. Will refactor code into a subclass...
 
         Can only support single series queries...
-        :param series_meta: econ_platform_core.SeriesMetaData
+        :param series_meta: econ_platform_core.SeriesMetadata
         :return: list
         """
         query_ticker = str(series_meta.ticker_query)

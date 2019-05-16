@@ -116,7 +116,7 @@ class ProviderRbaXls(econ_platform.providers.provider_xls_grab.ProviderXlsGrab):
     # def fetch(self, series_meta):
     #     """
     #
-    #     :param series_meta: myplattform.SeriesMetaData
+    #     :param series_meta: myplattform.SeriesMetadata
     #     :return: pandas.Series
     #     """
     #     if self.Directory is None:

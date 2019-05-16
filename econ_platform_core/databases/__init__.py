@@ -18,7 +18,7 @@ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 See the License for the specific language governing permissions and
 limitations under the License.
 """
-# from econ_platform_core import PlatformConfiguration, SeriesMetaData
+# from econ_platform_core import PlatformConfiguration, SeriesMetadata
 #
 #
 # class DatabaseManager(object):
@@ -40,13 +40,13 @@ limitations under the License.
 #         """
 #         Can we find the ticker on the database? Default behaviour is generally adequate.
 #         :param ticker: str
-#         :return: SeriesMetaData
+#         :return: SeriesMetadata
 #         """
 #         try:
 #             provider_code, query_ticker = ticker.split('@')
 #         except:
 #             return self._FindLocal(ticker)
-#         meta = SeriesMetaData()
+#         meta = SeriesMetadata()
 #         meta.ticker_local = ''
 #         meta.ticker_full = ticker
 #         meta.ticker_query = query_ticker
@@ -59,7 +59,7 @@ limitations under the License.
 #         """
 #         Databases that support local tickers should override this method.
 #
-#         :param local_ticker: SeriesMetaData
+#         :param local_ticker: SeriesMetadata
 #         :return:
 #         """
 #         raise NotImplementedError('This database does not support local tickers')
@@ -76,7 +76,7 @@ limitations under the License.
 #     def Retrieve(self, series_meta):
 #         """
 #
-#         :param series_meta: SeriesMetaData
+#         :param series_meta: SeriesMetadata
 #         :return: pandas.Series
 #         """
 #         raise NotImplementedError()
@@ -104,7 +104,7 @@ limitations under the License.
 #         """
 #
 #         :param ser: pandas.Series
-#         :param series_meta: SeriesMetaData
+#         :param series_meta: SeriesMetadata
 #         :param overwrite: bool
 #         :return:
 #         """

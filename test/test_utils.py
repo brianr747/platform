@@ -63,6 +63,14 @@ class test_functions(unittest.TestCase):
         # Note sure what format 1. will be converted to as a string.
         self.assertEqual(str(1.), utils.coerce_date_to_string(1.))
 
+    def test_param_dict_1(self):
+        self.assertEqual('|p=v|', utils.dict_to_param_string({'p': 'v'}))
+
+    def test_param_dict_2(self):
+        # Note: keys are in alphabetical order
+        self.assertEqual('!a=b_!p_=v_!', utils.dict_to_param_string({'p=': 'v!',
+                                                                    'a': 'b='}, delim='!'))
+
 
 
 
