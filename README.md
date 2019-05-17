@@ -28,6 +28,13 @@ of where this project is going.
 - Australian Bureau of Statistics via Excel.
 - Reserve Bank of Australia (RBA) via Excel.
 
+Note: As discussed in **DesignNotes.md**, I may switch to embedding the DB.nomics fetchers within
+this class structure, so that anyone who wanted to use their fetcher can plug it in seamlessly 
+(and any fetching code I develop could be passed on to them). DB.nomics has an industrial coding
+style that is probably overkill for my uses, but harmonisation eliminates wheel reinvention issues.
+(Since most of my effort would be on non-SDMX/JSON sources, the overlap would have been small
+anyway; I would just query their database anyway.)
+
 ### Databases
 
 - TEXT: Save each series as a text file in a local directory. This is

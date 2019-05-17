@@ -290,3 +290,22 @@ def dict_to_param_string(in_dict, delim = '|'):
     out = delim + (delim.join([x + '=' + y for x,y in zip(keyz, valz)])) + delim
     return out
 
+def param_string_to_dict(param_str, delim='|'):
+    """
+    Reverse of the dict_to_param_string() function.
+
+    Note that this will not completely rebuild a dict() after being serialised as a param_string: any '=' or
+    {delim} characters get eaten by dict_to_param_string().
+
+    :param param_str: str
+    :return: dict
+    """
+    out = {}
+    elems = param_str.split(delim)
+    splitted = [x.split('=', 1) for x in elems]
+    for term in splitted:
+        if len(term) == 2:
+            out[term[0]] = term[1]
+    return out
+
+

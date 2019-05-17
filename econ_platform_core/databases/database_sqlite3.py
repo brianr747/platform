@@ -113,7 +113,6 @@ class DatabaseSqlite3(DBapiDatabase):
         self.DatabaseFile = econ_platform_core.utils.parse_config_path(self.DatabaseFile)
 
 
-
     def TestTablesExist(self):
         cursor = self.Connection.cursor()
         # If the meta table is there, so it the values table?
@@ -261,8 +260,6 @@ provider_param_string) VALUES
 (?, ?, ?, ?, ?, ?)        
         """.format(self.TableMeta)
         local_ticker = series_meta.ticker_local
-        if len(local_ticker) == 0:
-            local_ticker = None
         self.Execute(create_str, str(series_meta.series_provider_code), str(series_meta.ticker_full),
                      series_meta.ticker_query, series_meta.series_name , series_meta.series_description,
                      econ_platform_core.utils.dict_to_param_string(series_meta.ProviderMetadata),
@@ -275,7 +272,6 @@ provider_param_string) VALUES
         :param series_meta: econ_platform_core.SeriesMetadata
         :return: None
         """
-
         if (series_meta.ticker_full is None) or (len(series_meta.ticker_full) == 0):
             raise NotImplementedError('Must delete by TickerFull specification')
         cmd = """
@@ -292,7 +288,62 @@ provider_param_string) VALUES
                 str(series_meta.ticker_full)))
         self.Connection.commit()
 
+    def GetMeta(self, full_ticker):
+        """
+        Get the metadata for a full ticker.
 
+        :param full_ticker: econ_platform_core.tickers.TickerFull
+        :return: econ_platform_core.SeriesMetadata
+        """
+        ticker = str(full_ticker)
+        mapper = {
+            'series_id': 'series_id',
+            'series_provider_code': 'series_provider_code',
+            'ticker_query': 'ticker_query',
+            'series_name': 'series_name',
+            'series_description': 'series_description',
+            'provider_param_string': None
+        }
+        collist = list(mapper.keys())
+        # LIMIT 1 is redundant, but...
+        res = self.SelectColumnList(self.TableMeta, collist, 'ticker_full = ?', ticker, 'LIMIT 1')
+        meta = econ_platform_core.SeriesMetadata()
+        meta.ticker_full = full_ticker
+        if len(res) == 0:
+            meta.Exists = False
+            return meta
+        meta.Exists = True
+        for c, val in zip(collist, res[0]):
+            if mapper[c] is not None:
+                setattr(meta, mapper[c], val)
+            elif 'provider_param_string' == c:
+                meta.ProviderMetadata = econ_platform_core.utils.param_string_to_dict(val)
+        return meta
+
+
+
+
+
+
+    def SelectColumnList(self, table, column_list, where_str, where_params, limit_n):
+        """
+        Executes a SELECT statement, returns cursor.fetchall()
+
+        The where_str has to be already formatted with '?' placeholders, without the "WHERE"
+
+        :param table: str
+        :param column_list: list
+        :param where_str: str
+        :param where_params: list
+        :param limit_str: int
+        :return:
+        """
+        col_str = ','.join(column_list)
+        limit_str = ' LIMIT {0}'.format(limit_n)
+        cmd = 'SELECT {0} FROM {1} WHERE {2} {3}'.format(col_str, table, where_str, limit_str)
+        self.GetConnection()
+        self.Execute(cmd, where_params)
+        return self.Cursor.fetchall()
 
     def CreateSqlite3Tables(self):
         """

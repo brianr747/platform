@@ -71,6 +71,15 @@ class test_functions(unittest.TestCase):
         self.assertEqual('!a=b_!p_=v_!', utils.dict_to_param_string({'p=': 'v!',
                                                                     'a': 'b='}, delim='!'))
 
+    def test_param_str_to_dict_1(self):
+        self.assertDictEqual({'A': 'B'}, utils.param_string_to_dict('|A=B|', delim='|'))
+
+    def test_param_str_to_dict_reverse(self):
+        targ = {'A': 'B', 'x': 'y'}
+        # Don't specify the delimiters
+        param = utils.dict_to_param_string(targ)
+        self.assertDictEqual(targ, utils.param_string_to_dict(param))
+
 
 
 

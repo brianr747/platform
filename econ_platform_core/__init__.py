@@ -78,18 +78,29 @@ PlatformConfiguration = econ_platform_core.configuration.ConfigParserWrapper()
 class SeriesMetadata(PlatformEntity):
     """
     Class that holds series meta data used on the platform.
-    """
 
+    Manifest: Standard order of "core" data fields.
+    """
+    Manifest = """self.Exists
+self.series_id
+self.series_provider_code
+self.ticker_full
+self.ticker_local
+self.ticker_datatype
+self.ticker_query
+self.series_name
+self.series_description
+self.series_web_page""".replace('self.', '').split('\n')
     def __init__(self):
         # Kind of strange, but does this series yet exist on the database in question?
         super().__init__()
         self.Exists = False
-        self.series_id = -1
-        self.series_provider_code = ''
-        self.ticker_full = ''
-        self.ticker_local = ''
-        self.ticker_datatype = ''
-        self.ticker_query = ''
+        self.series_id = None
+        self.series_provider_code = None
+        self.ticker_full = None
+        self.ticker_local = None
+        self.ticker_datatype = None
+        self.ticker_query = None
         self.series_name = None
         self.series_description = None
         self.series_web_page = None
@@ -111,7 +122,7 @@ class SeriesMetadata(PlatformEntity):
         for attrib, targ in things_to_test:
             obj = getattr(self, attrib)
             # noinspection PyPep8Naming
-            OK = (len(str(obj)) == 0) or (type(obj) is targ)
+            OK = (obj is None) or (type(obj) is targ)
             if not OK:
                 raise PlatformError('Invalid SeriesMetadata: {0} is not {1}'.format(attrib, targ))
         return True
@@ -123,6 +134,29 @@ class SeriesMetadata(PlatformEntity):
                 continue
             out += '{0}\t{1}\n'.format(name, str(getattr(self, name)))
         return out
+
+    def to_DF(self):
+        """
+        Return data as a DataFrame. Variable size, since provider data can vary.
+        :return: pandas.DataFrame
+        """
+        out_index = []
+        out = []
+        for k in SeriesMetadata.Manifest:
+            out_index.append(k)
+            out.append(getattr(self, k))
+        out_index.append('num_provider_data')
+        if len(self.ProviderMetadata) == 0:
+            self.ProviderMetadata = {'TEST_FIELD': None}
+        out.append(len(self.ProviderMetadata))
+        keyz = list(self.ProviderMetadata.keys())
+        for k in keyz:
+            out_index.append(k)
+            out.append(self.ProviderMetadata[k])
+        keyz.sort()
+        df = pandas.DataFrame(data=out, index=out_index)
+        return df
+
 
 
 class DatabaseManager(PlatformEntity):
@@ -153,7 +187,7 @@ class DatabaseManager(PlatformEntity):
         if type(ticker_obj) is TickerDataType:
             return self._FindDataType(ticker_obj)
         meta = SeriesMetadata()
-        meta.ticker_local = ''
+        meta.ticker_local = None
         meta.ticker_full = ticker_obj
         meta.series_provider_code, meta.ticker_query = ticker_obj.SplitTicker()
         meta.Exists = self.Exists(meta)
@@ -243,22 +277,33 @@ class DatabaseList(PlatformEntity):
     def Initialise(self):
         pass
 
-    def AddDatabase(self, wrapper):
+    def AddDatabase(self, wrapper, code=None):
         """
+        Add a database. If the code is not supplied, uses the code based on the PlatformConfiguration
+        setting (normal use). Only need to supply the code for special cases, like having extra SQLite
+        database files for testing.
 
         :param wrapper: DatabaseManager
+        :param code: str
         :return:
         """
-        code = PlatformConfiguration['DatabaseList'][wrapper.Name]
+        if code is None:
+            code = PlatformConfiguration['DatabaseList'][wrapper.Name]
         wrapper.Code = code
         self.DatabaseDict[wrapper.Code] = wrapper
 
     def __getitem__(self, item):
         """
-        Access method
+        Access method.
+
         :param item: str
         :return: DatabaseManager
         """
+        if item.upper() == 'DEFAULT':
+            item = PlatformConfiguration['Database']['Default']
+        if item == 'SQL':
+            # If the DEFAULT is SQL, will be re-mapped twice!
+            item = PlatformConfiguration['Database']['SQL']
         return self.DatabaseDict[item]
 
     def TransferSeries(self, full_ticker, source, dest):
@@ -444,9 +489,9 @@ def fetch(ticker, database='Default', dropna=True):
     :param dropna: bool
     :return: pandas.Series
     """
-    # NOTE: This will get fancier, but don't over-design for now...
-    if database.lower() == 'default':
-        database = PlatformConfiguration["Database"]["Default"]
+    # Default handling is inide the database manager...
+    # if database.lower() == 'default':
+    #     database = PlatformConfiguration["Database"]["Default"]
     database_manager: DatabaseManager = Databases[database]
     series_meta = database_manager.Find(ticker)
     series_meta.AssertValid()
@@ -484,7 +529,7 @@ def fetch(ticker, database='Default', dropna=True):
                         continue
                     database_manager.Write(t_ser, t_meta)
             raise
-        if out is pandas.Series:
+        if type(out) is not tuple:
             ser = out
         else:
             ser, series_meta = out
@@ -582,6 +627,26 @@ def get_provider_url(provider_code, open_browser=True):
         webbrowser.open(url, new=2)
     return url
 
+
+def fetch_metadata(ticker_str, database='SQL'):
+    """
+    Given a ticker string, find the series metadata, returned as a pandas.DataFrame.
+
+    TODO: If does not exist, try to go to the provider.
+
+    :param ticker_str: str
+    :param database: str
+    :return: pandas.DataFame
+    """
+    db_manager: DatabaseManager = Databases[database]
+    meta = db_manager.Find(ticker_str)
+    if meta.Exists:
+        try:
+            meta = db_manager.GetMeta(meta.ticker_full)
+        except NotImplementedError:
+            pass
+    df = meta.to_DF()
+    return df
 
 
 def init_package():

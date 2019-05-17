@@ -24,6 +24,26 @@ The solution was to create a script (*start.py*) that does the set up on import.
 Purists can call the initialise package function in *econ_platform*. This will
 help unit testing. 
 
+## DB.nomics Fetchers
+
+[2019-05-16]
+
+I just realised that the DB.nomics fetcher code is in Python: https://git.nomics.world/dbnomics-fetchers.
+The sensible thing to do is to align my "Provider" class (or at least a subclass) so that it can embed 
+a fetcher. This meas that any wrapping of data done here could be shared with that project,
+and anyone who wants to fetch data directly from suppliers (and not via the DB.nomics database)
+could plug their fetcher into their copy of the platform. (This helps eliminate my concern about
+wheel reinvention with respect to the SDMX fetching side of things.)
+
+Since I have only worked with Excel and CSV providers (and aggregator API's), this should not be
+a major redesign. However, I may align my "core" metadata column names to match theirs. (I only
+have two "core" metadata fields right now: series name and description; the other fields are 
+essentially for platform use.)
+
+Most casual users (like myself) should be content with just going to DB.nomics (or FRED, or 
+whatever), what matters is the ability to wrap alternative sources (like my *sfc_models* model
+output), spreadsheets, paid sources, etc. into the same interface.
+
 ## Circular Imports
 
 I have run into problems with circular imports. Importing the base package needs to 

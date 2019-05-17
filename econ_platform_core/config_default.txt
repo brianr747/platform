@@ -77,6 +77,7 @@ Quandl=Q
 ABS_XLS=ABSXLS
 RBA_XLS=RBAXLS
 Example Provider=TEST
+JST_Macrohistory=JST
 #+++++++++++++++++++++++++++++
 # Provider-specific Info Pre-pend "P_" to name
 [P_FRED]
@@ -90,3 +91,6 @@ parsed_directory = {CORE}\providers\cansim_csv\parsed
 zip_tail=-eng.zip
 [P_RBAXLS]
 directory={DATA}\rba_xls
+[P_JST]
+# Note: Can only have one XLS in this directory, so if there is a revised version, will need to move.
+directory={DATA}\JST_macrohistory

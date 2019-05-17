@@ -69,7 +69,7 @@ class DatabaseText(econ_platform_core.DatabaseManager):
         except:
             raise econ_platform_core.PlatformError('Corrupt file: {0}'.format(full_name))
         meta = econ_platform_core.SeriesMetadata()
-        meta.ticker_full = full_ticker
+        meta.ticker_full = econ_platform_core.tickers.TickerFull(full_ticker)
         meta.Exists = True
         try:
             meta.series_provider_code, meta.ticker_query = econ_platform_core.utils.split_ticker_information(full_ticker)
