@@ -76,7 +76,7 @@ class ProviderDBnomics(econ_platform_core.ProviderWrapper):
         ser.name = '{0}@{1}/{2}/{3}'.format(self.ProviderCode, df['provider_code'][0], df['dataset_code'][0],
                                              df['series_code'][0])
         # Convert 'NA' to NaN
-        ser.replace('NA', numpy.nan)
+        ser = ser.replace('NA', numpy.nan)
         # Always return a list of series. Only the user interface will convert list to a single pandas.Series
         return ser
 
