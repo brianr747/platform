@@ -27,6 +27,7 @@ of where this project is going.
 - Quandl.
 - Australian Bureau of Statistics via Excel.
 - Reserve Bank of Australia (RBA) via Excel.
+- Jordà-Schularick-Taylor Macrohistory Database (Excel file).
 
 Note: As discussed in **DesignNotes.md**, I may switch to embedding the DB.nomics fetchers within
 this class structure, so that anyone who wanted to use their fetcher can plug it in seamlessly 
