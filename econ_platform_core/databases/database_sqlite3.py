@@ -51,6 +51,10 @@ class DatabaseSqlite3(DBapiDatabase):
     Class that implements the interface to an SQLite database. This is in the core platform,
     as the sqlite3 library is part of the standard library.
 
+    By adding entries into the config file section 'D_SQLITE_EXTRA', you can create extra SQLite databases with
+    different filenames/codes. (Useful for testing, or to segregate data.) By default, there is a "TMP" database
+    created.
+
     NOTE: Code will migrate to super-classes. Overall logic into the AdvancedDatabase, SQL high-level logic into
     DBapiDatabase, and low level connection fetching (and SQL syntax) left in here.
     """

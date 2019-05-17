@@ -163,13 +163,6 @@ a single table. That would just be a new "database extension" that might re-use
 existing code, but it would run independently of the existing single-column
 database structure.
 
-## Big Refactoring (1)
-
-**UPDATE 2019-05-09** The refactoring discusses here has been completed.
-
-The refactoring has been completed. The package has been renamed and split into 
-*econ_platform_core* and *econ_platform*. 
-
 ## Comments
 
 With a fair amount of effort, users could replicate my examples. However, there will be example wrappers for various web interfaces

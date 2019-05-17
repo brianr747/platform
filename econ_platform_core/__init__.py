@@ -671,3 +671,42 @@ def init_package():
     global FailedExtensions
     global DecoratedFailedExtensions
     LoadedExtensions, FailedExtensions, DecoratedFailedExtensions = econ_platform_core.extensions.load_extensions()
+
+
+def get_platform_information(display=True):
+    """
+    Return a DataFrame with status information: list of providers, databases, extensions.
+
+    Format will change, so this is just for users who want to refresh their memory of provider codes, see
+    what extensions exist, etc.
+
+    :return: pandas.DataFrame
+    """
+    out = pandas.DataFrame(columns=['Type', 'Name', 'Info'])
+    # Create a little utility to append rows to a DataFrame
+    def appender(df, row):
+        return df.append(pandas.DataFrame([row], columns=df.columns))
+    # First: extensions
+    for ext in LoadedExtensions:
+        out = appender(out, ['Extension', ext, 'Loaded'])
+    out.sort_values('Name')
+    failed = pandas.DataFrame(columns=['Type', 'Name', 'Info'])
+    for ext in FailedExtensions:
+        failed = appender(failed, ['Extension', ext, 'FAILED'])
+    out = failed.append(out)
+    # Databases
+    db_list = list(Databases.DatabaseDict.keys())
+    db_list.sort()
+    for db in db_list:
+        mgr = Databases[db]
+        out = appender(out, ['Database', mgr.Name, db])
+    prov_list = list(Providers.ProviderDict.keys())
+    prov_list.sort()
+    for prov in prov_list:
+        provider = Providers[prov]
+        out = appender(out, ['Provider', provider.Name, prov])
+
+    out.index = list(range(0, len(out.index)))
+    if display:
+        print(out)
+    return out

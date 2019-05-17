@@ -61,6 +61,10 @@ SQLite Database=SQLITE
 directory={DATA}\text_database
 [D_SQLITE]
 file_name={DATA}\platform.db
+# Extra SQLite databases. Specified as {CODE}={filename}. {CODE} is converted to uppercase.
+[D_SQLITE_EXTRA]
+TMP={DATA}\platform_tmp.db
+#----------------------------------------------------------------------------
 # Generic provider options
 [ProviderOptions]
 echo_access=True
