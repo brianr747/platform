@@ -41,6 +41,12 @@ that is created by joining an old series to a new one.
 Will be needed if this project grows and new extensions depend on other non-standard
 extensions. (Although this is overkill for now, might as well build it before
 the back-filling is too complex.)
+- Create a "platform doc" function. It can return the doc string (__doc__)
+from all the important functions/objects that an external users might touch.
+This is not for Python programmers (who can use help(), which does exactly this), rather
+for users of external languages or even a local web server. In addition to serving
+doc strings, it could give lists of databases, providers, etc.
+
 
 **Completed**
 - Migrate extensions that use external API's to econ_platform package (out of core).
@@ -80,6 +86,29 @@ It likely makes no sense to query on a series-by-series basis always. Instead, a
 single "table fetch" gets an entire table of series from a provider, and all the series
 are updated. The "table fetch" is triggered by an update request on any of the
 series in the table.
+
+# Frequency Field
+
+I have so far dodged the issue of data frequency; I have just taken data as-is
+from providers, with just some cleaning. (This was what I did for my earlier
+personal platform; my R code just cleaned up frequency mismatches as needed.)
+
+Having the frequency field would be a useful piece of metadata, and probably
+should be added soon just so that provider code can set that field.
+
+However, if we want to step beyond just a descriptive metadata field, frequency
+alignment can be complicated. It may be handled at the database level, since
+we can imagine two models for such data:
+
+1) All dates are stored as calendar dates (current model). We then need to
+ensure that low frequency (weekly -> annual) are saved in a uniform fashion.
+2) We save dates in tables based on frequency: daily (and probably weekly) saved
+in tables with calendar dates, and lower frequency have either a string
+or two columns (e.g., year-month).
+
+I think calendar dates aligned to a common date (e.g., monthly data always
+saved to the first of the month) is the best option, but the system should
+allow someone to write an extension that uses a different database structure.
 
 # Start Date/End Date
 

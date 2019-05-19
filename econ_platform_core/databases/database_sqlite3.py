@@ -1,8 +1,32 @@
 """
-Sqlite3 database. Since the sqlite3 interface is packaged with base Python, a natural starting point.
+Sqlite3 database. Since the sqlite3 interface is packaged with base Python,
+a natural starting point.
 
-Get this database running, then will think how to refactor into a generic SQL class. There are some packages that
-handle wrapping, but may be overkill for my purposes.
+This database has a special feature: it is designed to add extra databases solely
+by modifying the config fig.
+
+In the config_default, we see:
+
+[D_SQLITE_EXTRA]
+TMP={DATA}\platform_tmp.db
+
+This means that there is an extra database (with code "TMP" saved in the file "platform_tmp.db"
+in the econ_platform_core/data directory.
+
+You can add more database files under new codes by adding an [D_SQLITE_EXTRA] entry
+in your site/user config files, e.g.:
+
+[D_SQLITE_EXTRA]
+SCRATCH=<path>scratch.db
+
+This means that you can fetch({ticker}, 'SCRATCH') and use that database. This is useful for
+development, as you can write to these side databases (and delete them) as you experiment
+with new data sources, without affecting your main database.
+
+(Other SQL databases could emulate this, but not very easily in the cases where analysts do not
+have permissions to create tables. Working with local database files is probably the cleanest
+way to create a distinction between "production" and "development" environments: once the new
+code is ready for prime time, you just point it at the production server instead of a local file.)
 
 Copyright 2019 Brian Romanchuk
 
@@ -259,13 +283,14 @@ DELETE FROM {0} WHERE series_id = ?""".format(self.TableData)
         # Need to make sure initialised
         self.GetConnection()
         create_str = """
-INSERT INTO {0} (series_provider_code, ticker_full, ticker_query, series_name, series_description,
+INSERT INTO {0} (series_provider_code, ticker_full, ticker_query, series_name, series_description, frequency,
 provider_param_string) VALUES
-(?, ?, ?, ?, ?, ?)        
+(?, ?, ?, ?, ?, ?, ?)        
         """.format(self.TableMeta)
         local_ticker = series_meta.ticker_local
         self.Execute(create_str, str(series_meta.series_provider_code), str(series_meta.ticker_full),
                      series_meta.ticker_query, series_meta.series_name , series_meta.series_description,
+                     series_meta.frequency,
                      econ_platform_core.utils.dict_to_param_string(series_meta.ProviderMetadata),
                      commit_after=True)
 
@@ -306,11 +331,12 @@ provider_param_string) VALUES
             'ticker_query': 'ticker_query',
             'series_name': 'series_name',
             'series_description': 'series_description',
+            'frequency': 'frequency',
             'provider_param_string': None
         }
         collist = list(mapper.keys())
         # LIMIT 1 is redundant, but...
-        res = self.SelectColumnList(self.TableMeta, collist, 'ticker_full = ?', ticker, 'LIMIT 1')
+        res = self.SelectColumnList(self.TableMeta, collist, 'ticker_full = ?', ticker, limit_n=1)
         meta = econ_platform_core.SeriesMetadata()
         meta.ticker_full = full_ticker
         if len(res) == 0:
@@ -339,7 +365,7 @@ provider_param_string) VALUES
         :param column_list: list
         :param where_str: str
         :param where_params: list
-        :param limit_str: int
+        :param limit_n: int
         :return:
         """
         col_str = ','.join(column_list)
@@ -374,6 +400,7 @@ provider_param_string) VALUES
         last_refresh TEXT NULL,
         last_meta_change TEXT NULL,
         discontinued TEXT NULL,
+        frequency text NULL,
         provider_param_string TEXT NULL
         )
         """.format(self.TableMeta)

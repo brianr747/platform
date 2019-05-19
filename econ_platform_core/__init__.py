@@ -79,6 +79,11 @@ class SeriesMetadata(PlatformEntity):
     """
     Class that holds series meta data used on the platform.
 
+    Note: class data members were lower case so that they matched my database column naming convention.
+    Probably a mistake to do it that way; should have made the database CamelCase.
+
+    The "frequency" member is not standardised yet.
+
     Manifest: Standard order of "core" data fields.
     """
     Manifest = """self.Exists
@@ -90,6 +95,7 @@ self.ticker_datatype
 self.ticker_query
 self.series_name
 self.series_description
+self.frequency
 self.series_web_page""".replace('self.', '').split('\n')
     def __init__(self):
         # Kind of strange, but does this series yet exist on the database in question?
@@ -104,6 +110,7 @@ self.series_web_page""".replace('self.', '').split('\n')
         self.series_name = None
         self.series_description = None
         self.series_web_page = None
+        self.frequency = None
         self.ProviderMetadata = {}
 
     def AssertValid(self):
@@ -361,6 +368,25 @@ class ProviderWrapper(PlatformEntity):
         :return: pandas.Series
         """
         raise NotImplementedError
+
+    def GetSeriesURL(self, series_meta):
+        """
+        Get the URL for a series, if possible. Otherwise, returns the provider webpage.
+
+        :param series_meta: SeriesMetadata
+        :return: str
+        """
+        try:
+            return self._GetSeriesUrlImplementation(series_meta)
+        except NotImplementedError:
+            return self.WebPage
+
+    def _GetSeriesUrlImplementation(self, series_meta):
+        """
+        Implements the actual fetching. If a NotImplementedError is thrown, the object will return the
+        Provider.WebPage.
+        """
+        raise NotImplementedError()
 
 
 class ProviderList(PlatformEntity):
@@ -628,6 +654,21 @@ def get_provider_url(provider_code, open_browser=True):
     return url
 
 
+def get_series_URL(ticker, database='Default', open_browser=True):
+    database_manager: DatabaseManager = Databases[database]
+    series_meta = database_manager.Find(ticker)
+    provider_code = str(series_meta.series_provider_code)
+    try:
+        url = Providers[provider_code].GetSeriesURL(series_meta)
+    except KeyError:
+        raise PlatformError('Provider code not defined: {0}'.format(provider_code))
+    if url is None or len(url) == 0:
+        return None
+    if open_browser:
+        webbrowser.open(url, new=2)
+    return url
+
+
 def fetch_metadata(ticker_str, database='SQL'):
     """
     Given a ticker string, find the series metadata, returned as a pandas.DataFrame.
@@ -673,9 +714,10 @@ def init_package():
     LoadedExtensions, FailedExtensions, DecoratedFailedExtensions = econ_platform_core.extensions.load_extensions()
 
 
-def get_platform_information(display=True):
+def get_platform_information(return_instead_of_print=False):
     """
-    Return a DataFrame with status information: list of providers, databases, extensions.
+    If return_instead_of_print is True, returns a DataFrame with information,
+    otherwise just prints to console (expected usage).
 
     Format will change, so this is just for users who want to refresh their memory of provider codes, see
     what extensions exist, etc.
@@ -707,6 +749,7 @@ def get_platform_information(display=True):
         out = appender(out, ['Provider', provider.Name, prov])
 
     out.index = list(range(0, len(out.index)))
-    if display:
+    if return_instead_of_print:
+        return out
+    else:
         print(out)
-    return out
