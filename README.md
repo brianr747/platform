@@ -17,6 +17,7 @@ Please note that all features listed are minimal implementations. However, they 
 of where this project is going.
 
 ### Providers
+
 "Single series" interface only; there will be table query support (for pandasdmx).
 
 - "User Series": Series that are calculated by Python code dynamically
@@ -45,7 +46,10 @@ will be refactored heavily once the rest of the platform is covered with unit te
 will handle the high level logic, and then sub-classes will deal with the SQL language-specific 
 details.
 
-Meta-data support is extremely minimal. Once the SQL design is stable, will add more fields.
+Metadata support is reasonable, but provider-specific metadata fields are hard to
+browse within the database. If the provider implementation supports it, it is
+possible to get the URL of a provider, even specific pages for series (FRED, DB.nomics).
+By default, the command will also open the web page of the provider/series.
 
 (Note: Starting with sqlite3, since that is installed with Python. Will worry 
 about compatability with other SQL formats later.)
@@ -79,11 +83,13 @@ protocol would be extremely important for an "industrial" multi-user
 platform, but is not a pressing issue for me.
 
 ### Other Languages
+
 - *R* can directly trigger the Python dynamic fetching code, using 
 reticulate. An example is given. (I have terrible legacy code in a
 side folder.)
 
 ### Programming Support
+
 - Very clean interface to the *logging* module; you just call 
 *start_log()* and a log file based on the module name is created in
 a (configurable) log directory. 
