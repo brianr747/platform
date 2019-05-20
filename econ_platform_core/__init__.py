@@ -392,12 +392,15 @@ class ProviderWrapper(PlatformEntity):
 class ProviderList(PlatformEntity):
     """
     List of all provider wrappers. Developers can push their own DatabaseManagers into the global object.
+
+    Keep the "User" provider also saved as a data member, since it will be accessed by code hooking into it.
     """
 
     def __init__(self):
         super().__init__()
         self.ProviderDict = {}
         self.EchoAccess = False
+        self.UserProvider = None
 
     def Initialise(self):
         self.EchoAccess = PlatformConfiguration['ProviderOptions'].getboolean('echo_access')
@@ -409,6 +412,9 @@ class ProviderList(PlatformEntity):
          :return:
          """
         self.ProviderDict[obj.ProviderCode] = obj
+        if obj.Name == 'User':
+            # Tuck the "User" provider into a known location.
+            self.UserProvider = obj
 
     def __getitem__(self, item):
         """

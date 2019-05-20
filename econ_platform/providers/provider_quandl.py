@@ -1,12 +1,13 @@
 """
 provider_quandl.py
 
-Functions to fetch data from Quandl, and convert to standard format.
+Functions to fetch *series* data from Quandl, and convert to standard format.
 
 Quandl website: https://www.quandl.com/
 
 You need an API key if you do more than 50 (?) queries per day.
 
+Note: this fetcher will fail for data tables (which is a lot of the data).
 
 Copyright 2019 Brian Romanchuk
 
@@ -21,8 +22,6 @@ distributed under the License is distributed on an "AS IS" BASIS,
 WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 See the License for the specific language governing permissions and
 limitations under the License.
-
-
 """
 
 import quandl
@@ -35,10 +34,17 @@ class ProviderQuandl(econ_platform_core.ProviderWrapper):
     """
     Quandl interface (https://www.quandl.com/)
 
+    Does not support tables (yet), nor is metadata available (?).
+
     """
     def __init__(self):
         super(ProviderQuandl, self).__init__(name='QUANDL')
+        self.WebPage = 'https://www.quandl.com/'
 
+    def _GetSeriesUrlImplementation(self, series_meta):
+        ticker = str(series_meta.ticker_query)
+        url = 'https://www.quandl.com/data/{0}'.format(ticker)
+        return url
 
     def fetch(self, series_meta):
         """
@@ -46,7 +52,7 @@ class ProviderQuandl(econ_platform_core.ProviderWrapper):
 
 
         Can only support single series queries...
-        :param series_meta: econ_platform_core.SeriesMetadata
+        :param series_meta: :class:`econ_platform_core.SeriesMetadata`
         :return: pandas.Series
         """
         query_ticker = series_meta.ticker_query

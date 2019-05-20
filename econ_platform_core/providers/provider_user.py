@@ -21,9 +21,10 @@ class ProviderUser(econ_platform_core.ProviderWrapper):
         :return:
         """
         try:
-            return self.SeriesMapper[query_ticker]
+            return self.SeriesMapper[str(query_ticker)]
         except KeyError:
-            raise NotImplementedError('There is no function that handles the query ticker: {0}'.format(query_ticker))
+            raise econ_platform_core.TickerNotFoundError(
+                'There is no function that handles the query ticker: {0}'.format(query_ticker))
 
 
     def fetch(self, series_meta):
@@ -34,6 +35,5 @@ class ProviderUser(econ_platform_core.ProviderWrapper):
         """
         query_ticker = series_meta.ticker_query
         fn = self.MapTicker(query_ticker)
-        ser = fn(query_ticker)
-        ser.name = series_meta.ticker_query
+        ser = fn(series_meta)
         return ser

@@ -8,6 +8,9 @@ Will switch over to SDMX (maybe), but the text files are easy to work with...
 Since this module has no dependencies on anything outside econ_platform_core or standard libraries, can stay in the
 core.
 
+Note: Certain tables from the Bank of Canada inexplicably contain 0 instead of NaN. I am eating those entries,
+but I hope that the BoC will get their act together...
+
 Copyright 2019 Brian Romanchuk
 
 Licensed under the Apache License, Version 2.0 (the "License");
@@ -45,6 +48,8 @@ class ProviderCansim_Csv(econ_platform_core.ProviderWrapper):
         self.DirectoryParsed = econ_platform_core.utils.parse_config_path(
             econ_platform_core.PlatformConfiguration['P_CCSV']['parsed_directory'])
         self.ZipTail = econ_platform_core.PlatformConfiguration['P_CCSV']['zip_tail']
+        # If anyone from the Bank of Canada sees this and is offended, get these table(s) fixed!
+        self.BorkedBankOfCanadaTables = ['10100139']
 
 
     def fetch(self, series_meta):
@@ -88,7 +93,7 @@ class ProviderCansim_Csv(econ_platform_core.ProviderWrapper):
         return data
 
     def GetTimeSeriesFile(self, table_name):
-        return os.path.join(self.DirectoryParsed, 'parsed_{0}.csv'.format(table_name))
+        return os.path.join(self.DirectoryParsed, 'parsed_{0}.txt'.format(table_name))
 
     def UnzipFile(self, table_name):
         fname = table_name + self.ZipTail
@@ -108,21 +113,30 @@ class ProviderCansim_Csv(econ_platform_core.ProviderWrapper):
         if len(date_str) == 7:
             # Monthly?
             ddate = econ_platform_core.utils.align_by_month(date_str[0:4], date_str[-2:], freq='M')
+        elif len(date_str) == 10:
+            ddate = econ_platform_core.utils.iso_string_to_date(date_str)
         else:
             raise NotImplementedError('Unknown CANSIM date format: {0}'.format(date_str))
         return ddate
 
     def ParseUnzipped(self, table_name):
+        """
+        Note: use ".txt" instead of CSV since Excel cannot import the files properly. (Great job, Redmond!)
+
+        :param table_name:
+        :return:
+        """
         target = os.path.join(self.DirectoryParsed, '{0}.csv'.format(table_name))
         # 2 output files (for now)
         # Save the last row for each vector
         target_col_names = ['vector', 'ref_date', 'value']
         last_rows = {}
+        is_borked_file = table_name in self.BorkedBankOfCanadaTables
         with open(self.GetTimeSeriesFile(table_name), 'w') as f_series:
             out_header = ['vector', econ_platform_core.PlatformConfiguration['Database']['dates_column'],
                           econ_platform_core.PlatformConfiguration['Database']['values_column']]
             f_series.write('\t'.join(out_header) +'\n')
-            with open(os.path.join(self.DirectoryParsed, 'snapshot_{0}.csv'.format(table_name)), 'w') as f_meta:
+            with open(os.path.join(self.DirectoryParsed, 'snapshot_{0}.txt'.format(table_name)), 'w') as f_meta:
                 with open(target, 'r') as csvfile:
                     reader = csv.reader(csvfile, quotechar='"')
                     # How's that for nesting, eh?
@@ -130,7 +144,7 @@ class ProviderCansim_Csv(econ_platform_core.ProviderWrapper):
                     header = [x.replace('"', '') for x in header]
                     # There seems to be some garbage in the first entry; nuke it from orbit.
                     header = [econ_platform_core.utils.remove_non_ascii(x) for x in header]
-                    f_meta.write('\t'.join(header))
+                    f_meta.write(('\t'.join(header)) + '\n')
                     # Find the columns
                     try:
                         targ_col_n = [econ_platform_core.utils.entry_lookup(x, header, case_sensitive=False)
@@ -141,11 +155,17 @@ class ProviderCansim_Csv(econ_platform_core.ProviderWrapper):
                     vector_col = targ_col_n[0]
                     for row in reader:
                         vector = row[vector_col]
-                        last_rows[vector] = row
                         data_row = [row[x] for x in targ_col_n]
                         try:
                             # If we cannot convert to float, do not write.
-                            float(data_row[-1])
+                            x = float(data_row[-1])
+                            # If we are in a borked file, eat any 0 values.
+                            # This operation is dangerous; I sent an e-mail to Statscan asking them to
+                            # ask the BoC to get their act together...
+                            if is_borked_file and 0. == x:
+                                continue
+                            # Only save the row in the summary if it has data.
+                            last_rows[vector] = tuple(row)
                             # Convert the date
                             data_row[1] = self.ParseDate(data_row[1]).isoformat()
                             f_series.write('\t'.join(data_row) + '\n')
@@ -154,7 +174,10 @@ class ProviderCansim_Csv(econ_platform_core.ProviderWrapper):
                 vector_list = list(last_rows.keys())
                 vector_list.sort()
                 for v in vector_list:
-                    f_meta.write('\t'.join(last_rows[v]) + '\n')
+                    x = last_rows[v]
+                    if len(x[vector_col]) == 0:
+                        raise ValueError('Huh')
+                    f_meta.write('\t'.join(x) + '\n')
 
 
 

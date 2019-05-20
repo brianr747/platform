@@ -15,15 +15,21 @@ from econ_platform.start import quick_plot
 # Normally, the user-defined series would be handled in a library. Kept here to keep
 # Example self-contained.
 
-def us_inflation(query_ticker):
-    if not query_ticker == 'US_CPI_INFLATION':
+def us_inflation(series_meta):
+    """
+
+    :param series_meta: econ_platform_core.SeriesMetadata
+    :return:
+    """
+    if not str(series_meta.ticker_query) == 'US_CPI_INFLATION':
         raise ValueError('Wrong series!')
     cpi_index = fetch('F@CPIAUCSL') # All -items, SA
     inf = cpi_index.pct_change(12)
+    series_meta.series_name = '12-month Change in U.S. CPI Inflation'
+    series_meta.series_description = 'Calculated series'
     return inf
 # Push the handler into the UserProvider
-# Assume we are still using the default provider code
-user_provider = Providers['U']
+user_provider = Providers.UserProvider
 user_provider.SeriesMapper['US_CPI_INFLATION'] = us_inflation
 # End of code that should be in a library.
 #--------------------------------------------------------------------

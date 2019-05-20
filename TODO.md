@@ -22,20 +22,10 @@ impemented by the Statscan interface when it is upgraded to handle metadata.)
 may or may not be stored on the database, although I think they may need to be stored on the
 database for consistency of treatment with other series (summary view, access by languages
 that do not use the Python interface, etc.).
-- Provider-specific meta-data, specified as key/value pairs. (The SeriesMetadata class has
-a class member to hold such data, but needs to be stored to the SQLite database.)
-- Providers should be able to open a URL that is specific to a particular series. (For 
-providers like FRED or DBnomics, each series has a landing page, for others it will be a table
-page, like Statscan.)
-- A *fetch_metadata()* command needs to be implemented for "external users."
 - The *fetch()* command needs to ensure uniformity of dates coming from external
 providers. 
-- Allow multiple SQLite database files to be specified by creating new databases in
-config settings.
 - Create config settings to bave default database per provider (e.g., certain commercial providers 
 only allow data to go to a particular machine, so that data goes to SQLite).
-- Define series that are simple functions of other series directly in the database. E.g., a series
-that is created by joining an old series to a new one.
 - Marking series as "discontinued" so that no time is wasted attempting updates.
 - Create an "extension manager" class that handles and logs extension loading.
 Will be needed if this project grows and new extensions depend on other non-standard
@@ -46,7 +36,8 @@ from all the important functions/objects that an external users might touch.
 This is not for Python programmers (who can use help(), which does exactly this), rather
 for users of external languages or even a local web server. In addition to serving
 doc strings, it could give lists of databases, providers, etc.
-
+- Implement "table queries" for Quandl, since the implementation appears borked otherwise.
+(Most of the data seems to be tables...)
 
 **Completed**
 - Migrate extensions that use external API's to econ_platform package (out of core).
@@ -55,7 +46,14 @@ string represents.
 - Add "series name"/"series description" as fields that exist for all series. 
 Should do quickly, as every provider has to support this!
 - Open the provider website based on a platform ticker. Could tie into a local database browser.
-
+- Provider-specific meta-data, specified as key/value pairs. (The SeriesMetadata class has
+a class member to hold such data, but needs to be stored to the SQLite database.)
+- Allow multiple SQLite database files to be specified by creating new databases in
+config settings.
+- Providers should be able to open a URL that is specific to a particular series. (For 
+providers like FRED or DBnomics, each series has a landing page, for others it will be a table
+page, like Statscan.)
+- A *fetch_metadata()* command needs to be implemented for "external users."
 
 # Update Protocol
 
@@ -82,19 +80,13 @@ for dumping into tables.
 
 # Table Fetches
 
-It likely makes no sense to query on a series-by-series basis always. Instead, a 
-single "table fetch" gets an entire table of series from a provider, and all the series
-are updated. The "table fetch" is triggered by an update request on any of the
-series in the table.
+(Completed.)
 
 # Frequency Field
 
 I have so far dodged the issue of data frequency; I have just taken data as-is
 from providers, with just some cleaning. (This was what I did for my earlier
 personal platform; my R code just cleaned up frequency mismatches as needed.)
-
-Having the frequency field would be a useful piece of metadata, and probably
-should be added soon just so that provider code can set that field.
 
 However, if we want to step beyond just a descriptive metadata field, frequency
 alignment can be complicated. It may be handled at the database level, since
