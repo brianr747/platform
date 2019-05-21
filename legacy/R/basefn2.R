@@ -250,13 +250,14 @@ SetXAxis <- function(pp,start,numyears=1){
   ylim = pp$coordinates$limits$y
   # Some dimwits made expand=TRUE default.
   # pp < pp + scale_x_date(limits=c(as.Date(start),as.Date(ddate)))
-  pp <- pp + coord_cartesian(xlim=as.Date(c(start,ddate)), ylim=ylim, expand=FALSE)
+  pp <- pp + coord_cartesian(xlim=as.Date(c(start,ddate)), ylim=ylim, expand=FALSE,
+                             default=TRUE)
   return(pp)
 }
 
 SetYAxis <- function(pp, mmin, mmax){
   # print(c(mmin, mmax))
-  pp <- pp + coord_cartesian(ylim=c(mmin, mmax), expand=FALSE)
+  pp <- pp + coord_cartesian(ylim=c(mmin, mmax), expand=FALSE, default=TRUE)
   return(pp)
 }
 

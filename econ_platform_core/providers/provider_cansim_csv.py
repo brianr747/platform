@@ -42,6 +42,7 @@ import zipfile
 import csv
 import os
 import pandas
+import glob
 
 import econ_platform_core
 from econ_platform_core import log, log_warning
@@ -53,12 +54,9 @@ import econ_platform_core.tickers as tickers
 class ProviderCansim_Csv(econ_platform_core.ProviderWrapper):
     def __init__(self):
         super(ProviderCansim_Csv, self).__init__(name='CANSIM_CSV')
-        self.DirectoryZip = econ_platform_core.utils.parse_config_path(
-            econ_platform_core.PlatformConfiguration['P_CCSV']['zip_directory'])
-
-        self.DirectoryParsed = econ_platform_core.utils.parse_config_path(
-            econ_platform_core.PlatformConfiguration['P_CCSV']['parsed_directory'])
-        self.ZipTail = econ_platform_core.PlatformConfiguration['P_CCSV']['zip_tail']
+        self.DataDirectory = econ_platform_core.utils.parse_config_path(
+            econ_platform_core.PlatformConfiguration['P_STATCAN']['directory'])
+        self.ZipTail = econ_platform_core.PlatformConfiguration['P_STATCAN']['zip_tail']
         # If anyone from the Bank of Canada sees this and is offended, get these table(s) fixed!
         self.BorkedBankOfCanadaTables = ['10100139',]
         self.WebPage = 'https://www150.statcan.gc.ca/n1/en/type/data?MM=1'
@@ -113,7 +111,6 @@ class ProviderCansim_Csv(econ_platform_core.ProviderWrapper):
             except:
                 raise econ_platform_core.PlatformError(
                     'Table {0} needs to be downloaded as a zip file'.format(table_name))
-        self.CheckManifest(table_name, vector)
         # Do the whole table
         self.TableWasFetched = True
         self.TableMeta = {}
@@ -121,7 +118,7 @@ class ProviderCansim_Csv(econ_platform_core.ProviderWrapper):
         self.MetaMapper = {}
         self.ParseUnzipped(table_name)
         self.BuildSeries()
-        self.SaveManifest(table_name)
+        self.ArchiveFiles(table_name)
         try:
             ser = self.TableSeries[str(series_meta.ticker_full)]
             meta = self.TableMeta[str(series_meta.ticker_full)]
@@ -129,32 +126,12 @@ class ProviderCansim_Csv(econ_platform_core.ProviderWrapper):
             raise econ_platform_core.TickerNotFoundError('{0} was not found'.format(str(series_meta.ticker_full)))
         return ser, meta
 
-    def SaveManifest(self, table_name):
-        fname = os.path.join(self.DirectoryParsed, '{0}_vectors.txt'.format(table_name))
-        f = open(fname, 'w')
-        for meta in self.TableMeta.values():
-            f.write(meta.ProviderMetadata["VECTOR"] + '\n')
-        f.close()
-
-    def CheckManifest(self, table_name, vector):
-        fname = os.path.join(self.DirectoryParsed, '{0}_vectors.txt'.format(table_name))
-        if not os.path.exists(fname):
-            return
-        f = open(fname, 'r')
-        for row in f:
-            row = row.strip()
-            if row == vector:
-                return
-        msg = 'Vector {0} not in Table {1}.\nYou may need to clear file {2} if this is an error'
-        raise econ_platform_core.TickerNotFoundError(msg.format(vector, table_name, fname))
-
-
     def GetTimeSeriesFile(self, table_name):
-        return os.path.join(self.DirectoryParsed, 'parsed_{0}.txt'.format(table_name))
+        return os.path.join(self.DataDirectory, 'parsed_{0}.txt'.format(table_name))
 
     def UnzipFile(self, table_name):
         fname = table_name + self.ZipTail
-        full_name = os.path.join(self.DirectoryZip, fname)
+        full_name = os.path.join(self.DataDirectory, fname)
         log('Unzipping %s', full_name)
         with zipfile.ZipFile(full_name, 'r') as myzip:
             info = myzip.infolist()
@@ -164,7 +141,7 @@ class ProviderCansim_Csv(econ_platform_core.ProviderWrapper):
                     log('Extracting file %s', i.filename)
                 else:
                     log_warning('Unexpected file name: %s', i.filename)
-                myzip.extract(i, self.DirectoryParsed)
+                myzip.extract(i, self.DataDirectory)
 
     def ParseDate(self, date_str):
         if len(date_str) == 7:
@@ -183,7 +160,7 @@ class ProviderCansim_Csv(econ_platform_core.ProviderWrapper):
         :param table_name:
         :return:
         """
-        target = os.path.join(self.DirectoryParsed, '{0}.csv'.format(table_name))
+        target = os.path.join(self.DataDirectory, '{0}.csv'.format(table_name))
         # 2 output files (for now)
         # Save the last row for each vector
         target_col_names = ['vector', 'ref_date', 'value']
@@ -193,7 +170,7 @@ class ProviderCansim_Csv(econ_platform_core.ProviderWrapper):
             out_header = ['vector', econ_platform_core.PlatformConfiguration['Database']['dates_column'],
                           econ_platform_core.PlatformConfiguration['Database']['values_column']]
             f_series.write('\t'.join(out_header) +'\n')
-            with open(os.path.join(self.DirectoryParsed, 'snapshot_{0}.txt'.format(table_name)), 'w') as f_meta:
+            with open(os.path.join(self.DataDirectory, 'snapshot_{0}.txt'.format(table_name)), 'w') as f_meta:
                 with open(target, 'r') as csvfile:
                     reader = csv.reader(csvfile, quotechar='"')
                     # How's that for nesting, eh?
@@ -310,6 +287,17 @@ class ProviderCansim_Csv(econ_platform_core.ProviderWrapper):
             new_meta[ticker_full] = meta
         self.TableMeta = new_meta
         self.TableSeries = new_series
+
+    def ArchiveFiles(self, table_name):
+        """
+        Move all the files associated with a table to the archive subdirectory.
+
+        :param table_name: str
+        :return:
+        """
+        flist = glob.glob(os.path.join(self.DataDirectory, table_name + '*'))
+        for fname in flist:
+            econ_platform_core.utils.archive_file(os.path.join(self.DataDirectory, fname))
 
 
 

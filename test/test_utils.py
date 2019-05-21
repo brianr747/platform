@@ -80,6 +80,31 @@ class test_functions(unittest.TestCase):
         param = utils.dict_to_param_string(targ)
         self.assertDictEqual(targ, utils.param_string_to_dict(param))
 
+    def test_archive(self):
+        """
+        Do all the archive tests in one shot, since order matters.
+
+        :return:
+        """
+        data_dir = os.path.join(os.path.dirname(__file__), 'data')
+        archive_dir = os.path.join(data_dir, 'archive')
+        if os.path.exists(archive_dir):
+            os.rmdir(archive_dir)
+        self.assertFalse(os.path.exists(archive_dir))
+        fname_1 = os.path.join(data_dir, 'archive_1.txt')
+        f = open(fname_1, 'w')
+        f.close()
+        self.assertTrue(os.path.exists(fname_1))
+        utils.archive_file(fname_1, archive_subdir='archive')
+        self.assertTrue(os.path.exists(os.path.join(archive_dir, 'archive_1.txt')))
+        self.assertFalse(os.path.exists(fname_1))
+        # clean up
+        os.remove(os.path.join(archive_dir, 'archive_1.txt'))
+        os.rmdir(archive_dir)
+
+
+
+
 
 
 

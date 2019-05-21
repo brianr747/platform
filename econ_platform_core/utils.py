@@ -26,6 +26,7 @@ import datetime
 import pathlib
 
 
+
 class PlatformEntity(object):
     """
     Base class for objects in the platform. Give an action-logging interface.
@@ -307,5 +308,25 @@ def param_string_to_dict(param_str, delim='|'):
         if len(term) == 2:
             out[term[0]] = term[1]
     return out
+
+def archive_file(full_filename, archive_subdir='archive'):
+    """
+    Move a file (after processing) to an "archive" subdirectory. Deletes any existing archive file with the same name.
+
+    :param full_filename: str
+    :param archive_subdir: str
+    :return:
+    """
+    if not os.path.exists(full_filename):
+        raise FileNotFoundError('{0} not found to archive'.format(full_filename))
+    orig_dir, file = os.path.split(full_filename)
+    archive_dir = os.path.join(orig_dir, archive_subdir)
+    if not os.path.exists(archive_dir):
+        os.mkdir(archive_dir)
+    targ_file = os.path.join(archive_dir, file)
+    if os.path.exists(targ_file):
+        os.remove(targ_file)
+    os.rename(full_filename, targ_file)
+
 
 

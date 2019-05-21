@@ -87,11 +87,9 @@ JST_Macrohistory=JST
 [P_FRED]
 # Need to get a free API key from the St. Louis FED. (Put into an external config file if you are using GIT),
 api_key=NONE
-[P_CCSV]
-# Directory information . Note that if these defaults are used, this means it goes below the providers directory.
-# Which means that we don't need to worry about the directory separaor in this case.
-zip_directory = {CORE}\providers\cansim_csv
-parsed_directory = {CORE}\providers\cansim_csv\parsed
+[P_STATCAN]
+# Directory information.
+directory = {DATA}\statscan
 zip_tail=-eng.zip
 [P_RBAXLS]
 directory={DATA}\rba_xls
