@@ -111,13 +111,14 @@ class DatabaseSqlite3(DBapiDatabase):
         self.SetParameters()
         full_name = self.DatabaseFile
         if full_name == ':memory:':
-            did_not_exist = False
+            did_not_exist = True
         else:
             did_not_exist = not os.path.exists(full_name)
-        self.Connection = sqlite3.Connection(full_name)
         if did_not_exist and auto_create:
-            create_sqlite3_tables()
+            self.CreateSqlite3Tables()
             return self.Connection
+        self.Connection = sqlite3.Connection(full_name)
+
         # Test to see whether the tables exist!
         if test_tables:
             self.TestTablesExist()
@@ -125,18 +126,13 @@ class DatabaseSqlite3(DBapiDatabase):
 
     def SetParameters(self):
         # Set data from config file, unless previously set
-        # List of (class_member, config_attribute) pairs.
-        info = [('DatabaseFile', 'file_name'),
-                ('TableMeta', 'meta_table'),
-                ('TableData', 'data_table')]
-        for attrib, config_name in info:
-            # If len() > 0, then already set
-            if len(getattr(self, attrib)) == 0:
-                # Can either be under "SQL" or "D_SQLITE3"
-                try:
-                    setattr(self, attrib, econ_platform_core.PlatformConfiguration['SQL'][config_name])
-                except KeyError:
-                    setattr(self, attrib, econ_platform_core.PlatformConfiguration['D_SQLITE'][config_name])
+        if len(self.DatabaseFile) == 0:
+            self.DatabaseFile = econ_platform_core.PlatformConfiguration['D_SQLITE']['file_name']
+        if len(self.TableMeta) == 0:
+            self.TableMeta = econ_platform_core.PlatformConfiguration['SQL']['meta_table']
+        if len(self.TableData) == 0:
+            self.TableData = econ_platform_core.PlatformConfiguration['SQL']['data_table']
+
         # Database file is a special case.
         self.DatabaseFile = econ_platform_core.utils.parse_config_path(self.DatabaseFile)
 
@@ -351,10 +347,6 @@ provider_param_string) VALUES
         return meta
 
 
-
-
-
-
     def SelectColumnList(self, table, column_list, where_str, where_params, limit_n):
         """
         Executes a SELECT statement, returns cursor.fetchall()
@@ -382,10 +374,9 @@ provider_param_string) VALUES
 
         """
         self.LogSQL = True
-        # Need to call this to initialise parameters...
-        self.GetConnection(test_tables=False)
-        # Don't test the table existence for duh reasons
-        # Can't use the "?" query parameters for table names
+        self.SetParameters()
+        full_name = self.DatabaseFile
+        self.Connection =  sqlite3.Connection(full_name)
         create_1 = """
         CREATE TABLE IF NOT EXISTS {0} (
         series_id INTEGER PRIMARY KEY, 
@@ -470,7 +461,7 @@ WHERE m.series_id = d.series_id GROUP BY d.series_id
                                  """.format(self.ViewLookup, self.TableMeta, self.TableLocal,
                                             self.TableTickerDataType)
         self.Execute(create_9)
-        self.TestTablesExist()
+        # self.TestTablesExist()
         self.Connection.commit()
 
 def create_sqlite3_tables():

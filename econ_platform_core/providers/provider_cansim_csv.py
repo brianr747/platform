@@ -3,13 +3,23 @@ provider_cansim_csv.py
 
 Handles CANSIM (or whatever StatsCan calls their database now) CSV files.
 
-Will switch over to SDMX (maybe), but the text files are easy to work with...
+TODO: allow incremental updates on a per-ticker basis, using their API. May need to rename this provider.
+
+Not sure whether it is better to use SDMX or stick with CSV's for initial data stocking.
 
 Since this module has no dependencies on anything outside econ_platform_core or standard libraries, can stay in the
 core.
 
 Note: Certain tables from the Bank of Canada inexplicably contain 0 instead of NaN. I am eating those entries,
 but I hope that the BoC will get their act together...
+
+Assumes English webpages and file names.
+
+The workflow of this provider is now quite unusual. I save the list of vectors to a manifest file once the table is
+processed. If this manifest file exists, it is checked for the given vector: if it is not there, a TickerNotFound
+error is thrown. Otherwise, the full file would be scanned looking for the non-existent ticker.
+
+Once the update protocol is more advanced, this will be probably be rebuilt.
 
 Copyright 2019 Brian Romanchuk
 
@@ -37,6 +47,7 @@ import econ_platform_core
 from econ_platform_core import log, log_warning
 import econ_platform_core.configuration
 import econ_platform_core.utils
+import econ_platform_core.tickers as tickers
 
 
 class ProviderCansim_Csv(econ_platform_core.ProviderWrapper):
@@ -49,14 +60,42 @@ class ProviderCansim_Csv(econ_platform_core.ProviderWrapper):
             econ_platform_core.PlatformConfiguration['P_CCSV']['parsed_directory'])
         self.ZipTail = econ_platform_core.PlatformConfiguration['P_CCSV']['zip_tail']
         # If anyone from the Bank of Canada sees this and is offended, get these table(s) fixed!
-        self.BorkedBankOfCanadaTables = ['10100139']
+        self.BorkedBankOfCanadaTables = ['10100139',]
+        self.WebPage = 'https://www150.statcan.gc.ca/n1/en/type/data?MM=1'
+        self.MetaMapper = {}
+
+
+    def GetTableUrl(self, table):
+        """
+        Get the URL for a table; no series-specific URL's (yet).
+        :param table: str
+        :return: str
+        """
+        return 'https://www150.statcan.gc.ca/t1/tbl1/en/tv.action?pid={0}'.format(table)
+
+    def _GetSeriesUrlImplementation(self, series_meta):
+        """
+        Get the webpage for the table associated with a series.
+
+        :param series_meta: econ_platform_core.SeriesMetadata
+        :return: str
+        """
+        ticker_query = str(series_meta.ticker_query)
+        try:
+            table_name, vector = ticker_query.split('|')
+        except:
+            raise econ_platform_core.TickerError('CANSIM_CSV ticker format: <table>|<vector>; invalid ticker = {0}'.format(
+                                         ticker_query))
+        return self.GetTableUrl(table_name)
+
 
 
     def fetch(self, series_meta):
         """
-        Do the fetch.
+        Do the fetch from CSV.
 
-        Can only support single series queries...
+        Increments may be via JSON.
+
         :param series_meta: econ_platform_core.SeriesMetadata
         :return: pandas.Series
         """
@@ -72,25 +111,43 @@ class ProviderCansim_Csv(econ_platform_core.ProviderWrapper):
             try:
                 self.UnzipFile(table_name)
             except:
-                raise econ_platform_core.TickerNotFoundError(
+                raise econ_platform_core.PlatformError(
                     'Table {0} needs to be downloaded as a zip file'.format(table_name))
-            self.ParseUnzipped(table_name)
-        items = []
-        with open(parsed_name, 'r') as f:
-            for row_raw in f:
-                row = row_raw.split('\t')
-                if row[0] == vector:
-                    ddate = econ_platform_core.utils.iso_string_to_date(row[1])
-                    items.append((ddate, float(row[2])))
-        if len(items) == 0:
-            raise econ_platform_core.TickerNotFoundError('Vector {0} not found in CANSIM table {1}'.format(vector, table_name))
-        items.sort()
-        values = [x[1] for x in items]
-        dates = [x[0] for x in items]
-        data = pandas.Series(values)
-        data.index = dates
-        data.name = '{0}@{1}'.format(self.ProviderCode, query_ticker)
-        return data
+        self.CheckManifest(table_name, vector)
+        # Do the whole table
+        self.TableWasFetched = True
+        self.TableMeta = {}
+        self.TableSeries = {}
+        self.MetaMapper = {}
+        self.ParseUnzipped(table_name)
+        self.BuildSeries()
+        self.SaveManifest(table_name)
+        try:
+            ser = self.TableSeries[str(series_meta.ticker_full)]
+            meta = self.TableMeta[str(series_meta.ticker_full)]
+        except KeyError:
+            raise econ_platform_core.TickerNotFoundError('{0} was not found'.format(str(series_meta.ticker_full)))
+        return ser, meta
+
+    def SaveManifest(self, table_name):
+        fname = os.path.join(self.DirectoryParsed, '{0}_vectors.txt'.format(table_name))
+        f = open(fname, 'w')
+        for meta in self.TableMeta.values():
+            f.write(meta.ProviderMetadata["VECTOR"] + '\n')
+        f.close()
+
+    def CheckManifest(self, table_name, vector):
+        fname = os.path.join(self.DirectoryParsed, '{0}_vectors.txt'.format(table_name))
+        if not os.path.exists(fname):
+            return
+        f = open(fname, 'r')
+        for row in f:
+            row = row.strip()
+            if row == vector:
+                return
+        msg = 'Vector {0} not in Table {1}.\nYou may need to clear file {2} if this is an error'
+        raise econ_platform_core.TickerNotFoundError(msg.format(vector, table_name, fname))
+
 
     def GetTimeSeriesFile(self, table_name):
         return os.path.join(self.DirectoryParsed, 'parsed_{0}.txt'.format(table_name))
@@ -142,7 +199,7 @@ class ProviderCansim_Csv(econ_platform_core.ProviderWrapper):
                     # How's that for nesting, eh?
                     header = next(reader)
                     header = [x.replace('"', '') for x in header]
-                    # There seems to be some garbage in the first entry; nuke it from orbit.
+                    # There is an encoding marker in the first row; nuke it from orbit.
                     header = [econ_platform_core.utils.remove_non_ascii(x) for x in header]
                     f_meta.write(('\t'.join(header)) + '\n')
                     # Find the columns
@@ -158,26 +215,102 @@ class ProviderCansim_Csv(econ_platform_core.ProviderWrapper):
                         data_row = [row[x] for x in targ_col_n]
                         try:
                             # If we cannot convert to float, do not write.
-                            x = float(data_row[-1])
+                            value = float(data_row[-1])
                             # If we are in a borked file, eat any 0 values.
                             # This operation is dangerous; I sent an e-mail to Statscan asking them to
                             # ask the BoC to get their act together...
-                            if is_borked_file and 0. == x:
+                            if is_borked_file and 0. == value:
                                 continue
-                            # Only save the row in the summary if it has data.
-                            last_rows[vector] = tuple(row)
-                            # Convert the date
-                            data_row[1] = self.ParseDate(data_row[1]).isoformat()
-                            f_series.write('\t'.join(data_row) + '\n')
                         except ValueError:
-                            pass
+                            continue
+                        # Only save the row in the summary if it has data.
+                        last_rows[vector] = tuple(row)
+                        # Convert the date
+                        data_row[1] = self.ParseDate(data_row[1]).isoformat()
+                        f_series.write('\t'.join(data_row) + '\n')
+                        if vector in self.TableSeries:
+                            self.TableSeries[vector].append((data_row[1], value))
+                        else:
+                            self.TableSeries[vector] = [(data_row[1], value)]
+                            self.TableMeta[vector] = self.CreateMetadata(table_name, row, header)
                 vector_list = list(last_rows.keys())
                 vector_list.sort()
                 for v in vector_list:
-                    x = last_rows[v]
-                    if len(x[vector_col]) == 0:
+                    value = last_rows[v]
+                    if len(value[vector_col]) == 0:
                         raise ValueError('Huh')
-                    f_meta.write('\t'.join(x) + '\n')
+                    f_meta.write('\t'.join(value) + '\n')
+
+    def CreateMetadata(self, table_name, row, header):
+        if len(self.MetaMapper) == 0:
+            ignore_list = ('REF_DATE', 'VALUE')
+            keep_list = []
+            for i in range(0, len(header)):
+                if header[i] not in ignore_list:
+                    keep_list.append(i)
+            keep_list = tuple(keep_list)
+            try:
+                uom_pos = econ_platform_core.utils.entry_lookup('UOM', header)
+                desc_list = []
+                ignore_2 = ('REF_DATE', 'DGUID')
+                for i in range(0, uom_pos):
+                    if header[i] not in ignore_2:
+                        desc_list.append(i)
+                desc_list = tuple(desc_list)
+            except KeyError:
+                desc_list = ()
+            self.MetaMapper['keep_list'] = keep_list
+            self.MetaMapper['desc_list'] = desc_list
+        else:
+            keep_list = self.MetaMapper['keep_list']
+            desc_list = self.MetaMapper['desc_list']
+        meta = econ_platform_core.SeriesMetadata()
+        for i in keep_list:
+            meta.ProviderMetadata[header[i]] = row[i]
+        vector = meta.ProviderMetadata['VECTOR']
+        query_ticker = '{0}|{1}'.format(table_name, meta.ProviderMetadata['VECTOR'])
+        meta.ticker_query = tickers.TickerFetch(query_ticker)
+        meta.series_provider_code = tickers.TickerProviderCode(self.ProviderCode)
+        meta.ticker_full = tickers.create_ticker_full(meta.series_provider_code, meta.ticker_query)
+        if len(desc_list) == 0:
+            meta.series_name = 'Statscan series with VECTOR={0}. Unable to create name.'.format(vector)
+            meta.series_description = 'Statscan series VECTOR={0}, From Table={1}. Unable to create name.'.format(
+                vector, table_name)
+        else:
+            ser_info = []
+            for idx in desc_list:
+                ser_info.append(row[idx])
+            sername = '; '.join(ser_info)
+            meta.series_name = sername
+            meta.series_description = '{0} From StatsCan Table {1}, Vector = {2}'.format(sername, table_name,
+                                                                                         vector)
+        return meta
+
+    def BuildSeries(self):
+        """
+        Build the series from data collected from file.
+
+
+        :return:
+        """
+        # Need to remap to use the full ticker.
+        new_series = {}
+        new_meta = {}
+        for vector in self.TableSeries.keys():
+            ser_data = self.TableSeries[vector]
+            meta = self.TableMeta[vector]
+            ser_data.sort()
+            ddates = [x[0] for x in ser_data]
+            values = [x[1] for x in ser_data]
+            ser = pandas.Series(values)
+            ser.index = ddates
+            ticker_full = str(meta.ticker_full)
+            ser.name = ticker_full
+            new_series[ticker_full] = ser
+            new_meta[ticker_full] = meta
+        self.TableMeta = new_meta
+        self.TableSeries = new_series
+
 
 
 

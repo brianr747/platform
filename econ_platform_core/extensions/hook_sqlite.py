@@ -34,4 +34,5 @@ def main():
     extra_list = econ_platform_core.PlatformConfiguration['D_SQLITE_EXTRA']
     for code in extra_list:
         obj = econ_platform_core.databases.database_sqlite3.DatabaseSqlite3()
+        obj.DatabaseFile = econ_platform_core.PlatformConfiguration['D_SQLITE_EXTRA'][code]
         econ_platform_core.Databases.AddDatabase(obj, code=code.upper())
