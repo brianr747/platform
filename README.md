@@ -18,17 +18,18 @@ of where this project is going.
 
 ### Providers
 
-"Single series" interface only; there will be table query support (for pandasdmx).
-
 - "User Series": Series that are calculated by Python code dynamically
-  on request.
+  on request. Can include miscellaneous series.
 - DB.nomics
 - FRED (St. Louis Fed)
 - CANSIM manual downloaded table (CSV) parsing.
-- Quandl.
-- Australian Bureau of Statistics via Excel.
+- Quandl (single series only).
+- Australian Bureau of Statistics via Excel (missing metadata).
 - Reserve Bank of Australia (RBA) via Excel.
 - Jordà-Schularick-Taylor Macrohistory Database (Excel file).
+
+Users can only fetch one series at a time, but provider code can grab an entire table and
+use it to stock the database in one operation.
 
 Note: As discussed in **DesignNotes.md**, I may switch to embedding the DB.nomics fetchers within
 this class structure, so that anyone who wanted to use their fetcher can plug it in seamlessly 
@@ -61,9 +62,8 @@ code and the underlying API's. This means that there is only a single
 command for most end users to worry about.
 
 The *fetch()* command is dynamic; the ticker is a combination
-of the Provider and the Provider-specific ticker. (Once SQL database
-support is added, users can configure friendly local tickers that are
-mapped automatically to the clunkier provider tickers.)
+of the Provider and the Provider-specific ticker. (Local tickers will allow for
+friendlier aliases of series, but yet handled.)
 
 - If the requested series does not exist, the system goes to 
 the Provider and fetches it. (This is either an API call, or 
@@ -117,13 +117,19 @@ framework that covers practically everything (providers and databases).
 Since *fetch()* returns a pandas Series object, they can leverage 
 the features of pandas. (Disclaimer: I am not too familiar with 
 pandas, and so my pandas code may stink.) Currently, the main
-advantage for analysts is *fetch()* and the ease of configuration/
+advantage for analysts is *fetch()* and the ease of configuration and
 logging.
 
 - *quick_plot()* One line plotting of series. (Although there is a 
 *Series.Plot()* method, I still need to call 
 *matplotlib.pyplot.show()* to see it.) Eventually, look-and-feel will
 be configurable with config files.
+- Examples of *R* plotting code. My *R* code (in the legacy folder) is not exactly the 
+greatest model to emulate, but I have utility functions that cover most of the needs for 
+formatting standard financial/economic time series plots.
+- Having series metadata gathered into one location should make it easier to track down
+time series that have been previously downloaded, although tools for browsing the database
+need to be adapted to fit the structure.
 
 The main planned work (which will be done when heavy development 
 starts) is to create classes to clean up chart management: create

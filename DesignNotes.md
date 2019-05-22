@@ -96,7 +96,7 @@ of extension loading is the use of alphabetical order in loading the extension m
  ## A Public Package?
  
  Although I would love that this package would have a life of its own, the reality is that
- maintenance could turn into a dog's breakfast. I already have 4 external providers, two 
+ maintenance could turn into a dog's breakfast. I already have 7 external providers, two 
  database formats, and one external language (R). Any changes on those API's would break some
  functionality of this package.
  
@@ -104,7 +104,7 @@ of extension loading is the use of alphabetical order in loading the extension m
  would just update the interfaces they use as needed.)
  
  If everyone believed that this package was the most amazing thing in the world, the maintenance
- burden would be pushed onto the extensions: other people would supply an 
+ burden should be pushed onto the extensions: other people would supply an 
  extensions to incorporate into this package for all the other API's.
  
  (I will probably pursue that strategy within my *sfc_models* package: I will have a script that
@@ -131,7 +131,7 @@ coverage for awhile.
 I have minimal SQLite support: series are overwritten completely
 each time. Metadata support is improving.
 
-The only thing I might push for is some form of series update support.Once that is
+The only thing I might push for is some form of series update support. Once that is
 in place, I will then work on refactoring before adding features.
 
 I think a full database wrapper package (SQLalchemy?) might be overkill. Will take a 
@@ -141,6 +141,8 @@ Unless I go with a database wrapper, my plan is to beef up an abstract "SQL" cla
 will migrate from SQLite class to the  base class, and only the query syntax 
 will be saved as  data in the subclass (if possible). Then adding a new SQL format
 will just be a question of changing the syntax to be SQL-dialect specific.
+
+Given the simplicity of the SQL, it is unclear whether SQLAlchemy is overkill.
 
 ## "Tickers" and Multi-Data Type Entities
 
@@ -171,3 +173,17 @@ system can generate sprawling tables, but it should be manageable.
 Although this was not a high priority, it appears to be needed for a project of mine, so it 
 might be put to the top of my priority list.
 
+## Miscellaneous Series/User Series
+
+The Canadian C.D. Howe Institute publishes a spreadsheet of Canadian recession dates. (I don't know
+whether it is available elsewhere.) Rather than create a provider with a single time series, I 
+created an extension that adds a "user series" ('U@CANADIAN_RECESSIONS').
+
+This seems to be the best model for smaller data sets, at least until the notion of a "pushed data
+provider" is supported. (This is a group of series that are pushed onto the database, and fetches will
+only get the stocked data. This could cover a lot of bulky financial market data downloads, 
+results from internal model runs, and one-off data insertions.)
+
+I expect that I will create recession indicator series for countries based on the "2 quarters of
+declining real GDP rule." Once I populate that set, I will see if the "User Provider" needs any 
+improvements to its interface.
