@@ -52,8 +52,19 @@ browse within the database. If the provider implementation supports it, it is
 possible to get the URL of a provider, even specific pages for series (FRED, DB.nomics).
 By default, the command will also open the web page of the provider/series.
 
-(Note: Starting with sqlite3, since that is installed with Python. Will worry 
-about compatability with other SQL formats later.)
+Note: Starting with sqlite3, since that is installed with Python. Since my objective was to get a 
+functioning platform as quickly as possible, I did what I knew would work, and did not worry about
+elegance. Now that I have end-to-end tests that cover desired behaviour, I can iterate on the database
+design
+
+(2019-05-22) After doing some research, I think I will be going with SQLAlchemy. This should
+make handling the dynamic aspects of metadata handling easier to work with. (Different providers
+have varying parameter fields to describe series, and we need tables to adapt to the provider
+metadata structure.) SQLAlchemy is also tied into Flask, which will allow for an HTML-based browsing
+capability for the darabase. SQLAlchemy is even tied to the SQL methods of Pandas, and so it might
+be possible to reduce the size of the code base by using Pandas SQL methods. Since I have never
+worked with SQLAlchemy, no idea when it will be up and running. Creating a new branch for 
+experiments. 
 
 ### Dynamic Loading
 
