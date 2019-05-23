@@ -66,6 +66,9 @@ be possible to reduce the size of the code base by using Pandas SQL methods. Sin
 worked with SQLAlchemy, no idea when it will be up and running. Creating a new branch for 
 experiments. 
 
+(I have now created a branch for SQLAlchemy. Since the code may be wildly non-functional, keep it
+out of the master branch until it looks functional.)
+
 ### Dynamic Loading
 
 Series are loaded with a single *fetch()* command that sits between user

@@ -46,26 +46,21 @@ limitations under the License.
 import os
 import pandas
 import sqlite3
-import datetime
 
 import econ_platform_core
 import econ_platform_core.databases
 import econ_platform_core.utils
-
-
-class AdvancedDatabase(econ_platform_core.DatabaseManager):
-    """
-    Abstract base class for all "advanced" databases; similar functionality to SQL databases
-    """
-    def __init__(self, name='Advanced Database (Abstract)'):
-        super().__init__(name=name)
-        self.IsAdvanced = True
+from econ_platform_core.databases import AdvancedDatabase
 
 
 class DBapiDatabase(AdvancedDatabase):
     """
     Abstract base class for DBAPI2-compliant databases. (Note: not an expert on DBAPI, so this name
-    may be shaky.
+    may be shaky.)
+
+    My focus is on the SQLAlchemy-based classes; this class will be for anyone who wants to stick with an interface
+
+    that is staright SQL.
     """
     def __init__(self, name='DBapi2-compliant SQL Database'):
         super().__init__(name)
@@ -75,12 +70,19 @@ class DatabaseSqlite3(DBapiDatabase):
     Class that implements the interface to an SQLite database. This is in the core platform,
     as the sqlite3 library is part of the standard library.
 
+    This class uses the dbapi interface, which is perhaps more familiar to more people. However, my development
+    efforts are probably going towards the SQLalchemy-based classes, and this class will not have the full feature
+    set of the SQLalchemy ones.
+
     By adding entries into the config file section 'D_SQLITE_EXTRA', you can create extra SQLite databases with
     different filenames/codes. (Useful for testing, or to segregate data.) By default, there is a "TMP" database
     created.
 
     NOTE: Code will migrate to super-classes. Overall logic into the AdvancedDatabase, SQL high-level logic into
-    DBapiDatabase, and low level connection fetching (and SQL syntax) left in here.
+    DBapiDatabase, and low level connection fetching (and SQL syntax) left in here. I am refactoring the base classes
+    first, and then will fix this class last. (I added public methods to this class, but the design is now that these
+    derived classes should only override the non-public implementation methods.)
+
     """
     Cursor: sqlite3.Cursor
     Directory: str
@@ -104,8 +106,14 @@ class DatabaseSqlite3(DBapiDatabase):
         self.ViewLookup = 'TickerLookup'
         self.TableProviderMeta = 'ProviderMeta'
         self.LogSQL = False
+        self.AutoCreate = True
 
-    def GetConnection(self, test_tables=True, auto_create=True):
+
+    def _Connect(self):
+        """
+        Implementation of database connection.
+        :return:
+        """
         if self.Connection is not None:
             return self.Connection
         self.SetParameters()
@@ -114,15 +122,42 @@ class DatabaseSqlite3(DBapiDatabase):
             did_not_exist = True
         else:
             did_not_exist = not os.path.exists(full_name)
-        if did_not_exist and auto_create:
+        if did_not_exist and self.AutoCreate:
             self.CreateSqlite3Tables()
             return self.Connection
         self.Connection = sqlite3.Connection(full_name)
+        self.HandleDatabase = self.Connection
 
-        # Test to see whether the tables exist!
-        if test_tables:
-            self.TestTablesExist()
+
+    def GetConnection(self, test_tables=True, auto_create=True):
+        """
+        This method needs to be eliminated, and switch over to Connect().
+
+        auto_create has been moved to a property of the class.
+
+        :param test_tables:
+        :param auto_create:
+        :return:
+        """
+        self.Connect()
         return self.Connection
+        # if self.Connection is not None:
+        #     return self.Connection
+        # self.SetParameters()
+        # full_name = self.DatabaseFile
+        # if full_name == ':memory:':
+        #     did_not_exist = True
+        # else:
+        #     did_not_exist = not os.path.exists(full_name)
+        # if did_not_exist and auto_create:
+        #     self.CreateSqlite3Tables()
+        #     return self.Connection
+        # self.Connection = sqlite3.Connection(full_name)
+        #
+        # # Test to see whether the tables exist!
+        # if test_tables:
+        #     self.TestTablesExist()
+        # return self.Connection
 
     def SetParameters(self):
         # Set data from config file, unless previously set

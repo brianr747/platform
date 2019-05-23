@@ -234,7 +234,7 @@ class DatabaseManager(PlatformEntity):
         """
         raise NotImplementedError()
 
-    def GetMeta(self, full_ticker):  # pragma: nocover
+    def GetMeta(self, ticker_str):  # pragma: nocover
         raise NotImplementedError()
 
     def RetrieveWithMeta(self, full_ticker):
@@ -443,6 +443,9 @@ class TickerError(PlatformError):
 
 
 class TickerNotFoundError(PlatformError):
+    pass
+
+class ConnectionError(PlatformError):
     pass
 
 

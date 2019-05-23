@@ -18,94 +18,109 @@ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 See the License for the specific language governing permissions and
 limitations under the License.
 """
-# from econ_platform_core import PlatformConfiguration, SeriesMetadata
-#
-#
-# class DatabaseManager(object):
-#     """
-#     This is the base class for Database Managers.
-#
-#     Note: Only support full series replacement for now.
-#     """
-#     def __init__(self, name='Virtual Object'):
-#         self.Name = name
-#         # This is overridden by the AdvancedDatabase constructor.
-#         # By extension, everything derived from this base class (like the TEXT dabase is "not advanced."
-#         self.IsAdvanced = False
-#         if not name == 'Virtual Object':
-#             self.Code = PlatformConfiguration['DatabaseList'][name]
-#         self.ReplaceOnly = True
-#
-#     def Find(self, ticker):
-#         """
-#         Can we find the ticker on the database? Default behaviour is generally adequate.
-#         :param ticker: str
-#         :return: SeriesMetadata
-#         """
-#         try:
-#             provider_code, query_ticker = ticker.split('@')
-#         except:
-#             return self._FindLocal(ticker)
-#         meta = SeriesMetadata()
-#         meta.ticker_local = ''
-#         meta.ticker_full = ticker
-#         meta.ticker_query = query_ticker
-#         meta.series_provider_code  = provider_code
-#         meta.Exists = self.Exists(ticker)
-#         # Provider-specific meta data data not supported yet.
-#         return meta
-#
-#     def _FindLocal(self, local_ticker):
-#         """
-#         Databases that support local tickers should override this method.
-#
-#         :param local_ticker: SeriesMetadata
-#         :return:
-#         """
-#         raise NotImplementedError('This database does not support local tickers')
-#
-#
-#     def Exists(self, ticker):
-#         """
-#
-#         :param ticker: str
-#         :return: bool
-#         """
-#         raise NotImplementedError()
-#
-#     def Retrieve(self, series_meta):
-#         """
-#
-#         :param series_meta: SeriesMetadata
-#         :return: pandas.Series
-#         """
-#         raise NotImplementedError()
-#
-#     def GetMeta(self, full_ticker):
-#         raise NotImplementedError()
-#
-#     def RetrieveWithMeta(self, full_ticker):
-#         """
-#         Retrieve both the meta data and the series. Have a single method in case there is
-#         an optimisation for the database to do both queries at once.
-#
-#         Since we normally do not want the meta data at the same time, have the usual workflow to just
-#         use the Retrieve() interface.
-#
-#         :param full_ticker: str
-#         :return: list
-#         """
-#         meta = self.GetMeta(full_ticker)
-#         ser = self.Retrieve(meta)
-#         return ser, meta
-#
-#
-#     def Write(self, ser, series_meta, overwrite=True):
-#         """
-#
-#         :param ser: pandas.Series
-#         :param series_meta: SeriesMetadata
-#         :param overwrite: bool
-#         :return:
-#         """
-#         raise NotImplementedError()
+
+# Ran into circular import problems, so the base database class went into econ_platform_core.__init__.py. I might try
+# to move it back later. I might make a stub definition.
+
+import econ_platform_core
+from econ_platform_core import SeriesMetadata
+from econ_platform_core.tickers import TickerFull, TickerProviderCode, TickerLocal, TickerFetch, TickerDataType
+
+class AdvancedDatabase(econ_platform_core.DatabaseManager):
+    """
+    Abstract base class for all "advanced" databases; assumed to have at least the functionality of SQL databases.
+    However, no assumption that SQL is under the hood.
+
+    Handles high level logic.
+
+    This class exposes an interface of public methods (no underscore), with the work done in methods designed
+    to be overloaded (with underscores).
+
+    Since we can have a half dozen database classes lying around in the code base, they cannot connect on the
+    package initialisation step. We also cannot guarantee that any particular public function is called first.
+    Therefore, all the public methods have to check to see whether the HandleDatabase has been initialised.
+
+    "HandleDatabase" is used rather than "Connection" since it may not be an actual SQL Connection object in
+    implementations. If you do not want to use that member, just set it to anything other than None when you initialise
+    the connection.
+    """
+    def __init__(self, name='Advanced Database (Abstract)'):
+        super().__init__(name=name)
+        self.IsAdvanced = True
+        self.HandleDatabase = None
+
+    def Connect(self):
+        """
+        Connect to the database, if HandleDatabase is None.
+        :return:
+        """
+        if self.HandleDatabase is not None:
+            return
+        # If this fails, subclass should throw useful ConnectionError.
+        self._Connect()
+        if self.HandleDatabase is None:
+            raise econ_platform_core.ConnectionError('Database handle not set!')
+
+    def _Connect(self):
+        """
+        Subclasses override this. Make sure that HandleDatabase is not None.
+
+        Should throw a descriptive ConnectionError if failure.
+
+        :return:
+        """
+        raise NotImplementedError()
+
+    def Find(self, ticker_str):
+        """
+        Find metadata based on a ticker string. Note that it can be a full ticker, local ticker, or datatype ticker.
+
+        :param ticker_str: str
+        :return: econ_platform_core.SeriesMeta
+        """
+        self.Connect()
+        ticker_obj = econ_platform_core.tickers.map_string_to_ticker(ticker_str)
+        if type(ticker_obj) is TickerLocal:
+            return self._GetMetaFromLocalTicker(ticker_obj)
+        if type(ticker_obj) is TickerDataType:
+            return self._FindDataType(ticker_obj)
+        if type(ticker_obj) is TickerFull:
+            return self._GetMetaFromFullTicker(ticker_obj)
+        raise econ_platform_core.PlatformError('Internal error: unsupported ticker class')
+
+    def GetMeta(self, ticker_string):
+        """
+        Given a ticker string, determine its type
+        :param ticker_string: str
+        :return: SeriesMetadata
+        """
+
+    def _GetMetaFromFullTicker(self, ticker_full):
+        """
+        Get the meta data based on the full ticker.
+
+        :param ticker_full: TickerFull
+        :return: SeriesMetadata
+        """
+        raise NotImplementedError()
+
+    def _GetMetaFromLocalTicker(self, ticker_local):
+        """
+        Given the local ticker, get the metadata object.
+
+        :param ticker_local: TickerLocal
+        :return: SeriesMetadata
+        """
+        raise NotImplementedError()
+
+    def _GetMetaFromDatatypeTicker(self, ticker_datatype):
+        """
+        Given a datatype ticker, return the SeriesMeta object.
+
+        :param ticker_datatype: TickerDatatype
+        :return: SeriesMeta
+        """
+        raise NotImplementedError()
+
+
+
