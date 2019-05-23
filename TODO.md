@@ -37,7 +37,7 @@ This is not for Python programmers (who can use help(), which does exactly this)
 for users of external languages or even a local web server. In addition to serving
 doc strings, it could give lists of databases, providers, etc.
 - Implement "table queries" for Quandl, since the implementation appears borked otherwise.
-(Most of the data seems to be tables...)
+(Most of the Quandl data seems to be tables...)
 
 **Completed**
 - Migrate extensions that use external API's to econ_platform package (out of core).
@@ -117,8 +117,10 @@ I see the need to support at least types of time axes:
 3. Float. Allows us to handle things like model time axes (converting ints to floats
    if needed).
    
-One exotic option may be to allow lower frequency dates: monthly, quarterly, etc.
+One exotic option may be to allow lower frequency dates: monthly, quarterly, etc. 
 
 I am going to dodge this question for as long as possible. For my purposes, I only need
-calendar dates and floats (for *sfc_models*). What we can do is have database/provider
-extensions signal that they can support more advanced time axes as well.
+calendar dates and floats (for *sfc_models*). (Since I am using a TEXT field to store the
+date information in SQLite, I just have to worry about the date axis formatting at the 
+encoding/parsing stage; I can fit all the data into the same column. What we can do is have 
+database/provider extensions signal that they can support more advanced time axes as well.
