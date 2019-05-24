@@ -22,23 +22,10 @@ limitations under the License.
 import econ_platform_core
 
 
-class ProviderUser(econ_platform_core.ProviderWrapper):
+class ProviderPushOnly(econ_platform_core.ProviderWrapper):
     def __init__(self):
-        super(ProviderUser, self).__init__(name='User')
-        self.SeriesMapper = {}
-
-    def MapTicker(self, query_ticker):
-        """
-        Monkey patch this method if you have a complex set of user functions
-        :param query_ticker: str
-        :return:
-        """
-        try:
-            return self.SeriesMapper[str(query_ticker)]
-        except KeyError:
-            raise econ_platform_core.TickerNotFoundError(
-                'There is no function that handles the query ticker: {0}'.format(query_ticker)) from None
-
+        super(ProviderPushOnly, self).__init__(name='PushOnly')
+        self.PushOnly = True
 
     def fetch(self, series_meta):
         """
@@ -46,7 +33,14 @@ class ProviderUser(econ_platform_core.ProviderWrapper):
         :param series_meta: econ_platform_core.SeriesMetadata
         :return: pandas.Series
         """
-        query_ticker = series_meta.ticker_query
-        fn = self.MapTicker(query_ticker)
-        ser = fn(series_meta)
-        return ser
+        raise econ_platform_core.PlatformError('The data from this provider is only pushed.')
+
+    def PushSeries(self, ser, series_meta, database, overwrite=True):
+        """
+        Utility function to be called for pushing data.
+        :param ser: pandas.Series
+        :param series_meta: econ_platform_core.SeriesMetadata
+        :param database: str
+        :return:
+        """
+        econ_platform_core.Databases[database].Write(ser, series_meta, overwrite)

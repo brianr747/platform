@@ -55,8 +55,8 @@ class ProviderCansim_Csv(econ_platform_core.ProviderWrapper):
     def __init__(self):
         super(ProviderCansim_Csv, self).__init__(name='CANSIM_CSV')
         self.DataDirectory = econ_platform_core.utils.parse_config_path(
-            econ_platform_core.PlatformConfiguration['P_STATCAN']['directory'])
-        self.ZipTail = econ_platform_core.PlatformConfiguration['P_STATCAN']['zip_tail']
+            econ_platform_core.PlatformConfiguration['P_STATSCAN']['directory'])
+        self.ZipTail = econ_platform_core.PlatformConfiguration['P_STATSCAN']['zip_tail']
         # If anyone from the Bank of Canada sees this and is offended, get these table(s) fixed!
         self.BorkedBankOfCanadaTables = ['10100139',]
         self.WebPage = 'https://www150.statcan.gc.ca/n1/en/type/data?MM=1'
@@ -83,7 +83,7 @@ class ProviderCansim_Csv(econ_platform_core.ProviderWrapper):
             table_name, vector = ticker_query.split('|')
         except:
             raise econ_platform_core.TickerError('CANSIM_CSV ticker format: <table>|<vector>; invalid ticker = {0}'.format(
-                                         ticker_query))
+                                         ticker_query)) from None
         return self.GetTableUrl(table_name)
 
 
@@ -103,14 +103,14 @@ class ProviderCansim_Csv(econ_platform_core.ProviderWrapper):
         except:
             raise econ_platform_core.TickerError('CANSIM_CSV ticker format: <table>|<vector>; invalid ticker = {0}'.format(
                                          query_ticker))
-        parsed_name = self.GetTimeSeriesFile(table_name)
-        if not os.path.exists(parsed_name):
+        target = os.path.join(self.DataDirectory, '{0}.csv'.format(table_name))
+        if not os.path.exists(target):
             econ_platform_core.log('Table file does not exist, attempting to unzip')
             try:
                 self.UnzipFile(table_name)
             except:
                 raise econ_platform_core.PlatformError(
-                    'Table {0} needs to be downloaded as a zip file'.format(table_name))
+                    'Table {0} needs to be downloaded as a zip file'.format(table_name)) from None
         # Do the whole table
         self.TableWasFetched = True
         self.TableMeta = {}
@@ -123,11 +123,9 @@ class ProviderCansim_Csv(econ_platform_core.ProviderWrapper):
             ser = self.TableSeries[str(series_meta.ticker_full)]
             meta = self.TableMeta[str(series_meta.ticker_full)]
         except KeyError:
-            raise econ_platform_core.TickerNotFoundError('{0} was not found'.format(str(series_meta.ticker_full)))
+            raise econ_platform_core.TickerNotFoundError('{0} was not found'.format(str(series_meta.ticker_full))) \
+                from None
         return ser, meta
-
-    def GetTimeSeriesFile(self, table_name):
-        return os.path.join(self.DataDirectory, 'parsed_{0}.txt'.format(table_name))
 
     def UnzipFile(self, table_name):
         fname = table_name + self.ZipTail
@@ -166,11 +164,12 @@ class ProviderCansim_Csv(econ_platform_core.ProviderWrapper):
         target_col_names = ['vector', 'ref_date', 'value']
         last_rows = {}
         is_borked_file = table_name in self.BorkedBankOfCanadaTables
-        with open(self.GetTimeSeriesFile(table_name), 'w') as f_series:
+        parsed_name = os.path.join(self.DataDirectory, '{0}_parsed.txt'.format(table_name))
+        with open(parsed_name, 'w') as f_series:
             out_header = ['vector', econ_platform_core.PlatformConfiguration['Database']['dates_column'],
                           econ_platform_core.PlatformConfiguration['Database']['values_column']]
             f_series.write('\t'.join(out_header) +'\n')
-            with open(os.path.join(self.DataDirectory, 'snapshot_{0}.txt'.format(table_name)), 'w') as f_meta:
+            with open(os.path.join(self.DataDirectory, '{0}_snapshot.txt'.format(table_name)), 'w') as f_meta:
                 with open(target, 'r') as csvfile:
                     reader = csv.reader(csvfile, quotechar='"')
                     # How's that for nesting, eh?

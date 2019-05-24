@@ -60,6 +60,8 @@ file_name={PARENT}\test\data\platform.db
 # Generic provider options
 [ProviderOptions]
 echo_access=True
+[D_SQLITE_EXTRA]
+TMP={PARENT}\test\data\platform_tmp.db
 #-------------------------------------------------------------------
 # Providers are specified by {ticker_code} = {Provider Name}
 # If you don't like the ticker code assignments, you can re-map them...
@@ -77,9 +79,8 @@ Example Provider=TEST
 [P_FRED]
 # Need to get a free API key from the St. Louis FED. (Put into an external config file if you are using GIT),
 api_key=THIS_TEXT_SHOULD_NOT_APPEAR_IN_TEST
-[P_CCSV]
+[P_STATSCAN]
 # Directory information . Note that if these defaults are used, this means it goes below the providers directory.
 # Which means that we don't need to worry about the directory separaor in this case.
-zip_directory = {PARENT}\test\data\cansim_csv
-parsed_directory = {PARENT}\test\data\cansim_csv
+directory = {PARENT}\test\data\cansim_csv
 zip_tail=-eng.zip

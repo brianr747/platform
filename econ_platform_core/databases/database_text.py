@@ -36,8 +36,8 @@ class DatabaseText(econ_platform_core.DatabaseManager):
                 econ_platform_core.PlatformConfiguration['D_TEXT']['directory'])
 
     @staticmethod
-    def GetFileName(series_meta):
-        return econ_platform_core.utils.convert_ticker_to_variable(str(series_meta.ticker_full)) + '.txt'
+    def GetFileName(ticker_full):
+        return econ_platform_core.utils.convert_ticker_to_variable(str(ticker_full)) + '.txt'
 
     def Exists(self, series_meta):
         self.CheckDirectory()
@@ -52,7 +52,7 @@ class DatabaseText(econ_platform_core.DatabaseManager):
         ser = pandas.Series(df[df.columns[0]])
         return ser
 
-    def GetMeta(self, full_ticker):
+    def _GetMetaFromFullTicker(self, full_ticker):
         self.CheckDirectory()
         full_name = os.path.join(self.Directory, DatabaseText.GetFileName(full_ticker))
         if not os.path.exists(full_name):
@@ -88,7 +88,7 @@ class DatabaseText(econ_platform_core.DatabaseManager):
         self.CheckDirectory()
         if not overwrite:
             raise NotImplementedError()
-        full_name = os.path.join(self.Directory, DatabaseText.GetFileName(series_meta))
+        full_name = os.path.join(self.Directory, DatabaseText.GetFileName(series_meta.ticker_full))
         econ_platform_core.log_debug('Writing to %s', full_name)
         ser.to_csv(path_or_buf=full_name, sep='\t', header=True)
 

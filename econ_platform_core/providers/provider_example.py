@@ -16,8 +16,6 @@ distributed under the License is distributed on an "AS IS" BASIS,
 WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 See the License for the specific language governing permissions and
 limitations under the License.
-
-
 """
 
 
@@ -68,4 +66,4 @@ class ProviderExample(econ_platform_core.ProviderWrapper):
             data = get_test_series(query_ticker)
             return data
         except KeyError:
-            raise econ_platform_core.TickerNotFoundError('Not found on TEST: {0}'.format(query_ticker))
+            raise econ_platform_core.TickerNotFoundError('Not found on TEST: {0}'.format(query_ticker)) from None

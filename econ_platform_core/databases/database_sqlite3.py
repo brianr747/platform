@@ -46,6 +46,7 @@ limitations under the License.
 import os
 import pandas
 import sqlite3
+import warnings
 
 import econ_platform_core
 import econ_platform_core.databases
@@ -128,37 +129,6 @@ class DatabaseSqlite3(DBapiDatabase):
         self.Connection = sqlite3.Connection(full_name)
         self.HandleDatabase = self.Connection
 
-
-    def GetConnection(self, test_tables=True, auto_create=True):
-        """
-        This method needs to be eliminated, and switch over to Connect().
-
-        auto_create has been moved to a property of the class.
-
-        :param test_tables:
-        :param auto_create:
-        :return:
-        """
-        self.Connect()
-        return self.Connection
-        # if self.Connection is not None:
-        #     return self.Connection
-        # self.SetParameters()
-        # full_name = self.DatabaseFile
-        # if full_name == ':memory:':
-        #     did_not_exist = True
-        # else:
-        #     did_not_exist = not os.path.exists(full_name)
-        # if did_not_exist and auto_create:
-        #     self.CreateSqlite3Tables()
-        #     return self.Connection
-        # self.Connection = sqlite3.Connection(full_name)
-        #
-        # # Test to see whether the tables exist!
-        # if test_tables:
-        #     self.TestTablesExist()
-        # return self.Connection
-
     def SetParameters(self):
         # Set data from config file, unless previously set
         if len(self.DatabaseFile) == 0:
@@ -173,9 +143,9 @@ class DatabaseSqlite3(DBapiDatabase):
 
 
     def TestTablesExist(self):
+        self.Connect()
         cursor = self.Connection.cursor()
-        # If the meta table is there, so it the values table?
-        # Don't know how to validate existence of SQL objects, so do it this way
+        # Have not looked up the right way to do this. TODO: Fix.
         try:
             cursor.execute('SELECT * FROM {0} LIMIT 1'.format(self.TableMeta))
         except sqlite3.OperationalError as ex:
@@ -197,7 +167,7 @@ class DatabaseSqlite3(DBapiDatabase):
         :return: sqlite3.Cursor
         """
         if self.Connection is None:
-            self.GetConnection(test_tables=False)
+            self.Connect()
         if self.Cursor is None:
             self.Cursor = self.Connection.cursor()
         if self.LogSQL:
@@ -228,14 +198,14 @@ class DatabaseSqlite3(DBapiDatabase):
         return self.Cursor
 
     def Exists(self, series_meta):
-        self.GetConnection()
+        self.Connect()
         search_query = 'SELECT COUNT(*) FROM {0} WHERE ticker_full = ?'.format(self.TableMeta)
         cursor = self.Execute(search_query, str(series_meta.ticker_full))
         res = cursor.fetchall()
         return res[0][0] > 0
 
     def Retrieve(self, series_meta):
-        self.GetConnection()
+        self.Connect()
         ticker_full = str(series_meta.ticker_full)
         series_id = self.GetSeriesID(ticker_full)
         if series_id is None:
@@ -295,7 +265,7 @@ DELETE FROM {0} WHERE series_id = ?""".format(self.TableData)
 
     def GetSeriesID(self, full_ticker):
         full_ticker = str(full_ticker)
-        self.GetConnection()
+        self.Connect()
         cmd = """
         SELECT series_id FROM {0} WHERE ticker = ? LIMIT 1""".format(self.ViewLookup)
         self.Execute(cmd, full_ticker, commit_after=False)
@@ -312,7 +282,7 @@ DELETE FROM {0} WHERE series_id = ?""".format(self.TableData)
         :return:
         """
         # Need to make sure initialised
-        self.GetConnection()
+        self.Connect()
         create_str = """
 INSERT INTO {0} (series_provider_code, ticker_full, ticker_query, series_name, series_description, frequency,
 provider_param_string) VALUES
@@ -336,7 +306,7 @@ provider_param_string) VALUES
             raise NotImplementedError('Must delete by TickerFull specification')
         cmd = """
         DELETE FROM {0} WHERE ticker_full = ?""".format(self.TableMeta)
-        self.GetConnection()
+        self.Connect()
         self.Execute(cmd, str(series_meta.ticker_full), commit_after=False)
         if self.Cursor.rowcount > 1:  # pragma: nocover
             # This should never be hit, but it could happen if the SQL command is mangled.
@@ -348,7 +318,7 @@ provider_param_string) VALUES
                 str(series_meta.ticker_full)))
         self.Connection.commit()
 
-    def GetMeta(self, full_ticker):
+    def _GetMetaFromFullTicker(self, full_ticker):
         """
         Get the metadata for a full ticker.
 
@@ -370,13 +340,14 @@ provider_param_string) VALUES
         res = self.SelectColumnList(self.TableMeta, collist, 'ticker_full = ?', ticker, limit_n=1)
         meta = econ_platform_core.SeriesMetadata()
         meta.ticker_full = full_ticker
+        meta.series_provider_code, meta.ticker_query = full_ticker.SplitTicker()
         if len(res) == 0:
             meta.Exists = False
             return meta
         meta.Exists = True
         for c, val in zip(collist, res[0]):
             if mapper[c] is not None:
-                setattr(meta, mapper[c], val)
+                meta[mapper[c]] = val
             elif 'provider_param_string' == c:
                 meta.ProviderMetadata = econ_platform_core.utils.param_string_to_dict(val)
         return meta
@@ -398,7 +369,7 @@ provider_param_string) VALUES
         col_str = ','.join(column_list)
         limit_str = ' LIMIT {0}'.format(limit_n)
         cmd = 'SELECT {0} FROM {1} WHERE {2} {3}'.format(col_str, table, where_str, limit_str)
-        self.GetConnection()
+        self.Connect()
         self.Execute(cmd, where_params)
         return self.Cursor.fetchall()
 
@@ -509,9 +480,8 @@ def create_sqlite3_tables():
     """
     obj = DatabaseSqlite3()
     obj.CreateSqlite3Tables()
-    # Close the connection...
     del obj
-    # Do test.
     obj2 = DatabaseSqlite3()
-    obj2.GetConnection(test_tables=True)
+    obj2.TestTablesExist()
+
 

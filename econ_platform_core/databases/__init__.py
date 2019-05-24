@@ -21,6 +21,7 @@ limitations under the License.
 
 # Ran into circular import problems, so the base database class went into econ_platform_core.__init__.py. I might try
 # to move it back later. I might make a stub definition.
+import warnings
 
 import econ_platform_core
 from econ_platform_core import SeriesMetadata
@@ -75,11 +76,52 @@ class AdvancedDatabase(econ_platform_core.DatabaseManager):
         """
         Find metadata based on a ticker string. Note that it can be a full ticker, local ticker, or datatype ticker.
 
+        This method is identical (now) to GetMeta(), and one of them will be deprecated. I think GetMeta() is a better
+        name, and so it will likely survive.
+
         :param ticker_str: str
         :return: econ_platform_core.SeriesMeta
         """
+        warnings.warn('Find is being replaced by GetMeta()', DeprecationWarning)
+        return self.GetMeta(ticker_str)
+        # self.Connect()
+        # ticker_obj = econ_platform_core.tickers.map_string_to_ticker(ticker_str)
+        # if type(ticker_obj) is TickerLocal:
+        #     return self._GetMetaFromLocalTicker(ticker_obj)
+        # if type(ticker_obj) is TickerDataType:
+        #     return self._FindDataType(ticker_obj)
+        # if type(ticker_obj) is TickerFull:
+        #     return self._GetMetaFromFullTicker(ticker_obj)
+        # raise econ_platform_core.PlatformError('Internal error: unsupported ticker class')
+
+    def Exists(self, ticker_string):
+        """
+        Does a ticker exist?
+        :param ticker_string: str
+        :return: bool
+        """
         self.Connect()
-        ticker_obj = econ_platform_core.tickers.map_string_to_ticker(ticker_str)
+        return self._Exists(ticker_string)
+
+    def _Exists(self, ticker_string):
+        """
+        Implements Exists(). This implementation calls GetMeta(), but could be replaced by something
+        more efficient (since everything other than the Exists property is thrown out).
+
+        (It is unclear whether this method is needed...)
+        :return: bool
+        """
+        meta = self.GetMeta(ticker_string)
+        return meta.Exists
+
+    def GetMeta(self, ticker_string):
+        """
+        Does the same thing as Find(). Ouch. One method will be deprecated.
+        :param ticker_string: str
+        :return: SeriesMetadata
+        """
+        self.Connect()
+        ticker_obj = econ_platform_core.tickers.map_string_to_ticker(ticker_string)
         if type(ticker_obj) is TickerLocal:
             return self._GetMetaFromLocalTicker(ticker_obj)
         if type(ticker_obj) is TickerDataType:
@@ -87,13 +129,6 @@ class AdvancedDatabase(econ_platform_core.DatabaseManager):
         if type(ticker_obj) is TickerFull:
             return self._GetMetaFromFullTicker(ticker_obj)
         raise econ_platform_core.PlatformError('Internal error: unsupported ticker class')
-
-    def GetMeta(self, ticker_string):
-        """
-        Given a ticker string, determine its type
-        :param ticker_string: str
-        :return: SeriesMetadata
-        """
 
     def _GetMetaFromFullTicker(self, ticker_full):
         """

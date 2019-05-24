@@ -41,6 +41,7 @@ limitations under the License.
 import pandas
 import traceback
 import webbrowser
+import warnings
 
 # As a convenience, use the "logging.info" function as log.
 from logging import info as log, debug as log_debug, warning as log_warning, error as log_error
@@ -134,7 +135,20 @@ self.series_web_page""".replace('self.', '').split('\n')
                 raise PlatformError('Invalid SeriesMetadata: {0} is not {1}'.format(attrib, targ))
         return True
 
-    def __str__(self):
+    def __setitem__(self, key, value):
+        type_mapper = {
+            'series_provider_code': TickerProviderCode,
+            'ticker_full': TickerFull,
+            'ticker_local': TickerLocal,
+            'ticker_datatype': TickerDataType,
+            'ticker_query': TickerFetch}
+        if key in type_mapper:
+            setattr(self, key, type_mapper[key](value))
+        else:
+            setattr(self, key, value)
+
+
+    def __repr__(self):
         out = ''
         for name in dir(self):
             if name.startswith('_'):
@@ -188,18 +202,20 @@ class DatabaseManager(PlatformEntity):
         :param ticker: str
         :return: SeriesMetadata
         """
-        ticker_obj = econ_platform_core.tickers.map_string_to_ticker(ticker)
-        if type(ticker_obj) is TickerLocal:
-            return self._FindLocal(ticker_obj)
-        if type(ticker_obj) is TickerDataType:
-            return self._FindDataType(ticker_obj)
-        meta = SeriesMetadata()
-        meta.ticker_local = None
-        meta.ticker_full = ticker_obj
-        meta.series_provider_code, meta.ticker_query = ticker_obj.SplitTicker()
-        meta.Exists = self.Exists(meta)
-        # Provider-specific meta data data not supported yet.
-        return meta
+        warnings.warn('Find is being replaced by GetMeta()', DeprecationWarning)
+        return self.GetMeta(ticker)
+        # ticker_obj = econ_platform_core.tickers.map_string_to_ticker(ticker)
+        # if type(ticker_obj) is TickerLocal:
+        #     return self._FindLocal(ticker_obj)
+        # if type(ticker_obj) is TickerDataType:
+        #     return self._FindDataType(ticker_obj)
+        # meta = SeriesMetadata()
+        # meta.ticker_local = None
+        # meta.ticker_full = ticker_obj
+        # meta.series_provider_code, meta.ticker_query = ticker_obj.SplitTicker()
+        # meta.Exists = self.Exists(meta)
+        # # Provider-specific meta data data not supported yet.
+        # return meta
 
     def _FindLocal(self, local_ticker):  # pragma: nocover
         """
@@ -220,8 +236,9 @@ class DatabaseManager(PlatformEntity):
 
     def Exists(self, ticker):  # pragma: nocover
         """
+        This method is only really needed by the non-complex databases.
 
-        :param ticker: econ_platform_core.tickers._TickerAbstract
+        :param ticker: str
         :return: bool
         """
         raise NotImplementedError()
@@ -234,8 +251,20 @@ class DatabaseManager(PlatformEntity):
         """
         raise NotImplementedError()
 
-    def GetMeta(self, ticker_str):  # pragma: nocover
-        raise NotImplementedError()
+    def GetMeta(self, ticker_str):
+        ticker_obj = econ_platform_core.tickers.map_string_to_ticker(ticker_str)
+        if type(ticker_obj) is TickerLocal:
+            return self._FindLocal(ticker_obj)
+        if type(ticker_obj) is TickerDataType:
+            return self._FindDataType(ticker_obj)
+        meta = SeriesMetadata()
+        meta.ticker_local = None
+        meta.ticker_full = ticker_obj
+        meta.series_provider_code, meta.ticker_query = ticker_obj.SplitTicker()
+        meta.Exists = self.Exists(meta)
+        # Provider-specific meta data data not supported yet.
+        return meta
+
 
     def RetrieveWithMeta(self, full_ticker):
         """
@@ -349,6 +378,8 @@ class ProviderWrapper(PlatformEntity):
         self.Name = name
         self.ProviderCode = ''
         self.IsExternal = True
+        # Are these data only pushed to the database? If so, never attempt to update from within a fetch.
+        self.PushOnly = False
         # Sometimes we fetch an entire table as a side effect of fetching a series.
         # A provider can mark this possibility by setting TableWasFetched to True, and
         # loading up TableSeries, TableMeta with series/meta-data. The fetch() function will
@@ -401,6 +432,7 @@ class ProviderList(PlatformEntity):
         self.ProviderDict = {}
         self.EchoAccess = False
         self.UserProvider = None
+        self.PushOnlyProvider = None
 
     def Initialise(self):
         self.EchoAccess = PlatformConfiguration['ProviderOptions'].getboolean('echo_access')
@@ -415,6 +447,8 @@ class ProviderList(PlatformEntity):
         if obj.Name == 'User':
             # Tuck the "User" provider into a known location.
             self.UserProvider = obj
+        if obj.Name == 'PushOnly':
+            self.PushOnlyProvider = obj
 
     def __getitem__(self, item):
         """
@@ -528,14 +562,14 @@ def fetch(ticker, database='Default', dropna=True):
     # if database.lower() == 'default':
     #     database = PlatformConfiguration["Database"]["Default"]
     database_manager: DatabaseManager = Databases[database]
-    series_meta = database_manager.Find(ticker)
+    series_meta = database_manager.GetMeta(ticker)
     series_meta.AssertValid()
     provider_code = series_meta.series_provider_code
     # noinspection PyPep8
     try:
         provider_manager: ProviderWrapper = Providers[provider_code]
     except:
-        raise KeyError('Unknown provider_code: ' + str(provider_code))
+        raise KeyError('Unknown provider_code: ' + str(provider_code)) from None
 
     if series_meta.Exists:
         # Return what is on the database.
@@ -545,6 +579,10 @@ def fetch(ticker, database='Default', dropna=True):
     else:
         if provider_manager.IsExternal:
             _hook_fetch_external(provider_manager, ticker)
+        if provider_manager.PushOnly:
+            raise PlatformError(
+                'Series {0} does not exist on {1}. Its ticker indicates that it is push-only series.'.format(
+                    ticker, database)) from None
         log_debug('Fetching %s', ticker)
         # Force this to False, so that ProviderManager extension writers do not need to
         # remember to do so.
@@ -670,7 +708,7 @@ def get_series_URL(ticker, database='Default', open_browser=True):
     try:
         url = Providers[provider_code].GetSeriesURL(series_meta)
     except KeyError:
-        raise PlatformError('Provider code not defined: {0}'.format(provider_code))
+        raise PlatformError('Provider code not defined: {0}'.format(provider_code)) from None
     if url is None or len(url) == 0:
         return None
     if open_browser:
@@ -762,3 +800,31 @@ def get_platform_information(return_instead_of_print=False):
         return out
     else:
         print(out)
+
+
+def push_df(df, meta, database):
+    """
+    Push a series in the form of a DataFrame onto the database.
+
+    Utility function that will be useful for R.
+
+    Dataframe is assumed to have the first column as dates, the second as float.
+
+    Currently, meta is assumed to be the "fetching ticker" (no Provider code); could eventually take a data frame
+    to pass in metadata values.
+
+    :param df: pandas.DataFrame
+    :param meta: str
+    :return:
+    """
+    ser = pandas.Series(df.iloc[:,1])
+    ser.index = df.iloc[:, 0]
+    # Replace this with more conversion options...
+    fetch_ticker = str(meta)
+    ser.name = fetch_ticker
+    push_provider = Providers.PushOnlyProvider
+    metadata = SeriesMetadata()
+    metadata.series_provider_code = tickers.TickerProviderCode(push_provider.ProviderCode)
+    metadata.ticker_query = tickers.TickerFetch(fetch_ticker)
+    metadata.ticker_full = tickers.create_ticker_full(metadata.series_provider_code, metadata.ticker_query)
+    push_provider.PushSeries(ser, metadata, database)

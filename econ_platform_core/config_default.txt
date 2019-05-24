@@ -76,6 +76,8 @@ echo_access=True
 DBnomics=D
 FRED=F
 User=U
+# Use emptry string for push-only.
+PushOnly=
 CANSIM_CSV=STATCAN
 Quandl=Q
 ABS_XLS=ABSXLS
@@ -87,7 +89,7 @@ JST_Macrohistory=JST
 [P_FRED]
 # Need to get a free API key from the St. Louis FED. (Put into an external config file if you are using GIT),
 api_key=NONE
-[P_STATCAN]
+[P_STATSCAN]
 # Directory information.
 directory = {DATA}\statscan
 zip_tail=-eng.zip

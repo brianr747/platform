@@ -21,6 +21,11 @@ pfetch <- function(ticker, database="Default"){
   return(ser)
 }
 
+pwrite <- function(ser, ticker, database="Default"){
+  df = data.frame(time(ser), coredata(ser))
+  myplatform$push_df(df, ticker, database)
+}
+
 # Get rid of the warnings about the time zone...
 # options(xts_check_TZ=FALSE)
 
