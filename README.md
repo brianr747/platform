@@ -6,10 +6,9 @@ by 3.5.
 
 (I expect to get some collaboration on this project. I am using it for my own research, and 
 I am working off the MASTER branch. If there are other users, I will switch to a 
-MASTER/DEVELOPMENT  structure, so that my work doesn't break other people's work. I would
-argue that it is too soon for anyone else to adopt as a work platform, unless 
-they want to either go off in their own direction, or willing to keep up with the
-design changes that will hit until the project structure matures. - Brian R)
+MASTER/DEVELOPMENT  structure, so that my work doesn't break other people's work. I make
+side branches when there fairly major changes that will break things for a short
+period of time, however, those get merged back as quickly as possible.)
 
 ## Features
 
@@ -18,8 +17,17 @@ of where this project is going.
 
 ### Providers
 
+The following are sources of data to be used as analysts that are part of the platform functionality. 
+They allow for data generated internally to be used in an identical fashion as the rest of the 
+external data sources. This means that a complex set of internal data sources can be harmonised
+into a single package.
 - "User Series": Series that are calculated by Python code dynamically
   on request. Can include miscellaneous series.
+ - "Push Only" data. Data that is pushed onto the database by an external program. (For example, R
+  can write to the database using this provider.) Could include big data insertions from batch
+  processes, such as end-of-day securities prices.
+  
+ External data providers.
 - DB.nomics
 - FRED (St. Louis Fed)
 - CANSIM manual downloaded table (CSV) parsing.
@@ -100,7 +108,8 @@ platform, but is not a pressing issue for me.
 
 - *R* can directly trigger the Python dynamic fetching code, using 
 reticulate. An example is given. (I have terrible legacy code in a
-side folder.)
+side folder.) It can also push time series to the database. (Since they
+come from *R*, they are part of the "push only" provider.)
 
 ### Programming Support
 
