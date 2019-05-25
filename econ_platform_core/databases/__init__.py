@@ -158,5 +158,74 @@ class AdvancedDatabase(econ_platform_core.DatabaseManager):
         """
         raise NotImplementedError()
 
+    def GetLastRefresh(self, ticker_full):
+        """
+        Get the last refresh datetime.datetime from the database.
+
+        :param ticker_full: TickerFull
+        :return: datetime.date
+        """
+        self.Connect()
+        return self._GetLastRefresh(ticker_full)
+
+    def _GetLastRefresh(self, ticker_full):
+        """
+        Extract the last_fresh from a metadata object. Subclasses can override this if they are concerned
+        about performance.
+        :param ticker_full: TickerFull
+        :return:
+        """
+        meta = self._GetMetaFromFullTicker(ticker_full)
+        return meta.last_refresh
+
+    def SetLastRefresh(self, ticker_full, time_stamp=None):
+        """
+        Set the last refresh time. Two uses:
+        (1) The provider was polled, and there was no new data. The UpdateProtocol class should call this
+        method to note this, so that the provider will not be polled again (until the series is stale).
+        (2) Called by external code to roll back the last_refresh to force an update.
+
+        May not be called after a write operation, so it up to the database subclass to set the update time.
+
+        :param ticker_full: TickerFull
+        :param time_stamp: datatime.datetime
+        :return:
+        """
+        self.Connect()
+        self._SetLastRefresh(ticker_full, time_stamp)
+
+    def _SetLastRefresh(self, ticker_full, time_stamp=None):
+        """
+
+        :param ticker_full:
+        :param time_stamp:
+        :return:
+        """
+        raise NotImplementedError()
+
+    def SetLastUpdate(self, ticker_full, time_stamp=None):
+        """
+        Set the last update and refresh time.
+
+        If the subclass handles the last_update management during Write(), set SetsLastUpdateAutomatically=True,
+        and this method will not be called.
+
+        :param ticker_full: TickerFull
+        :param time_stamp: datatime.datetime
+        :return:
+        """
+        self.Connect()
+        self._SetLastUpdate(ticker_full, time_stamp)
+
+    def _SetLastUpdate(self, ticker_full, time_stamp=None):
+        """
+
+        :param ticker_full:
+        :param time_stamp:
+        :return:
+        """
+        raise NotImplementedError()
+
+
 
 

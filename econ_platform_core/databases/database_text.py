@@ -19,6 +19,8 @@ limitations under the License.
 
 import os
 import pandas
+import datetime
+import pathlib
 
 import econ_platform_core
 import econ_platform_core.databases
@@ -28,27 +30,47 @@ import econ_platform_core.utils
 
 
 class DatabaseText(econ_platform_core.DatabaseManager):
+    """
+    Database that dumps time series into a folder. Simple and effective. No metadata.
+
+
+    """
     def __init__(self):
         super().__init__('Text File Database')
         self.Directory = None
+        # The timestamp is automatically set by the OS when writing.
+        self.SetsLastUpdateAutomatically = True
 
     def CheckDirectory(self):
         if self.Directory is None:
             self.Directory = econ_platform_core.utils.parse_config_path(
                 econ_platform_core.PlatformConfiguration['D_TEXT']['directory'])
 
-    @staticmethod
-    def GetFileName(ticker_full):
-        return econ_platform_core.utils.convert_ticker_to_variable(str(ticker_full)) + '.txt'
+    def GetFileName(self, ticker_full, full_path=True):
+        """
+        Get the file name associated with a ticker.
+        :param ticker_full: TickerFull
+        :param full_path: bool
+        :return: str
+        """
+        # This looks crazy, but might get passes a SeriesMeta by accident. My code convention switched around during
+        # development...
+        if hasattr(ticker_full, 'ticker_full'):
+            ticker_full = ticker_full.ticker_full
+        file_only = econ_platform_core.utils.convert_ticker_to_variable(str(ticker_full)) + '.txt'
+        if full_path:
+            return os.path.join(self.Directory, file_only)
+        else:
+            return file_only
 
-    def Exists(self, series_meta):
+    def Exists(self, ticker_full):
         self.CheckDirectory()
-        full_file = os.path.join(self.Directory, DatabaseText.GetFileName(series_meta))
+        full_file = self.GetFileName(ticker_full, full_path=True)
         return os.path.exists(full_file)
 
     def Retrieve(self, series_meta):
         self.CheckDirectory()
-        full_name = os.path.join(self.Directory, DatabaseText.GetFileName(series_meta))
+        full_name = self.GetFileName(series_meta, full_path=True)
         econ_platform_core.log_debug('Loading from %s', full_name)
         df = pandas.read_csv(filepath_or_buffer=full_name, sep='\t', parse_dates=True, index_col=0)
         ser = pandas.Series(df[df.columns[0]])
@@ -56,7 +78,7 @@ class DatabaseText(econ_platform_core.DatabaseManager):
 
     def _GetMetaFromFullTicker(self, full_ticker):
         self.CheckDirectory()
-        full_name = os.path.join(self.Directory, DatabaseText.GetFileName(full_ticker))
+        full_name = self.GetFileName(full_ticker, full_path=True)
         if not os.path.exists(full_name):
             raise econ_platform_core.entity_and_errors.TickerNotFoundError('Unknown ticker: {0}'.format(full_ticker))
         return self.GetMetaFromFile(full_name)
@@ -90,7 +112,7 @@ class DatabaseText(econ_platform_core.DatabaseManager):
         self.CheckDirectory()
         if not overwrite:
             raise NotImplementedError()
-        full_name = os.path.join(self.Directory, DatabaseText.GetFileName(series_meta.ticker_full))
+        full_name = self.GetFileName(series_meta.ticker_full, full_path=True)
         econ_platform_core.log_debug('Writing to %s', full_name)
         ser.to_csv(path_or_buf=full_name, sep='\t', header=True)
 
@@ -112,4 +134,38 @@ class DatabaseText(econ_platform_core.DatabaseManager):
                 pass
         return out
 
+    def GetLastRefresh(self, ticker_full):
+        """
+        Get the file modification time stamp,
+        :param ticker_full: TickerFull
+        :return: datetime.datatime
+        """
+        self.CheckDirectory()
+        file_name = self.GetFileName(ticker_full, full_path=True)
+        t = os.path.getmtime(file_name)
+        return datetime.datetime.fromtimestamp(t)
+
+    def SetLastRefresh(self, ticker_full, time_stamp=None):
+        """
+        Set the last refresh date (touch the file). Does not support non-None time_stamp...
+        :param ticker_full: TickerFull
+        :param time_stamp: datetime.datetime
+        :return: None
+        """
+        self.CheckDirectory()
+        file_name = self.GetFileName(ticker_full, full_path=True)
+        if time_stamp is not None:
+            raise NotImplementedError('This database does not support setting the refresh date to arbitrary times.')
+        pathlib.Path(file_name).touch(exist_ok=True)
+
+    def SetLastUpdate(self, ticker_full, time_stamp=None):
+        """
+        This method should not be called, since this class has SetsLastUpdateAutomatically=True.
+        Does the same thing as SetLastRefresh() [which it just calls]
+
+        :param ticker_full: TickerFull
+        :param time_stamp: datetime.datetime
+        :return:
+        """
+        self.SetLastRefresh(ticker_full, time_stamp)
 

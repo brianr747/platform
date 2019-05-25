@@ -46,7 +46,7 @@ limitations under the License.
 import os
 import pandas
 import sqlite3
-import warnings
+import datetime
 
 import econ_platform_core
 import econ_platform_core.databases
@@ -471,6 +471,46 @@ WHERE m.series_id = d.series_id GROUP BY d.series_id
         self.Execute(create_9)
         # self.TestTablesExist()
         self.Connection.commit()
+
+    # def _GetLastRefresh(self, ticker_full):
+    #     """
+    #
+    #     :param ticker_full: TickerFull
+    #     :return:
+    #     """
+    #     # TODO: implement this to boost performance. For now, uses superclass's method, which gets the information
+    #     # from the SeriesMetadata object (which fills all fields, not just the last_refresh.
+
+    def _SetLastRefresh(self, ticker_full, time_stamp=None):
+        """
+        Set the last_refresh field.
+        :param ticker_full: TickerFull
+        :param time_stamp: datetime.datetime
+        :return:
+        """
+        id = self.GetSeriesID(ticker_full)
+        cmd = """
+        UPDATE {0} SET last_update = ? WHERE id_series = ?""".format(self.TableMeta)
+        if time_stamp is None:
+            time_stamp = datetime.datetime.now()
+        self.Execute(cmd, id, time_stamp, commit_after=True)
+
+    def _SetLastUpdate(self, ticker_full, time_stamp=None):
+        """
+        Set the last_refresh, last_update field.
+        :param ticker_full: TickerFull
+        :param time_stamp: datetime.datetime
+        :return:
+        """
+        id = self.GetSeriesID(ticker_full)
+        cmd = """
+        UPDATE {0} SET last_update = ?, last_refresh = ? WHERE series_id = ?""".format(self.TableMeta)
+        if time_stamp is None:
+            time_stamp = datetime.datetime.now()
+        self.Execute(cmd, id, time_stamp, time_stamp, commit_after=True)
+
+
+
 
 def create_sqlite3_tables():
     """

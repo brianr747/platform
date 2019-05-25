@@ -83,6 +83,7 @@ def start_log(fname=None):  # pragma: nocover
 
 
 PlatformConfiguration = econ_platform_core.configuration.ConfigParserWrapper()
+ExtensionList = econ_platform_core.extensions.ExtensionManager()
 
 
 class DatabaseManager(PlatformEntity):
@@ -90,6 +91,9 @@ class DatabaseManager(PlatformEntity):
     This is the base class for Database Managers.
 
     Note: Only support full series replacement for now.
+
+    SetsLastUpdateAutomatically: Does the database update the last_update/last_refresh fields automatically on
+    a write> If False, the UpdateProtocol will (supposed to...) call SetLastUpdate() after a Write()
     """
 
     def __init__(self, name='Virtual Object'):
@@ -100,6 +104,7 @@ class DatabaseManager(PlatformEntity):
         self.IsAdvanced = False
         self.Code = ''
         self.ReplaceOnly = True
+        self.SetsLastUpdateAutomatically = False
 
     def Find(self, ticker):
         """
@@ -169,6 +174,49 @@ class DatabaseManager(PlatformEntity):
         meta.Exists = self.Exists(meta)
         # Provider-specific meta data data not supported yet.
         return meta
+
+    def GetLastRefresh(self, ticker_full):
+        """
+        Get the last refresh datetime for a ticker.
+
+        Subclasses must implement this method, as it is the minimal information needed for an update
+        strategy.
+
+        :param ticker_full: TickerFull
+        :return:
+        """
+        raise NotImplementedError()
+
+    def SetLastRefresh(self, ticker_full, time_stamp=None):
+        """
+        Set the timestamp of the last refresh. Note that this will be called if an external provider is polled
+        and there is no new data.
+
+        If time_stamp is None, the manager should set to the current time.
+
+        This needs to be implemented by all database managers. The simplest manager (TEXT) will just touch the file
+        to reset the time stamp.
+
+        If the database manager is told to write the series, it is up to the database manager to set the LastRefresh
+        during the write operation. It is left to the manager, as it is likely that it will be more efficient to set the
+        status during the write operation.
+
+        :param ticker_full: TickerFull
+        :param time_stamp: datatime.datetime
+        :return:
+        """
+        raise NotImplementedError()
+
+    def SetLastUpdate(self, ticker_full, time_stamp=None):
+        """
+        Sets the last_update *and* last_refresh fields. If time_stamp is None, uses current time.
+
+        Called after a Write() by the UpdateProtocol, unless self.SetsLastUpdateAutomatically is True.
+        :param ticker_full: TickerFull
+        :param time_stamp: datatime.date
+        :return:
+        """
+        raise NotImplementedError()
 
 
     def RetrieveWithMeta(self, full_ticker):
@@ -367,12 +415,6 @@ class ProviderList(PlatformEntity):
 
 Providers = ProviderList()
 
-# TODO: Replace these variables with an "Extension Manager".
-LoadedExtensions = []
-FailedExtensions = []
-DecoratedFailedExtensions = []
-ExtensionList = econ_platform_core.extensions.ExtensionManager()
-
 
 
 class UpdateProtocol(PlatformEntity):
@@ -416,13 +458,17 @@ class UpdateProtocolManager(PlatformEntity):
     def __init__(self):
         super().__init__()
         self.Protocols = {}
+        self.Default = 'NOUPDATE'
 
     def __getitem__(self, item):
         """
-
+        Get the protocol via indexing. "DEFAULT" (case-insensitive) is mapped to self.Default.
+        (fetch() will call DEFAULT.)
         :param item: UpdateProtocol
         :return:
         """
+        if item.lower() == 'default':
+            item = self.Default
         try:
             return self.Protocols[item]
         except KeyError:
@@ -462,12 +508,11 @@ def fetch(ticker, database='Default', dropna=True):
         provider_manager: ProviderWrapper = Providers[provider_code]
     except:
         raise KeyError('Unknown provider_code: ' + str(provider_code)) from None
-
     if series_meta.Exists:
         # Return what is on the database.
         global UpdateProtocolList
         # TODO: Allow for choice of protocol.
-        return UpdateProtocolList["NOUPDATE"].Update(series_meta, provider_manager, database_manager)
+        return UpdateProtocolList["DEFAULT"].Update(series_meta, provider_manager, database_manager)
     else:
         if provider_manager.IsExternal:
             _hook_fetch_external(provider_manager, ticker)
@@ -493,6 +538,8 @@ def fetch(ticker, database='Default', dropna=True):
                     if str(t_meta.ticker_full) == str(series_meta.ticker_full):
                         continue
                     database_manager.Write(t_ser, t_meta)
+                    if not database_manager.SetsLastUpdateAutomatically:
+                        database_manager.SetLastUpdate(t_meta.ticker_full)
             raise
         if type(out) is not tuple:
             ser = out
@@ -502,6 +549,10 @@ def fetch(ticker, database='Default', dropna=True):
             ser = ser.dropna()
         log('Writing %s', ticker)
         database_manager.Write(ser, series_meta)
+        # Having this logic repeated three times is silly, but I want to force subclasses to
+        # implement SetLastUpdate(), as otherwise update protocols will break.
+        if not database_manager.SetsLastUpdateAutomatically:
+            database_manager.SetLastUpdate(series_meta.ticker_full)
         if provider_manager.TableWasFetched:
             for k in provider_manager.TableSeries:
                 t_ser = provider_manager.TableSeries[k]
@@ -510,6 +561,8 @@ def fetch(ticker, database='Default', dropna=True):
                 if str(t_meta.ticker_full) == str(series_meta.ticker_full):
                     continue
                 database_manager.Write(t_ser, t_meta)
+                if not database_manager.SetsLastUpdateAutomatically:
+                    database_manager.SetLastUpdate(t_meta.ticker_full)
 
     return ser
 
