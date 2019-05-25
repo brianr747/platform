@@ -1,6 +1,8 @@
 """
 utils.py
 
+Generic utilities. Should only depend on PlatformEntity amd standard libraries, so that this can be safely
+imported anywhere without creating circular imports.
 
 Copyright 2019 Brian Romanchuk
 

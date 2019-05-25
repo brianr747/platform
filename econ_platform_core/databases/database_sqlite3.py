@@ -335,6 +335,8 @@ provider_param_string) VALUES
             'series_name': 'series_name',
             'series_description': 'series_description',
             'frequency': 'frequency',
+            'last_refresh': 'last_refresh',
+            'last_update':  'last_update',
             'provider_param_string': None
         }
         collist = list(mapper.keys())

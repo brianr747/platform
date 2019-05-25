@@ -66,6 +66,9 @@ TMP={PARENT}\test\data\platform_tmp.db
 # Providers are specified by {ticker_code} = {Provider Name}
 # If you don't like the ticker code assignments, you can re-map them...
 #++++++++++++++++++++++++++++++++++++++
+[UpdateProtocol]
+Default=NOUPDATE
+SimpleHours=24
 [ProviderList]
 DBnomics=D
 FRED=F

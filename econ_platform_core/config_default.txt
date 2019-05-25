@@ -37,6 +37,10 @@ UseExampleProvider = False
 # cannot get checked in.
 UserConfigEnvironmentVariableName = PLATFORM_USER_CONFIG
 
+#----------------------------------------------------------------
+[UpdateProtocol]
+Default=NOUPDATE
+SimpleHours=24
 #------------------------------------------------------------------
 # High level "database parameters." For a particular database (like MySQL), it should have its
 # own section of parameters.

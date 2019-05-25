@@ -57,7 +57,9 @@ self.ticker_query
 self.series_name
 self.series_description
 self.frequency
-self.series_web_page""".replace('self.', '').split('\n')
+self.series_web_page
+self.last_refresh
+self.last_update""".replace('self.', '').split('\n')
     def __init__(self):
         # Kind of strange, but does this series yet exist on the database in question?
         super().__init__()
@@ -72,6 +74,8 @@ self.series_web_page""".replace('self.', '').split('\n')
         self.series_description = None
         self.series_web_page = None
         self.frequency = None
+        self.last_refresh = None
+        self.last_update = None
         self.ProviderMetadata = {}
 
     def AssertValid(self):

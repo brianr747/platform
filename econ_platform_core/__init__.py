@@ -67,6 +67,7 @@ import econ_platform_core.tickers
 
 # Get the logging information. Users can either programmatically change the LogInfo.LogDirectory or
 # use a config file before calling start_log()
+from econ_platform_core.update_protocols import UpdateProtocolManager, NoUpdateProtocol
 
 LogInfo = utils.PlatformLogger()
 
@@ -415,73 +416,6 @@ class ProviderList(PlatformEntity):
 
 Providers = ProviderList()
 
-
-
-class UpdateProtocol(PlatformEntity):
-    """
-    Class to handle the management of data updates.
-
-    The base class behaviour is to not update data already on the database. More
-    sophisticated handlers will pushed over top of this default object during the initialisation step.
-
-    (The more sophisticated managers will be developed in another module.)
-
-    """
-
-    # noinspection PyMethodMayBeStatic,PyUnusedLocal
-    def Update(self, series_meta, provider_wrapper, database_manager):
-        """
-        Procedure to handle updates. The default behaviour is to not update; just retrieve from the
-        database.
-
-        :param series_meta: SeriesMetadata
-        :param provider_wrapper: ProviderWrapper
-        :param database_manager: DatabaseManager
-        :return:
-        """
-        log_debug('Fetching {0} from {1}'.format(series_meta.ticker_full, database_manager.Name))
-        return database_manager.Retrieve(series_meta)
-
-
-class UpdateProtocolManager(PlatformEntity):
-    """
-    Base class for series update protocols.
-
-    Implements the 'NOUPDATE' protocol, which unsurprisingly, never updates series.
-
-    Add subclasses to the UpdateProtocolList to offer more interesting options.
-
-    Eventually, need to offer the ability to choose which to use. Since we only have one option,
-    not needed...
-    """
-
-    def __init__(self):
-        super().__init__()
-        self.Protocols = {}
-        self.Default = 'NOUPDATE'
-
-    def __getitem__(self, item):
-        """
-        Get the protocol via indexing. "DEFAULT" (case-insensitive) is mapped to self.Default.
-        (fetch() will call DEFAULT.)
-        :param item: UpdateProtocol
-        :return:
-        """
-        if item.lower() == 'default':
-            item = self.Default
-        try:
-            return self.Protocols[item]
-        except KeyError:
-            raise PlatformError('Unknown UpdateProtocol code: {0}'.format(item))
-
-    def Initialise(self):
-        """
-        Get the NOUPDATE protocol manager
-        :return:
-        """
-        self.Protocols['NOUPDATE'] = UpdateProtocol()
-
-
 UpdateProtocolList = UpdateProtocolManager()
 
 
@@ -512,59 +446,60 @@ def fetch(ticker, database='Default', dropna=True):
         # Return what is on the database.
         global UpdateProtocolList
         # TODO: Allow for choice of protocol.
-        return UpdateProtocolList["DEFAULT"].Update(series_meta, provider_manager, database_manager)
+        return UpdateProtocolList["DEFAULT"].Update(ticker, series_meta, provider_manager, database_manager)
     else:
-        if provider_manager.IsExternal:
-            _hook_fetch_external(provider_manager, ticker)
-        if provider_manager.PushOnly:
-            raise PlatformError(
-                'Series {0} does not exist on {1}. Its ticker indicates that it is push-only series.'.format(
-                    ticker, database)) from None
-        log_debug('Fetching %s', ticker)
-        # Force this to False, so that ProviderManager extension writers do not need to
-        # remember to do so.
-        provider_manager.TableWasFetched = False
-        if Providers.EchoAccess:
-            print('Going to {0} to fetch {1}'.format(provider_manager.Name, ticker))
-        try:
-            out = provider_manager.fetch(series_meta)
-        except TickerNotFoundError:
-            # If the table was fetched, write the table, even if the specific series was not there...
-            if provider_manager.TableWasFetched:
-                for k in provider_manager.TableSeries:
-                    t_ser = provider_manager.TableSeries[k]
-                    t_meta = provider_manager.TableMeta[k]
-                    # Don't write the single series again..
-                    if str(t_meta.ticker_full) == str(series_meta.ticker_full):
-                        continue
-                    database_manager.Write(t_ser, t_meta)
-                    if not database_manager.SetsLastUpdateAutomatically:
-                        database_manager.SetLastUpdate(t_meta.ticker_full)
-            raise
-        if type(out) is not tuple:
-            ser = out
-        else:
-            ser, series_meta = out
-        if dropna:
-            ser = ser.dropna()
-        log('Writing %s', ticker)
-        database_manager.Write(ser, series_meta)
-        # Having this logic repeated three times is silly, but I want to force subclasses to
-        # implement SetLastUpdate(), as otherwise update protocols will break.
-        if not database_manager.SetsLastUpdateAutomatically:
-            database_manager.SetLastUpdate(series_meta.ticker_full)
-        if provider_manager.TableWasFetched:
-            for k in provider_manager.TableSeries:
-                t_ser = provider_manager.TableSeries[k]
-                t_meta = provider_manager.TableMeta[k]
-                # Don't write the single series again..
-                if str(t_meta.ticker_full) == str(series_meta.ticker_full):
-                    continue
-                database_manager.Write(t_ser, t_meta)
-                if not database_manager.SetsLastUpdateAutomatically:
-                    database_manager.SetLastUpdate(t_meta.ticker_full)
-
-    return ser
+        return UpdateProtocolList["DEFAULT"].FetchAndWrite(ticker, series_meta, provider_manager, database_manager)
+    #     if provider_manager.IsExternal:
+    #         _hook_fetch_external(provider_manager, ticker)
+    #     if provider_manager.PushOnly:
+    #         raise PlatformError(
+    #             'Series {0} does not exist on {1}. Its ticker indicates that it is push-only series.'.format(
+    #                 ticker, database)) from None
+    #     log_debug('Fetching %s', ticker)
+    #     # Force this to False, so that ProviderManager extension writers do not need to
+    #     # remember to do so.
+    #     provider_manager.TableWasFetched = False
+    #     if Providers.EchoAccess:
+    #         print('Going to {0} to fetch {1}'.format(provider_manager.Name, ticker))
+    #     try:
+    #         out = provider_manager.fetch(series_meta)
+    #     except TickerNotFoundError:
+    #         # If the table was fetched, write the table, even if the specific series was not there...
+    #         if provider_manager.TableWasFetched:
+    #             for k in provider_manager.TableSeries:
+    #                 t_ser = provider_manager.TableSeries[k]
+    #                 t_meta = provider_manager.TableMeta[k]
+    #                 # Don't write the single series again..
+    #                 if str(t_meta.ticker_full) == str(series_meta.ticker_full):
+    #                     continue
+    #                 database_manager.Write(t_ser, t_meta)
+    #                 if not database_manager.SetsLastUpdateAutomatically:
+    #                     database_manager.SetLastUpdate(t_meta.ticker_full)
+    #         raise
+    #     if type(out) is not tuple:
+    #         ser = out
+    #     else:
+    #         ser, series_meta = out
+    #     if dropna:
+    #         ser = ser.dropna()
+    #     log('Writing %s', ticker)
+    #     database_manager.Write(ser, series_meta)
+    #     # Having this logic repeated three times is silly, but I want to force subclasses to
+    #     # implement SetLastUpdate(), as otherwise update protocols will break.
+    #     if not database_manager.SetsLastUpdateAutomatically:
+    #         database_manager.SetLastUpdate(series_meta.ticker_full)
+    #     if provider_manager.TableWasFetched:
+    #         for k in provider_manager.TableSeries:
+    #             t_ser = provider_manager.TableSeries[k]
+    #             t_meta = provider_manager.TableMeta[k]
+    #             # Don't write the single series again..
+    #             if str(t_meta.ticker_full) == str(series_meta.ticker_full):
+    #                 continue
+    #             database_manager.Write(t_ser, t_meta)
+    #             if not database_manager.SetsLastUpdateAutomatically:
+    #                 database_manager.SetLastUpdate(t_meta.ticker_full)
+    #
+    # return ser
 
 
 def fetch_df(ticker, database='Default', dropna=True):
@@ -615,13 +550,20 @@ def _hook_fetch_external(provider_manager, ticker):
     pass
 
 
-def log_last_error():  # pragma: nocover
+def log_last_error(just_info=False):  # pragma: nocover
     """
     Convenience function to log the last error.
+
+    If just_info, just logs as "INFO", so we do not get an error...
+
+    :type just_info: bool
     :return:
     """
     msg = traceback.format_exc()
-    log_error(msg)
+    if just_info:
+        log(msg)
+    else:
+        log_error(msg)
 
 def get_provider_url(provider_code, open_browser=True):
     """
@@ -738,6 +680,11 @@ def get_platform_information(return_instead_of_print=False):
     for prov in prov_list:
         provider = Providers[prov]
         out = appender(out, ['Provider', provider.Name, prov])
+    update_list = list(UpdateProtocolList.Protocols.keys())
+    update_list.sort()
+    for prot in update_list:
+        mgr = UpdateProtocolList[prot]
+        out = appender(out, ['UpdateManager', mgr.Name, prot])
 
     out.index = list(range(0, len(out.index)))
     if return_instead_of_print:

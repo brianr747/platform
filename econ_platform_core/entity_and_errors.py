@@ -101,3 +101,7 @@ class TickerNotFoundError(PlatformError):
 
 class ConnectionError(PlatformError):
     pass
+
+
+class NoDataError(PlatformError):
+    pass

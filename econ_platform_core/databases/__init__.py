@@ -22,6 +22,7 @@ limitations under the License.
 # Ran into circular import problems, so the base database class went into econ_platform_core.__init__.py. I might try
 # to move it back later. I might make a stub definition.
 import warnings
+import datetime
 
 import econ_platform_core
 import econ_platform_core.entity_and_errors
@@ -172,11 +173,18 @@ class AdvancedDatabase(econ_platform_core.DatabaseManager):
         """
         Extract the last_fresh from a metadata object. Subclasses can override this if they are concerned
         about performance.
+
+        If the last_refresh is returned as None, returns now(). This will block updates. Have to implement the
+        last_refresh functionality to get updates!
+
         :param ticker_full: TickerFull
         :return:
         """
         meta = self._GetMetaFromFullTicker(ticker_full)
-        return meta.last_refresh
+        if meta.last_refresh is not None:
+            return meta.last_refresh
+        else:
+            return datetime.datetime.now()
 
     def SetLastRefresh(self, ticker_full, time_stamp=None):
         """

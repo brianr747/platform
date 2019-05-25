@@ -55,4 +55,4 @@ def main():
     Note: probably not a good idea to do have this hook running when running a big batch...
     :return:
     """
-    econ_platform_core._hook_fetch_external = beep_on_windows
+    econ_platform_core.update_protocols._hook_fetch_external = beep_on_windows
