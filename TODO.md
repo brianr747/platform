@@ -11,7 +11,7 @@ document.
 # Point Form Items
 
 Stuff that can be summarised easily.
-- "Pushed Data provider": data that is pushed to the database; no updates.
+
 - EViews support.
 - Bloomberg API.
 - Local tickers. (Friendly tickers defined by users.) 
@@ -30,7 +30,7 @@ only allow data to go to a particular machine, so that data goes to SQLite).
 - Create an "extension manager" class that handles and logs extension loading.
 Will be needed if this project grows and new extensions depend on other non-standard
 extensions. (Although this is overkill for now, might as well build it before
-the back-filling is too complex.)
+the back-filling is too complex.) (*Started*)
 - Create a "platform doc" function. It can return the doc string (__doc__)
 from all the important functions/objects that an external users might touch.
 This is not for Python programmers (who can use help(), which does exactly this), rather
@@ -54,17 +54,24 @@ config settings.
 providers like FRED or DBnomics, each series has a landing page, for others it will be a table
 page, like Statscan.)
 - A *fetch_metadata()* command needs to be implemented for "external users."
+- "Pushed Data provider": data that is pushed to the database; no updates. (Used by *R*.)
 
 # Update Protocol
 
-The current system looks a bit silly; what we need is a dynamic update during
-the *fetch()* processing. (At the time of writing, if the series exists on the 
-database, it is not updated at all.) I can live without that feature for now
-(I know that I just need to delete the appropriate text file), but others will 
-not be happy with it. (Worst case, they will short-circuit the fetch, and send
-every *fetch()* to external providers, which is exactly what I am trying to avoid.)
+Update protocol work has started. Not heavily tested, but it looks reasonable.
 
-Once my SQL code is more stable, I will work on this protocol.
+The only missing piece is the ability for providers to do data increments; right now,
+we only support total re-writes of series. This is "safe" in the sense that the entire time
+series is always up to date, but is wasteful. We also lose back history if the provider cuts
+down the range of data.
+
+To fix this, we need to add in the ability to select date ranges for external providers. Should
+be straightfoward, so long as the provider interface allows us to use datetime.date objects to 
+select start dates. In some cases, might need to use strings mapped to the frequency, e.g.,
+"2000Q1" or whatever.
+
+Databases will either have to support incremental updates, or the UpdateProtocol will have to 
+fetch the series and splice them in memory.
 
 # Support Tables
 

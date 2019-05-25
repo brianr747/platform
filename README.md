@@ -95,10 +95,10 @@ parsing a downloaded table, as in the CANSIM_CSV interface.)
 - If the series is *USER* series, the appropriate Python code module
 (registered by the user) will calculate the series in the same way as
 an external provider API.
-- TODO: If the series exists, an "update protocol" will be implemented.
-(Right now, if you want to update a series, you delete the text file...)
-The Provider code will decide whether it is worthwhile doing another
-API query, and most queries will be incremental. This means that users
+
+(UPDATE 2019-05-25) The beginning of update protocols is under construction. Not completed,
+but it seems functional. (Needs more testing...) The update protocol will decide whether it is 
+worthwhile doing another API query, and most queries will be incremental. This means that users
 can fetch the same series 100 times in a row, and the provider API
 will be hit with perhaps one API refresh call in a day. The update
 protocol would be extremely important for an "industrial" multi-user
@@ -166,18 +166,11 @@ from par coupon data, forward rate approximations, etc.)
 
 ## Version 1.0
 
-I hope to reach "Version 1.0" "soon." There are two areas that need to be
+I hope to reach "Version 1.0" "soon." There are four areas that need to be
 completed.
 
-**1. Metadata.** [Updated 2109-05-15] Metadata support has been expanded, covering the most important
-common fields - series name, series description. Without that information, users have almost no
-idea what series represent (as I discovered on my old platform), and are forced to keep going back
-to the provider web pages to get definitions. What is missing is the dictionary of provider-specific
-(or even table-specific) of key/value pairs. Rather than map those metadata schemes to a common one
-(which is a massive time sink), just preserve the provider scheme as-is. Since the number of
-metadata fields is variable, this is painful for SQL tables. I will dump each entry into a single
-table, and we can worry about creating "provider tables" later. (The problem with putting each entry
-on a separate row is that there is no good way to search over them naturally.)
+**1. Metadata.** [Updated 2109-05-15] Metadata is largely handled now, but want to 
+add features in SQLAlchemy (provider metadata).
 
 **2. Unit Test Coverage.** I want to get *econ_platform_core* to 100% unit test
 coverage (with some areas skipped). Once this is in place, it will be possible for
@@ -187,9 +180,11 @@ the non-core code is going to be hard to unit test anyway. (At the time of writi
 is less than 100%, but in good shape. A couple of end-to-end tests are doing a lot of the coverage,
 and that will need to be replaced by more granular testing.)
 
-**3. Cleanup.** Some class names and data structure names need to be cleaned up. This probably 
-should be done before people start using it. (I can refactor a variable name change in PyCharm 
-fairly easily, but this will not be available for new users using text editors to develop.)
+**3. Cleanup.** The extension manager needs some work, and might tie all platform
+configuration objects into a single object.
+
+**4. SQLAlchemy.** Create a SQLAlchemy database support (on top of a SQLite back end). First
+need to replicate the SQLite functionality, then add provider metadata capabilities. 
 
 After this in place, the programming structure should be stable. All that
 happens is that extensions are added. For example, financial market users 
