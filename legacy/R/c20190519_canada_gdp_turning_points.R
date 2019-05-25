@@ -41,7 +41,7 @@ PlotFromLowLevel(p4,"c20190519_canada_UR_rise_recessions.png","*Rise versus min 
 
 # Show BoC Rate
 
-target_rate = pfetch('STATCAN@10100139|v39079', database='TEXT')
+target_rate = pfetch('STATCAN@10100139|v39079', database='SQL')
 p5 <- ShadeBars1(target_rate["1993-01-01/"], recession["1993-01-01/"], 
               'Ann % Chg', main='Canadian Target Rate And Recessions*')
 p5 <- SetXAxis(p5,"1993-01-01", 3)

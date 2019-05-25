@@ -21,7 +21,7 @@ require("lubridate")
 require("TTR")
 
 
-source('platformstartup.R')
+# source('platformstartup.R')
 
 
 BondEconomicsBlue <- function() {return("#4D469C")}

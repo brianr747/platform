@@ -11,16 +11,16 @@ library(data.table)
 #' @param ser xts series.
 #' @return data.frame
 indicator_to_dates <- function(ser){
-  indic = coredata(ser)
+  indicator = coredata(ser)
   ddates = time(ser)
-  df = data.frame(ddates, indic)
-  names(df) = c('ddates', 'indic')
-  out_DF = data.table(df)[, .(min(ddates), max(ddates)), by = .(rleid(indic), indic)][
-    indic == 1, .(Start = V1, End = V2)]
+  df = data.frame(ddates, indicator)
+  names(df) = c('ddates', 'indicator')
+  out_DF = data.table(df)[, .(min(ddates), max(ddates)), by = .(rleid(indicator), indicator)][
+    indicator == 1, .(Start = V1, End = V2)]
   return(out_DF)
 }
 
-OnePanelChart <- function(p1,fname="tmp.png",foottext="",tiny=F,footnote_y = 2){
+OnePanelChart <- function(p1,fname="tmp.png",foottext="",footnote_y = 2){
   
   r = GetRes()
   p1 <- ResizeText(p1)
@@ -37,6 +37,25 @@ OnePanelChart <- function(p1,fname="tmp.png",foottext="",tiny=F,footnote_y = 2){
   InsertFootnote(foottext,footnote_y)  
 }
 
+
+TwoPanelChart <- function(p1,p2,fname="tmp.png",foottext="")
+{
+  r = GetRes()
+  p1 <- ResizeText(p1)
+  p2 <- ResizeText(p2)
+  p1 = p1 + theme(plot.margin= unit(c(0.05, .15, .3, .2), "cm"))
+  p2 = p2 + theme(plot.margin= unit(c(0.05, .15, .5, .2), "cm"))
+  fname = paste(GetImgDir(),fname, sep='')
+  print(paste("Writing:",fname))
+  png(fname,width=round(4.5*r),height=round(3.75*r),res=r)
+  grid.arrange(p1,p2,ncol=1)
+  InsertFootnote(foottext)
+  dev.off()
+  grid.arrange(p1,p2,ncol=1)
+  grid.arrange(p1,p2,ncol=1)
+  InsertFootnote(foottext)  
+}
+
 Plot1Ser <- function(ser, ylab="",main="",show_watermark=T,has_marker=F, 
                      startdate=NULL){
   if (!is.null(startdate)){
@@ -44,7 +63,6 @@ Plot1Ser <- function(ser, ylab="",main="",show_watermark=T,has_marker=F,
       startdate = paste(startdate, '/', sep='')
     }
     ser = ser[startdate]
-    indic = indic[startdate]
   }
   # Build data data.frame
   pp <- StartPlot()
@@ -80,8 +98,10 @@ ShadeBars1 <- function(ser, indic, ylab="",main="",show_watermark=T,has_marker=F
     indic = indic[startdate]
   }
   # Build data data.frame
+
   pp <- StartPlot()
-  pp = pp + geom_rect(data=rec_dates, aes(xmin=Start, xmax=End, ymin=-Inf, ymax=+Inf), fill='pink', alpha=0.4)
+  shade_intervals = indicator_to_dates(indic)
+  pp = pp + geom_rect(data=shade_intervals, aes(xmin=Start, xmax=End, ymin=-Inf, ymax=+Inf), fill='pink', alpha=0.4)
   return(PlotWork1(pp, ser, ylab,main,show_watermark,has_marker))
 }
 
@@ -119,8 +139,6 @@ PlotWork1 <- function(pp, ser, ylab="",main="",show_watermark=T,has_marker=F){
   series.df = data.frame(date=datez,val=coredata(ser))
   names(series.df) <- c("date","val")  # Why is this necessary?
   # Turn the indicator variable into a start/end data.frame
-  rec_dates = indicator_to_dates(indic)
-  
   pp <- pp + geom_line(data=series.df, aes(x=date,y=val))
   if (has_marker){
     pp <- pp + geom_point(aes(x=date,y=val))
