@@ -67,6 +67,8 @@ import glob
 import datetime
 
 import econ_platform_core
+import econ_platform_core.entity_and_errors
+import econ_platform_core.series_metadata
 from econ_platform_core import log, log_warning, log_debug
 import econ_platform_core.configuration
 import econ_platform_core.tickers as tickers
@@ -94,9 +96,9 @@ class ProviderJSTMacrohistory(econ_platform_core.ProviderWrapper):
         # Excel can lock files, throw them out...
         flist = [x for x in flist if not '~' in x]
         if len(flist) == 0:
-            raise econ_platform_core.PlatformError('No XLSX file in {0}'.format(self.Directory))
+            raise econ_platform_core.entity_and_errors.PlatformError('No XLSX file in {0}'.format(self.Directory))
         if len(flist) > 1:
-            raise econ_platform_core.PlatformError('More than one XLSX file in {0}: cannot tell which to use'.format(
+            raise econ_platform_core.entity_and_errors.PlatformError('More than one XLSX file in {0}: cannot tell which to use'.format(
                 self.Directory))
         fname = flist[0]
         log_debug('Reading %s', fname)
@@ -120,7 +122,7 @@ class ProviderJSTMacrohistory(econ_platform_core.ProviderWrapper):
                     continue
                 ser = pandas.Series(df[c])
                 ser.index = cal_dates
-                meta = econ_platform_core.SeriesMetadata()
+                meta = econ_platform_core.series_metadata.SeriesMetadata()
                 meta.series_provider_code = econ_platform_core.tickers.TickerProviderCode(self.ProviderCode)
                 meta.ticker_query = econ_platform_core.tickers.TickerFetch('{0} {1}'.format(iso_code, c))
                 meta.ticker_full = econ_platform_core.tickers.create_ticker_full(meta.series_provider_code,
@@ -136,7 +138,7 @@ class ProviderJSTMacrohistory(econ_platform_core.ProviderWrapper):
             meta = self.TableMeta[str(series_meta.ticker_full)]
             return ser, meta
         except KeyError:
-            raise econ_platform_core.TickerNotFoundError('{0} not found'.format(str(series_meta.ticker_full)))
+            raise econ_platform_core.entity_and_errors.TickerNotFoundError('{0} not found'.format(str(series_meta.ticker_full)))
 
 
 

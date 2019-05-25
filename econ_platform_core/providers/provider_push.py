@@ -20,6 +20,7 @@ limitations under the License.
 """
 
 import econ_platform_core
+import econ_platform_core.entity_and_errors
 
 
 class ProviderPushOnly(econ_platform_core.ProviderWrapper):
@@ -33,7 +34,7 @@ class ProviderPushOnly(econ_platform_core.ProviderWrapper):
         :param series_meta: econ_platform_core.SeriesMetadata
         :return: pandas.Series
         """
-        raise econ_platform_core.PlatformError('The data from this provider is only pushed.')
+        raise econ_platform_core.entity_and_errors.PlatformError('The data from this provider is only pushed.')
 
     def PushSeries(self, ser, series_meta, database, overwrite=True):
         """

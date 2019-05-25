@@ -12,7 +12,9 @@ import econ_platform_core
 import econ_platform_core.configuration
 
 # Need this setting if we want to register actions, which we do when unit testing.
-econ_platform_core.utils.PlatformEntity._IgnoreRegisterActions = False
+import econ_platform_core.entity_and_errors
+
+econ_platform_core.entity_and_errors.PlatformEntity._IgnoreRegisterActions = False
 
 try:
     run_end_to_end = os.environ['RUN_END_TO_END'].lower() == 't'

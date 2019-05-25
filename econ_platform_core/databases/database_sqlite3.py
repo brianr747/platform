@@ -50,6 +50,8 @@ import warnings
 
 import econ_platform_core
 import econ_platform_core.databases
+import econ_platform_core.entity_and_errors
+import econ_platform_core.series_metadata
 import econ_platform_core.utils
 from econ_platform_core.databases import AdvancedDatabase
 
@@ -152,10 +154,10 @@ class DatabaseSqlite3(DBapiDatabase):
             # Expected error message: 'no such table: {table_name}'
             econ_platform_core.log_warning('sqlite3 error %s', ex)
             if self.TableMeta.lower() in ex.args[0].lower():
-                raise econ_platform_core.PlatformError('Tables do not exist. Need to run the initialisation script init_sqlite.py in the scripts directory.')
+                raise econ_platform_core.entity_and_errors.PlatformError('Tables do not exist. Need to run the initialisation script init_sqlite.py in the scripts directory.')
             else:
                 print(str(ex))
-                raise econ_platform_core.PlatformError('Error when testing for table existence')
+                raise econ_platform_core.entity_and_errors.PlatformError('Error when testing for table existence')
 
     def Execute(self, cmd, *args, commit_after=False, is_many=False):
         """
@@ -209,7 +211,7 @@ class DatabaseSqlite3(DBapiDatabase):
         ticker_full = str(series_meta.ticker_full)
         series_id = self.GetSeriesID(ticker_full)
         if series_id is None:
-            raise econ_platform_core.TickerNotFoundError('{0} not found on database'.format(ticker_full))
+            raise econ_platform_core.entity_and_errors.TickerNotFoundError('{0} not found on database'.format(ticker_full))
         cmd = """
 SELECT series_dates, series_values FROM {0} WHERE series_id = ?
         """.format(self.TableData)
@@ -222,7 +224,7 @@ SELECT series_dates, series_values FROM {0} WHERE series_id = ?
         try:
             dates = [mapper(x[0]) for x in res]
         except:
-            raise econ_platform_core.PlatformError('Corrupted date axis for {0}'.format(ticker_full))
+            raise econ_platform_core.entity_and_errors.PlatformError('Corrupted date axis for {0}'.format(ticker_full))
         valz = [x[1] for x in res]
         ser = pandas.Series(valz)
         ser.index = pandas.DatetimeIndex(dates)
@@ -311,7 +313,7 @@ provider_param_string) VALUES
         if self.Cursor.rowcount > 1:  # pragma: nocover
             # This should never be hit, but it could happen if the SQL command is mangled.
             # Unless cascade deletions are counted...
-            raise econ_platform_core.PlatformError(
+            raise econ_platform_core.entity_and_errors.PlatformError(
                 'Internal Error! Attempted to delete more than one row!')
         if warn_if_non_existent and 0 == self.Cursor.rowcount:
             econ_platform_core.log_warning('Series to be deleted did not exist: {0}'.format(
@@ -338,7 +340,7 @@ provider_param_string) VALUES
         collist = list(mapper.keys())
         # LIMIT 1 is redundant, but...
         res = self.SelectColumnList(self.TableMeta, collist, 'ticker_full = ?', ticker, limit_n=1)
-        meta = econ_platform_core.SeriesMetadata()
+        meta = econ_platform_core.series_metadata.SeriesMetadata()
         meta.ticker_full = full_ticker
         meta.series_provider_code, meta.ticker_query = full_ticker.SplitTicker()
         if len(res) == 0:

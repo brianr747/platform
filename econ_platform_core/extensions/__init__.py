@@ -37,6 +37,23 @@ import econ_platform_core
 # since the design is changing rapidly at this stage. Once the core has stabilised, we will just import
 # the "core extensions". As a result, no point in figuring out unit test techniques.
 # Also: may create a "ExtensionManager" class to do this work.
+
+
+class ExtensionManager(econ_platform_core.PlatformEntity):
+    """
+    Class to handle extension loading and status. Currently non-functional; code will migrate to using this.
+
+    This class just offers the interface (for code completion purposes; the real extension manager will be
+    defined in extensions.__init__.py
+    """
+
+    def __init__(self):
+        super().__init__()
+        self.LoadedExtensions = []
+        self.FailedExtensions = []
+        self.DecoratedFailedExtensions = []
+
+
 def load_extensions():  # pragma: nocover
     """
     Imports all *.py files in this directory (in alphabetical order).

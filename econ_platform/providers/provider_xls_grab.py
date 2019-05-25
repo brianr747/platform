@@ -19,6 +19,8 @@ import pandas
 import glob
 
 import econ_platform_core
+import econ_platform_core.entity_and_errors
+import econ_platform_core.series_metadata
 from econ_platform_core import log, log_warning, log_debug
 import econ_platform_core.configuration
 import econ_platform_core.tickers as tickers
@@ -63,7 +65,7 @@ class ProviderXlsGrab(econ_platform_core.ProviderWrapper):
             meta = self.TableMeta[str(full_ticker)]
             return ser, meta
         except:
-            raise econ_platform_core.TickerNotFoundError('{0} not found'.format(str(full_ticker)))
+            raise econ_platform_core.entity_and_errors.TickerNotFoundError('{0} not found'.format(str(full_ticker)))
 
     def FixIndex(self, df_index):
         """
@@ -132,7 +134,7 @@ class ProviderXlsGrab(econ_platform_core.ProviderWrapper):
         full_ticker = tickers.create_ticker_full(self.ProviderCode, series_code)
         if 'nan' in str(full_ticker):
             raise SkipColumn()
-        meta = econ_platform_core.SeriesMetadata()
+        meta = econ_platform_core.series_metadata.SeriesMetadata()
         meta.ticker_full = full_ticker
         meta.series_provider_code = tickers.TickerProviderCode(self.ProviderCode)
         meta.ticker_query = tickers.TickerFetch(series_code)

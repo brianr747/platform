@@ -24,7 +24,8 @@ limitations under the License.
 import warnings
 
 import econ_platform_core
-from econ_platform_core import SeriesMetadata
+import econ_platform_core.entity_and_errors
+from econ_platform_core.series_metadata import SeriesMetadata
 from econ_platform_core.tickers import TickerFull, TickerProviderCode, TickerLocal, TickerFetch, TickerDataType
 
 class AdvancedDatabase(econ_platform_core.DatabaseManager):
@@ -60,7 +61,7 @@ class AdvancedDatabase(econ_platform_core.DatabaseManager):
         # If this fails, subclass should throw useful ConnectionError.
         self._Connect()
         if self.HandleDatabase is None:
-            raise econ_platform_core.ConnectionError('Database handle not set!')
+            raise econ_platform_core.entity_and_errors.ConnectionError('Database handle not set!')
 
     def _Connect(self):
         """
@@ -128,7 +129,7 @@ class AdvancedDatabase(econ_platform_core.DatabaseManager):
             return self._FindDataType(ticker_obj)
         if type(ticker_obj) is TickerFull:
             return self._GetMetaFromFullTicker(ticker_obj)
-        raise econ_platform_core.PlatformError('Internal error: unsupported ticker class')
+        raise econ_platform_core.entity_and_errors.PlatformError('Internal error: unsupported ticker class')
 
     def _GetMetaFromFullTicker(self, ticker_full):
         """

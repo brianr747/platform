@@ -25,10 +25,11 @@ import configparser
 import os
 
 import econ_platform_core
+import econ_platform_core.entity_and_errors
 import econ_platform_core.utils
 
 
-class ConfigParserWrapper(econ_platform_core.utils.PlatformEntity):
+class ConfigParserWrapper(econ_platform_core.entity_and_errors.PlatformEntity):
     """
     A wrapper class for the platform configuration loading. All the real work is done by ConfigParser; but
     we need to track that the correct sequence of files is opened.

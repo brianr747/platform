@@ -22,6 +22,8 @@ import pandas
 
 import econ_platform_core
 import econ_platform_core.databases
+import econ_platform_core.entity_and_errors
+import econ_platform_core.series_metadata
 import econ_platform_core.utils
 
 
@@ -56,7 +58,7 @@ class DatabaseText(econ_platform_core.DatabaseManager):
         self.CheckDirectory()
         full_name = os.path.join(self.Directory, DatabaseText.GetFileName(full_ticker))
         if not os.path.exists(full_name):
-            raise econ_platform_core.TickerNotFoundError('Unknown ticker: {0}'.format(full_ticker))
+            raise econ_platform_core.entity_and_errors.TickerNotFoundError('Unknown ticker: {0}'.format(full_ticker))
         return self.GetMetaFromFile(full_name)
 
     def GetMetaFromFile(self, full_name):
@@ -67,14 +69,14 @@ class DatabaseText(econ_platform_core.DatabaseManager):
         try:
             dummy, full_ticker = header.split('\t')
         except:
-            raise econ_platform_core.PlatformError('Corrupt file: {0}'.format(full_name))
-        meta = econ_platform_core.SeriesMetadata()
+            raise econ_platform_core.entity_and_errors.PlatformError('Corrupt file: {0}'.format(full_name))
+        meta = econ_platform_core.series_metadata.SeriesMetadata()
         meta.ticker_full = econ_platform_core.tickers.TickerFull(full_ticker)
         meta.Exists = True
         try:
             meta.series_provider_code, meta.ticker_query = econ_platform_core.utils.split_ticker_information(full_ticker)
         except:
-            raise econ_platform_core.PlatformError('Invalid full ticker')
+            raise econ_platform_core.entity_and_errors.PlatformError('Invalid full ticker')
         return meta
 
     def Write(self, ser, series_meta, overwrite=True):

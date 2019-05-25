@@ -20,6 +20,7 @@ limitations under the License.
 """
 
 import econ_platform_core
+import econ_platform_core.entity_and_errors
 
 
 class ProviderUser(econ_platform_core.ProviderWrapper):
@@ -36,7 +37,7 @@ class ProviderUser(econ_platform_core.ProviderWrapper):
         try:
             return self.SeriesMapper[str(query_ticker)]
         except KeyError:
-            raise econ_platform_core.TickerNotFoundError(
+            raise econ_platform_core.entity_and_errors.TickerNotFoundError(
                 'There is no function that handles the query ticker: {0}'.format(query_ticker)) from None
 
 

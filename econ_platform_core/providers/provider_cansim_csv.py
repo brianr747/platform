@@ -45,6 +45,8 @@ import pandas
 import glob
 
 import econ_platform_core
+import econ_platform_core.entity_and_errors
+import econ_platform_core.series_metadata
 from econ_platform_core import log, log_warning
 import econ_platform_core.configuration
 import econ_platform_core.utils
@@ -82,7 +84,7 @@ class ProviderCansim_Csv(econ_platform_core.ProviderWrapper):
         try:
             table_name, vector = ticker_query.split('|')
         except:
-            raise econ_platform_core.TickerError('CANSIM_CSV ticker format: <table>|<vector>; invalid ticker = {0}'.format(
+            raise econ_platform_core.entity_and_errors.TickerError('CANSIM_CSV ticker format: <table>|<vector>; invalid ticker = {0}'.format(
                                          ticker_query)) from None
         return self.GetTableUrl(table_name)
 
@@ -101,7 +103,7 @@ class ProviderCansim_Csv(econ_platform_core.ProviderWrapper):
         try:
             table_name, vector = query_ticker.split('|')
         except:
-            raise econ_platform_core.TickerError('CANSIM_CSV ticker format: <table>|<vector>; invalid ticker = {0}'.format(
+            raise econ_platform_core.entity_and_errors.TickerError('CANSIM_CSV ticker format: <table>|<vector>; invalid ticker = {0}'.format(
                                          query_ticker))
         target = os.path.join(self.DataDirectory, '{0}.csv'.format(table_name))
         if not os.path.exists(target):
@@ -109,7 +111,7 @@ class ProviderCansim_Csv(econ_platform_core.ProviderWrapper):
             try:
                 self.UnzipFile(table_name)
             except:
-                raise econ_platform_core.PlatformError(
+                raise econ_platform_core.entity_and_errors.PlatformError(
                     'Table {0} needs to be downloaded as a zip file'.format(table_name)) from None
         # Do the whole table
         self.TableWasFetched = True
@@ -123,7 +125,7 @@ class ProviderCansim_Csv(econ_platform_core.ProviderWrapper):
             ser = self.TableSeries[str(series_meta.ticker_full)]
             meta = self.TableMeta[str(series_meta.ticker_full)]
         except KeyError:
-            raise econ_platform_core.TickerNotFoundError('{0} was not found'.format(str(series_meta.ticker_full))) \
+            raise econ_platform_core.entity_and_errors.TickerNotFoundError('{0} was not found'.format(str(series_meta.ticker_full))) \
                 from None
         return ser, meta
 
@@ -240,7 +242,7 @@ class ProviderCansim_Csv(econ_platform_core.ProviderWrapper):
         else:
             keep_list = self.MetaMapper['keep_list']
             desc_list = self.MetaMapper['desc_list']
-        meta = econ_platform_core.SeriesMetadata()
+        meta = econ_platform_core.series_metadata.SeriesMetadata()
         for i in keep_list:
             meta.ProviderMetadata[header[i]] = row[i]
         vector = meta.ProviderMetadata['VECTOR']

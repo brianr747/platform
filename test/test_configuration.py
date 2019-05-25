@@ -7,7 +7,9 @@ import econ_platform_core
 import econ_platform_core.configuration as configuration
 
 # Need this line if we want to look at action.
-econ_platform_core.utils.PlatformEntity._IgnoreRegisterActions = False
+import econ_platform_core.entity_and_errors
+
+econ_platform_core.entity_and_errors.PlatformEntity._IgnoreRegisterActions = False
 
 class ConfigTester(unittest.TestCase):
     def setUp(self) -> None:

@@ -26,6 +26,7 @@ limitations under the License.
 # We may restrict this import in the future, but do the "import *" for simplicity during development.
 from econ_platform_core import *
 import econ_platform.extensions
+from econ_platform_core import PlatformError
 
 
 def quick_plot(ser, title=None):
@@ -62,9 +63,9 @@ def init_econ_platform():
     """
     econ_platform_core.init_package()
     _LoadedExtensions, _FailedExtensions, _DecoratedFailedExtensions = econ_platform.extensions.load_extensions()
-    econ_platform_core.LoadedExtensions += _LoadedExtensions
-    econ_platform_core.FailedExtensions += _FailedExtensions
-    econ_platform_core.DecoratedFailedExtensions += _DecoratedFailedExtensions
+    econ_platform_core.ExtensionList.LoadedExtensions += _LoadedExtensions
+    econ_platform_core.ExtensionList.FailedExtensions += _FailedExtensions
+    econ_platform_core.ExtensionList.DecoratedFailedExtensions += _DecoratedFailedExtensions
 
 
 

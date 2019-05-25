@@ -187,3 +187,13 @@ results from internal model runs, and one-off data insertions.)
 I expect that I will create recession indicator series for countries based on the "2 quarters of
 declining real GDP rule." Once I populate that set, I will see if the "User Provider" needs any 
 improvements to its interface.
+
+## Engine Context Object?
+
+Although I do not think it makes sense to have more than one "application" object, it might be an
+idea to move all the global objects (database list, provider list, config information) to a single
+"context" class. Probably should do this sooner, rather than later, as it will break a lot of code.
+(Logging is a global concept, and its dependence on the configuration information was one reason
+I started out with the global objects.)
+
+This would help testing: we can flush the entire platform context when doing end-to-end tests. 

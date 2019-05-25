@@ -24,6 +24,8 @@ import econ_platform_core
 import pandas
 import datetime
 
+import econ_platform_core.entity_and_errors
+
 
 def get_test_series(str_ticker):
     """
@@ -66,4 +68,4 @@ class ProviderExample(econ_platform_core.ProviderWrapper):
             data = get_test_series(query_ticker)
             return data
         except KeyError:
-            raise econ_platform_core.TickerNotFoundError('Not found on TEST: {0}'.format(query_ticker)) from None
+            raise econ_platform_core.entity_and_errors.TickerNotFoundError('Not found on TEST: {0}'.format(query_ticker)) from None

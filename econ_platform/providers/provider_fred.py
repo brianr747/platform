@@ -27,6 +27,7 @@ import fredapi
 
 
 import econ_platform_core
+import econ_platform_core.entity_and_errors
 
 
 class ProviderFred(econ_platform_core.ProviderWrapper):
@@ -86,7 +87,7 @@ class ProviderFred(econ_platform_core.ProviderWrapper):
         :return:
         """
         if series_meta.ticker_query is None:
-            raise econ_platform_core.PlatformError('Need to see the query ticker in order to fetch the metadata')
+            raise econ_platform_core.entity_and_errors.PlatformError('Need to see the query ticker in order to fetch the metadata')
         return 'https://fred.stlouisfed.org/series/{0}'.format(str(series_meta.ticker_query))
 
 

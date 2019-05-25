@@ -49,6 +49,7 @@ import pandas
 import glob
 
 import econ_platform_core
+import econ_platform_core.entity_and_errors
 from econ_platform_core import log, log_warning
 import econ_platform_core.configuration
 import econ_platform_core.tickers as tickers
@@ -111,7 +112,7 @@ class ProviderAbsXls(econ_platform_core.ProviderWrapper):
                         sheet.index = list_index
                         return sheet[c]
         # Did not find it; puke.
-        raise econ_platform_core.TickerNotFoundError('Could not find series ID = {0}'.format(series_code))
+        raise econ_platform_core.entity_and_errors.TickerNotFoundError('Could not find series ID = {0}'.format(series_code))
 
 
 

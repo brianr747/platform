@@ -4,6 +4,7 @@ import os
 import datetime
 
 import econ_platform_core
+import econ_platform_core.entity_and_errors
 import econ_platform_core.utils as utils
 
 
@@ -139,41 +140,41 @@ class test_parse_config_directory(unittest.TestCase):
 
 class test_PlatformEntity(unittest.TestCase):
     def setUp(self) -> None:
-        utils.PlatformEntity._IgnoreRegisterActions = False
+        econ_platform_core.entity_and_errors.PlatformEntity._IgnoreRegisterActions = False
 
     def test_no_actions(self):
-        utils.PlatformEntity._IgnoreRegisterActions = True
-        obj = utils.PlatformEntity()
+        econ_platform_core.entity_and_errors.PlatformEntity._IgnoreRegisterActions = True
+        obj = econ_platform_core.entity_and_errors.PlatformEntity()
         self.assertEqual([], obj._Actions)
         obj._RegisterAction('A', 'B')
         self.assertEqual([], obj._Actions)
         # We want to register actions in unit tests; make sure this is reset.
-        utils.PlatformEntity._IgnoreRegisterActions = False
+        econ_platform_core.entity_and_errors.PlatformEntity._IgnoreRegisterActions = False
 
     def test_msg_false(self):
-        obj = utils.PlatformEntity()
+        obj = econ_platform_core.entity_and_errors.PlatformEntity()
         obj._RegisterAction('', 'x')
         self.assertFalse(obj._HasAction(None, 'Y'))
 
     def test_both_miss(self):
-        obj = utils.PlatformEntity()
+        obj = econ_platform_core.entity_and_errors.PlatformEntity()
         obj._RegisterAction('a', 'b')
         obj._RegisterAction('c', 'd')
         self.assertFalse(obj._HasAction('b', 'a'))
 
     def test_no_test(self):
-        obj = utils.PlatformEntity()
+        obj = econ_platform_core.entity_and_errors.PlatformEntity()
         with self.assertRaises(ValueError):
             obj._HasAction()
 
     def test_find_action(self):
-        obj = utils.PlatformEntity()
+        obj = econ_platform_core.entity_and_errors.PlatformEntity()
         obj._RegisterAction('a', 'b')
         obj._RegisterAction('c', 'd')
         self.assertTrue(obj._HasAction('a', None))
 
     def test_find_msg(self):
-        obj = utils.PlatformEntity()
+        obj = econ_platform_core.entity_and_errors.PlatformEntity()
         obj._RegisterAction('a', 'bbb')
         obj._RegisterAction('c', 'ddd')
         self.assertTrue(obj._HasAction(None, 'bb'))
