@@ -10,6 +10,8 @@ test/data/*.txt
 test/data/*.db
 # sqlite databases
 econ_platform_core/data/*.db
+# External hook files
+econ_platform/extensions/hook_sfc_models.py
 
 
 # R files

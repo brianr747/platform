@@ -327,7 +327,7 @@ class ProviderWrapper(PlatformEntity):
     """
     Name: str
 
-    def __init__(self, name='VirtualObject'):
+    def __init__(self, name='VirtualObject', default_code=None):
         super().__init__()
         self.Name = name
         self.ProviderCode = ''
@@ -343,7 +343,14 @@ class ProviderWrapper(PlatformEntity):
         self.TableMeta = {}
         self.WebPage = ''
         if not name == 'VirtualObject':
-            self.ProviderCode = PlatformConfiguration['ProviderList'][name]
+            try:
+                self.ProviderCode = PlatformConfiguration['ProviderList'][name]
+            except KeyError:
+                if default_code is None:
+                    raise PlatformError(
+                    'Must set the provider code in the config file under [ProviderList] for provider {0}'.format(name))
+                else:
+                    self.ProviderCode = default_code
 
     def fetch(self, series_meta):  # pragma: nocover
         """
