@@ -220,14 +220,26 @@ SELECT series_dates, series_values FROM {0} WHERE series_id = ?
             try:
                 return econ_platform_core.utils.iso_string_to_date(s)
             except:
-                float(s)
+                return float(s)
         try:
             dates = [mapper(x[0]) for x in res]
         except:
             raise econ_platform_core.entity_and_errors.PlatformError('Corrupted date axis for {0}'.format(ticker_full))
         valz = [x[1] for x in res]
-        ser = pandas.Series(valz)
-        ser.index = pandas.DatetimeIndex(dates)
+
+        if len(dates) > 0 and type(dates[0]) == float:
+            # need to sort properly; data were sorted as strings!
+            # This is silly, but not fixable until we create a float-based time axis table.
+            # SQLAlchemy...
+            data = [(x,y) for x,y in zip(dates, valz)]
+            data.sort()
+            dates = [x[0] for x in data]
+            valz = [x[1] for x in data]
+            ser = pandas.Series(valz)
+            ser.index = dates
+        else:
+            ser = pandas.Series(valz)
+            ser.index = pandas.DatetimeIndex(dates)
         ser.name = ticker_full
         return ser
 

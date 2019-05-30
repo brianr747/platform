@@ -1,4 +1,4 @@
-# platform
+# econ_platform
 *Platform to download, manipulate and plot data. Mainly Python, with some R.*
 
 Python 3.7 is needed (possibly 3.6); I use variable type hints which are not supported

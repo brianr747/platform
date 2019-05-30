@@ -67,7 +67,7 @@ class SimpleUpdate(UpdateProtocol):
             # The adventure begins!
             # For now, refresh entire series.
             try:
-                self.FetchAndWrite(ticker, series_meta, provider_wrapper, database_manager)
+                return self.FetchAndWrite(ticker, series_meta, provider_wrapper, database_manager)
             except NoDataError:
                 log_debug('Series {0} has no new data; marking refreshed'.format(ticker_str))
                 database_manager.SetLastRefresh(series_meta.ticker_full)
