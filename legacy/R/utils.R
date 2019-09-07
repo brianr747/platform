@@ -134,6 +134,22 @@ StartPlot <- function(){
 }
 
 
+PlotXYReal <- function(x, y, ylab="", main="", has_marker=F){
+  pp <- StartPlot()
+  series.df = data.frame(x=x,y=y)
+  names(series.df) <- c("x","y")  # Why is this necessary?
+  # Turn the indicator variable into a start/end data.frame
+  pp <- pp + geom_line(data=series.df, aes(x=x,y=y))
+  if (has_marker){
+    pp <- pp + geom_point(aes(x=x,y=y))
+  }
+  pp <- pp + ylab(ylab)
+  pp <- pp + theme(axis.title.x = element_blank())
+  pp <- pp + ggtitle(main) + theme(plot.title = element_text(hjust = 0.5))
+  return(pp)
+  
+}
+
 PlotWork1 <- function(pp, ser, ylab="",main="",show_watermark=T,has_marker=F){
   datez = time(ser)
   series.df = data.frame(date=datez,val=coredata(ser))

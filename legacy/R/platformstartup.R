@@ -21,6 +21,11 @@ pfetch <- function(ticker, database="Default"){
   return(ser)
 }
 
+pfetch_real <- function(ticker, database="Default"){
+  df = myplatform$fetch_df(ticker, database)
+  return(df)
+}
+
 pwrite <- function(ser, ticker, database="Default"){
   df = data.frame(time(ser), coredata(ser))
   myplatform$push_df(df, ticker, database)
