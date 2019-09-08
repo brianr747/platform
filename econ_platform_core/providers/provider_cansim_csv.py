@@ -112,7 +112,7 @@ class ProviderCansim_Csv(econ_platform_core.ProviderWrapper):
                 self.UnzipFile(table_name)
             except:
                 raise econ_platform_core.entity_and_errors.PlatformError(
-                    'Table {0} needs to be downloaded as a zip file'.format(table_name)) from None
+                    'Table {0} needs to be downloaded as a zip file into {1}'.format(table_name, self.DataDirectory)) from None
         # Do the whole table
         self.TableWasFetched = True
         self.TableMeta = {}
