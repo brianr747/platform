@@ -366,6 +366,9 @@ provider_param_string) VALUES
                 meta[mapper[c]] = val
             elif 'provider_param_string' == c:
                 meta.ProviderMetadata = econ_platform_core.utils.param_string_to_dict(val)
+        # If the refresh is set to NULL, need to return a value way in the past to force an update
+        if meta.last_refresh is None:
+            meta.last_refresh = datetime.datetime(1980, 1, 1)
         return meta
 
 
@@ -504,10 +507,10 @@ WHERE m.series_id = d.series_id GROUP BY d.series_id
         """
         id = self.GetSeriesID(ticker_full)
         cmd = """
-        UPDATE {0} SET last_update = ? WHERE id_series = ?""".format(self.TableMeta)
+        UPDATE {0} SET last_refresh = ? WHERE id_series = ?""".format(self.TableMeta)
         if time_stamp is None:
             time_stamp = datetime.datetime.now()
-        self.Execute(cmd, id, time_stamp, commit_after=True)
+        self.Execute(cmd, time_stamp, id, commit_after=True)
 
     def _SetLastUpdate(self, ticker_full, time_stamp=None):
         """
@@ -521,7 +524,7 @@ WHERE m.series_id = d.series_id GROUP BY d.series_id
         UPDATE {0} SET last_update = ?, last_refresh = ? WHERE series_id = ?""".format(self.TableMeta)
         if time_stamp is None:
             time_stamp = datetime.datetime.now()
-        self.Execute(cmd, id, time_stamp, time_stamp, commit_after=True)
+        self.Execute(cmd, time_stamp, time_stamp, id, commit_after=True)
 
 
 

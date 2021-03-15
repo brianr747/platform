@@ -50,7 +50,7 @@ GetConn <- function() {
 
 GetRes <- function() {return(133.333)}
 GetImgDir <- function() {return (".\\images\\")}
-GetFootText <- function() {return("(C) 2019 B. Romanchuk")}
+GetFootText <- function() {return("(C) 2021 B. Romanchuk")}
 
 DBLoad <- function(IID){
 conn <- GetConn()
@@ -388,6 +388,23 @@ AutoY <- function(pp, ser){
   return (SetYAxis(pp, mmin, mmax))
   
 }
+
+Scatter1 <- function(x, y, ylab="",xlab="", main="",show_watermark=T){
+  xx <- data.frame(x,y)
+  names(xx) <- c("x","y")
+  pp <- ggplot(xx,aes(x=x,y=y)) + geom_point()
+  if (show_watermark){
+    pp <- AddWatermark(pp,x=x[1],y=-Inf)
+    #pp <- pp + annotate("text",x=dates[1],y=-Inf,label="bondeconomics.com",color="white",vjust=-.4,hjust=-.05,size=18,alpha=.8,family="Impact")
+  }
+  # pp <- AutoY(pp, ser)
+  pp <- pp + ylab(ylab)
+  pp <- pp + xlab(xlab)
+  pp <- pp + theme(plot.title = element_text(hjust = 0.5))
+  pp <- pp + ggtitle(main)
+  return(pp)
+}
+
 
 PlotLowLevel1 <- function(ser,ylab="",main="",show_watermark=T){
 dates <- time(ser)

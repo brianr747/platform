@@ -64,7 +64,8 @@ March 1960\t March 1961
 October 1974\t March 1975
 June 1981\t October 1982
 March 1990\t April 1992
-October 2008\tMay 2009"""
+October 2008\tMay 2009
+February 2020\tJuly 2020"""
 
 extension_name = 'Recessions User Series'
 

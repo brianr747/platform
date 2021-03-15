@@ -122,3 +122,4 @@ venv.bak/
 
 # mypy
 .mypy_cache/
+/examples/drachma_overnight_rate.xls

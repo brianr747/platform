@@ -36,7 +36,8 @@ UseExampleProvider = False
 # file they want loaded for user-specific customisation. I point mine to a file outside the repository, so it
 # cannot get checked in.
 UserConfigEnvironmentVariableName = PLATFORM_USER_CONFIG
-
+# Point this to a module with user series; see econ_platform.extensions.miscellaneous_series.py
+miscellaneous_series_module=<full path to Python file>
 #----------------------------------------------------------------
 [UpdateProtocol]
 Default=NOUPDATE

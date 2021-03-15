@@ -56,6 +56,27 @@ TwoPanelChart <- function(p1,p2,fname="tmp.png",foottext="")
   InsertFootnote(foottext)  
 }
 
+ThreePanelChart <- function(p1,p2,p3, fname="tmp.png",foottext="")
+{
+  r = GetRes()
+  p1 <- ResizeText(p1)
+  p2 <- ResizeText(p2)
+  p3 <- ResizeText(p3)
+  p1 = p1 + theme(plot.margin= unit(c(0.05, .15, .3, .2), "cm"))
+  p2 = p2 + theme(plot.margin= unit(c(0.05, .15, .3, .2), "cm"))
+  p3 = p3 + theme(plot.margin= unit(c(0.05, .15, .5, .2), "cm"))
+  fname = paste(GetImgDir(),fname, sep='')
+  print(paste("Writing:",fname))
+  png(fname,width=round(4.5*r),height=round(5.2*r),res=r)
+  grid.arrange(p1,p2,p3,ncol=1)
+  InsertFootnote(foottext)
+  dev.off()
+  grid.arrange(p1,p2,p3,ncol=1)
+  grid.arrange(p1,p2,p3,ncol=1)
+  InsertFootnote(foottext)  
+}
+
+
 Plot1Ser <- function(ser, ylab="",main="",show_watermark=T,has_marker=F, 
                      startdate=NULL){
   if (!is.null(startdate)){
@@ -81,7 +102,7 @@ Plot2Ser <- function(ser1,ser2, legend=c("series1","series2"),
     
   }
   pp <- StartPlot()
-  return (PlotWork2(ser1,ser2, legend,
+  return (PlotWork2(pp, ser1,ser2, legend,
                     ylab, main,legendpos,
                     hasmarker,legendhead))
   
@@ -149,6 +170,43 @@ PlotXYReal <- function(x, y, ylab="", main="", has_marker=F){
   return(pp)
   
 }
+
+Plot2XYReal <-  function(x, y, y2, legend=c("series1", "series2"), 
+                         ylab="", main="", legendpos=c(.8, .8), legendhead="", has_marker=F){
+  pp <- StartPlot()
+  full_x = c(x, x)
+  full_y = c(y, y2)
+  colors <-factor(c(
+    rep("s1",length(y)),
+    rep("s2",length(y2))
+  ))
+  levels(colors) = legend
+  series.df = data.frame(x=full_x,y=full_y, colors=colors)
+  names(series.df) <- c("x","y", "colors")  # Why is this necessary?
+  # Turn the indicator variable into a start/end data.frame
+  #pp <- pp + geom_line(data=series.df, aes(x=x,y=y))
+  if (has_marker){
+    pp <- pp + geom_line(data=series.df,aes(x=x,y=y,colour=colors, linetype=colors))
+    pp <- pp + scale_linetype_manual(legendhead,values=c(1,6))
+    pp <- pp + scale_colour_manual(legendhead,values=c("black","red"))
+    pp <- pp + geom_point(data=series.df, aes(x=x, y, shape=colors), size=2.5)
+    pp <- pp + scale_shape_manual(legendhead, values=c(1, 2))
+  }
+  else{
+    not_implemented()
+  }
+  pp <- pp + ylab(ylab)
+  pp <- pp + theme(axis.title.x = element_blank())
+  pp <- pp + ggtitle(main) + theme(plot.title = element_text(hjust = 0.5))
+  pp <- pp + theme(legend.position=legendpos)
+  return(pp)
+}
+
+
+
+
+
+
 
 PlotWork1 <- function(pp, ser, ylab="",main="",show_watermark=T,has_marker=F){
   datez = time(ser)
