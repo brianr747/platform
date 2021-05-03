@@ -3,6 +3,7 @@
 
 library(data.table)
 
+
 #' Create a data.frame with start and end dates where an indicator
 #' series = 1.
 #' 
@@ -29,7 +30,53 @@ OnePanelChart <- function(p1,fname="tmp.png",foottext="",footnote_y = 2){
   
   png(fname,width=round(4.5*r),height=round(3*r),res=r)
   
-  p1 = p1 + theme(plot.margin= unit(c(0.05, .15, .5, .2), "cm"))
+  p1 = p1 + theme(plot.margin= unit(c(0.05, .3, .5, .2), "cm"))
+  print(p1)
+  InsertFootnote(foottext,footnote_y)
+  dev.off() 
+  print(p1)
+  InsertFootnote(foottext,footnote_y)  
+}
+
+OnePanelChartBook <- function(p1,fname="tmp.png",foottext="",footnote_y = 2){
+  base_file = tools::file_path_sans_ext(fname)
+  
+  # r = GetRes()
+  p1 <- ResizeText(p1)
+  
+  fname = paste(GetImgDir(), "\\png\\", base_file, '.png', sep='')
+  print(paste("Writing PNG (300 dpi):",fname))
+  r = 300
+  png(fname,width=round(4.5*r),height=round(3*r),res=r)
+  
+  p1 = p1 + theme(plot.margin= unit(c(0.05, .3, .5, .2), "cm"))
+  print(p1)
+  InsertFootnote(foottext,footnote_y)
+  dev.off() 
+  print(p1)
+  InsertFootnote(foottext,footnote_y)
+  #----------------------------------------------------
+  fname = paste(GetImgDir(), "\\png90\\", base_file, '.png', sep='')
+  print(paste("Writing PNG (90 dpi):",fname))
+  r = 90
+  png(fname,width=round(4.5*r),height=round(3*r),res=r)
+  
+  # p1 = p1 + theme(plot.margin= unit(c(0.05, .3, .5, .2), "cm"))
+  print(p1)
+  InsertFootnote(foottext,footnote_y)
+  dev.off() 
+  print(p1)
+  InsertFootnote(foottext,footnote_y)
+  
+  # ----------------------------------------------------
+  r = 300
+  
+  fname = paste(GetImgDir(), "\\jpg\\", base_file, '.jpg', sep='')
+  print(paste("Writing:",fname))
+  
+  jpeg(fname,width=round(4.5*r),height=round(3*r),res=r)
+  
+  # p1 = p1 + theme(plot.margin= unit(c(0.05, .3, .5, .2), "cm"))
   print(p1)
   InsertFootnote(foottext,footnote_y)
   dev.off() 
@@ -55,6 +102,46 @@ TwoPanelChart <- function(p1,p2,fname="tmp.png",foottext="")
   grid.arrange(p1,p2,ncol=1)
   InsertFootnote(foottext)  
 }
+
+TwoPanelChartBook <- function(p1,p2,fname="tmp.png",foottext="")
+{
+  base_file = tools::file_path_sans_ext(fname)
+  # r = GetRes()
+  p1 <- ResizeText(p1)
+  p2 <- ResizeText(p2)
+  p1 = p1 + theme(plot.margin= unit(c(0.05, .3, .3, .2), "cm"))
+  p2 = p2 + theme(plot.margin= unit(c(0.05, .3, .5, .2), "cm"))
+  # -----------------------
+  fname = paste(GetImgDir(), "\\png\\", base_file, '.png', sep='')
+  r = 300
+  print(paste("Writing:",fname))
+  png(fname,width=round(4.5*r),height=round(3.75*r),res=r)
+  grid.arrange(p1,p2,ncol=1)
+  InsertFootnote(foottext)
+  dev.off()
+  #----------------------------------------------------
+  fname = paste(GetImgDir(), "\\png90\\", base_file, '.png', sep='')
+  print(paste("Writing PNG (90 dpi):",fname))
+  r = 90
+  png(fname,width=round(4.5*r),height=round(3.75*r),res=r)
+  grid.arrange(p1,p2,ncol=1)
+  InsertFootnote(foottext)
+  dev.off()
+  #------------------------------------------------------
+  r = 300
+  fname = paste(GetImgDir(), "\\jpg\\", base_file, '.jpg', sep='')
+  print(paste("Writing:",fname))
+  
+  jpeg(fname,width=round(4.5*r),height=round(3*r),res=r)
+  grid.arrange(p1,p2,ncol=1)
+  InsertFootnote(foottext)
+  dev.off()
+  grid.arrange(p1,p2,ncol=1)
+  grid.arrange(p1,p2,ncol=1)
+  InsertFootnote(foottext)  
+ 
+}
+
 
 ThreePanelChart <- function(p1,p2,p3, fname="tmp.png",foottext="")
 {
@@ -215,7 +302,7 @@ PlotWork1 <- function(pp, ser, ylab="",main="",show_watermark=T,has_marker=F){
   # Turn the indicator variable into a start/end data.frame
   pp <- pp + geom_line(data=series.df, aes(x=date,y=val))
   if (has_marker){
-    pp <- pp + geom_point(aes(x=date,y=val))
+    pp <- pp + geom_point(data=series.df, aes(x=date,y=val))
   }
   if (show_watermark){
     # pp <- AddWatermark(pp,x=-Inf,y=-Inf)
