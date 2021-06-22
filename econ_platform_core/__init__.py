@@ -50,6 +50,7 @@ import pandas
 import traceback
 import webbrowser
 import warnings
+import datetime
 
 # As a convenience, use the "logging.info" function as log.
 from logging import info as log, debug as log_debug, warning as log_warning, error as log_error
@@ -528,6 +529,24 @@ def fetch_df(ticker, database='Default', dropna=True):
     except:
         log_last_error()
         raise
+
+
+def reset_update_time(ticker, database='Default', time_stamp=None):
+    """
+    Convenience function to set the update/refresh time back in the past, forcing an update of the series.
+
+    If time_stamp is left as None, set to datetime.datetime(1980, 1, 1).
+
+    :param ticker: str
+    :param database: str
+    :return: None
+    """
+    database_manager: DatabaseManager = Databases[database]
+    series_meta = database_manager.GetMeta(ticker)
+    series_meta.AssertValid()
+    if time_stamp is None:
+        time_stamp=datetime.datetime(1980, 1, 1)
+    database_manager.SetLastRefresh(ticker_full=series_meta.ticker_full, time_stamp=time_stamp)
 
 
 def log_extension_status():  # pragma: nocover

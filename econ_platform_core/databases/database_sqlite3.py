@@ -507,7 +507,7 @@ WHERE m.series_id = d.series_id GROUP BY d.series_id
         """
         id = self.GetSeriesID(ticker_full)
         cmd = """
-        UPDATE {0} SET last_refresh = ? WHERE id_series = ?""".format(self.TableMeta)
+        UPDATE {0} SET last_refresh = ? WHERE series_id = ?""".format(self.TableMeta)
         if time_stamp is None:
             time_stamp = datetime.datetime.now()
         self.Execute(cmd, time_stamp, id, commit_after=True)

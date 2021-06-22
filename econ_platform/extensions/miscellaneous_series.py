@@ -51,6 +51,11 @@ def main():
         return
     if not hasattr(module, 'SeriesDict'):
         print('Miscellaneous series does not have a dictionary: SeriesDict')
-        return
-    for k in module.SeriesDict:
-        econ_platform_core.Providers.UserProvider.SeriesMapper[k] = module.SeriesDict[k]
+    else:
+        for k in module.SeriesDict:
+            econ_platform_core.Providers.UserProvider.SeriesMapper[k] = module.SeriesDict[k]
+    if not hasattr(module, 'FunctionDict'):
+        print('Miscellaneous series module does not have a FunctionDict')
+    else:
+        for k in module.FunctionDict:
+            econ_platform_core.Providers.UserProvider.FunctionMapper[k] = module.FunctionDict[k]

@@ -4,6 +4,8 @@ Provider for internally generated series.
 By default, empty, but the idea is that you push your own handlers into this object. Probably need to monkey-patch
 your own class if this gets complicated.
 
+2021-06-21: Added the ability to create tickers that are "functions."
+
 Copyright 2019 Brian Romanchuk
 
 Licensed under the Apache License, Version 2.0 (the "License");
@@ -27,6 +29,7 @@ class ProviderUser(econ_platform_core.ProviderWrapper):
     def __init__(self):
         super(ProviderUser, self).__init__(name='User')
         self.SeriesMapper = {}
+        self.FunctionMapper = {}
 
     def MapTicker(self, query_ticker):
         """
@@ -47,7 +50,22 @@ class ProviderUser(econ_platform_core.ProviderWrapper):
         :param series_meta: econ_platform_core.SeriesMetadata
         :return: pandas.Series
         """
-        query_ticker = series_meta.ticker_query
-        fn = self.MapTicker(query_ticker)
-        ser = fn(series_meta)
-        return ser
+        query_ticker = str(series_meta.ticker_query)
+        if '(' in query_ticker:
+            # The series ticker corresponds to a function.
+            try:
+                fn_name, fn_args = query_ticker.split('(')
+            except:
+                raise ValueError('User Provider can only handle functions with a single parenthesis character ("(")')
+            fn_args = fn_args.replace(')', '')
+            try:
+                fn = self.FunctionMapper[fn_name]
+            except KeyError:
+                raise econ_platform_core.entity_and_errors.TickerNotFoundError(
+                    'There is no function that handles the query ticker: {0}'.format(query_ticker)) from None
+            ser = fn(series_meta, fn_args)
+            return ser
+        else:
+            fn = self.MapTicker(query_ticker)
+            ser = fn(series_meta)
+            return ser

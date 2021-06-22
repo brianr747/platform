@@ -1,56 +1,22 @@
+"""
+Example of working with a user-defined "functional" series
+
+This example does not make much sense on its own, as the calculation should really be moved to
+another library code. However, this shows the workflow.
 
 """
-Brian Romanchuk's miscellaneous series. Used in example code.
 
-
-To use this file, point
-[Options]
-miscellaneous_series_module=<path to this file>
-
-However, it makes more sense to create your own file, and use any series from here that you like.
-
-Copyright 2019 Brian Romanchuk
-
-Licensed under the Apache License, Version 2.0 (the "License");
-you may not use this file except in compliance with the License.
-You may obtain a copy of the License at
-
-    http://www.apache.org/licenses/LICENSE-2.0
-
-Unless required by applicable law or agreed to in writing, software
-distributed under the License is distributed on an "AS IS" BASIS,
-WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-See the License for the specific language governing permissions and
-limitations under the License.
-"""
 import pandas
-import econ_platform
+
+from econ_platform_core import fetch, Providers, reset_update_time
+from econ_platform.start import quick_plot
 
 
-def calc_fed(series_meta):
-    """
-    Splice together a daily Fed Funds rate from FRED series.
+#---------------------------------------------------------------------------------------
+# Normally, the user-defined series would be handled in a library. Kept here to keep
+# Example self-contained.
 
-    :param series_meta: econ_platform_core.SeriesMetadata
-    :return:
-    """
-    # Just use series_meta to fill in description
-    effective = econ_platform.fetch('F@DFF')
-    target = econ_platform.fetch('F@DFEDTAR')
-    upper = econ_platform.fetch('F@DFEDTARU')
-    downer = econ_platform.fetch('F@DFEDTARL')
-    new_target = (upper + downer)/2.
-    out = target.combine_first(new_target)
-    cut_off = out.index[0]
-    out = out.combine_first(effective[:cut_off])
-    out.name = 'FedFunds: Long Series'
-    series_meta.series_description= 'Combination of Fed Funds (FF) Effect (up to 1982), FF target (to 2008), ' \
-                                    'then average of upper and lower bounds. '
-    series_meta.series_name = 'Fed Funds Long Time History'
-    return out, series_meta
-
-
-def us_inflation_dispersion(series_meta, fn_args):
+def inflation_fn(series_meta, fn_args):
     """
     Inflation dispersion in the U.S., based on major groups
     food and beverages, housing, apparel, transportation, medical care, recreation, education and communication, and other goods and services
@@ -81,7 +47,7 @@ def us_inflation_dispersion(series_meta, fn_args):
     if return_type not in ('HEADLINE', 'MIN', 'MAX'):
         raise ValueError(f'Invalid return type {return_type}, must be one of HEADLINE, MIN, MAX')
     if return_type == 'HEADLINE':
-        cpi_index = econ_platform.fetch('F@CPIAUCSL') # All -items, SA
+        cpi_index = fetch('F@CPIAUCSL') # All -items, SA
         pct_chg = cpi_index.pct_change(N_months)
         factor = 1. + pct_chg
         annualised = pow(factor, 12./float(N_months))
@@ -97,7 +63,7 @@ def us_inflation_dispersion(series_meta, fn_args):
 
     group_df = pandas.DataFrame()
     for group in groups_tickers:
-        level = econ_platform.fetch('F@'+group)
+        level = fetch('F@'+group)
         pct_chg = level.pct_change(N_months)
         factor = 1. + pct_chg
         annualised = pow(factor, 12./float(N_months))
@@ -113,16 +79,21 @@ def us_inflation_dispersion(series_meta, fn_args):
     series_meta.series_description = 'Calculated series'
     return out, series_meta
 
+# Push the handler into the UserProvider
+user_provider = Providers.UserProvider
+user_provider.FunctionMapper['US_INF_DISPERSION'] = inflation_fn
+# End of code that should be in a library.
+#--------------------------------------------------------------------
 
 
-SeriesDict = {
-    'FedFunds': calc_fed,
-}
+# Now we can fetch it.
+# Note that since this calculated series uses the US CPI index level, the system
+# automatically also creates the CPI series on the database when this is called.
 
-FunctionDict = {
-    'US_INF_DISPERSION': us_inflation_dispersion,
-}
+# Call reset_update_time() to force an update of the series while the code is under development.
+# Note that this does not affect the series fetched from the external provider.
+reset_update_time('U@US_INF_DISPERSION(24, MAX)')
+inf = fetch('U@US_INF_DISPERSION(24, MAX)')
 
 
-
-
+quick_plot(inf)
