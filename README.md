@@ -4,7 +4,7 @@
 Python 3.7 is needed (possibly 3.6); I use variable type hints which are not supported
 by 3.5.
 
-(I expect to get some collaboration on this project. I am using it for my own research, and 
+(I might get some collaboration on this project. I am using it for my own research, and 
 I am working off the MASTER branch. If there are other users, I will switch to a 
 MASTER/DEVELOPMENT  structure, so that my work doesn't break other people's work. I make
 side branches when there fairly major changes that will break things for a short
@@ -74,8 +74,8 @@ be possible to reduce the size of the code base by using Pandas SQL methods. Sin
 worked with SQLAlchemy, no idea when it will be up and running. Creating a new branch for 
 experiments. 
 
-(I have now created a branch for SQLAlchemy. Since the code may be wildly non-functional, keep it
-out of the master branch until it looks functional.)
+(2021-06-22: I did not get very far with SQLAlchemy. I would have to re-start if I want to
+investigate this option.)
 
 ### Dynamic Loading
 
@@ -167,9 +167,9 @@ from par coupon data, forward rate approximations, etc.)
 ## Version 1.0
 
 I hope to reach "Version 1.0" "soon." There are four areas that need to be
-completed.
+completed. (Note: this did not happen, but I am looking at the project again.)
 
-**1. Metadata.** [Updated 2109-05-15] Metadata is largely handled now, but want to 
+**1. Metadata.** [Updated 2019-05-15] Metadata is largely handled now, but want to 
 add features in SQLAlchemy (provider metadata).
 
 **2. Unit Test Coverage.** I want to get *econ_platform_core* to 100% unit test
