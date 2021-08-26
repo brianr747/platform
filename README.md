@@ -110,6 +110,10 @@ platform, but is not a pressing issue for me.
 reticulate. An example is given. (I have terrible legacy code in a
 side folder.) It can also push time series to the database. (Since they
 come from *R*, they are part of the "push only" provider.)
+  
+It would be fairly straightforward to create Excel support using the *xlwings* package. 
+Using *xlwings*, it would be possible to create a custom function that wraps the *fetch()*
+command. 
 
 ### Programming Support
 
